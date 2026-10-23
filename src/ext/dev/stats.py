@@ -10,21 +10,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import discord
 from discord.ext import commands
 
-from core import AluContext, AluDevCog
+from core import DevCog
+from utils import const
 
 if TYPE_CHECKING:
-    import discord
-
-    from core import AluBot
+    from core import AluBot, Context
 
 
-class StatsCog(AluDevCog):
+class StatsCog(DevCog):
     """Stats Cog."""
 
+    JAILED_BOTS_ROLE_ID = 1090428532162822234
+
     @commands.command(name="invite-link")
-    async def invite_link(self, ctx: AluContext) -> None:
+    async def invite_link(self, ctx: Context) -> None:
         """Get invite link for the bot.
 
         Somewhat pointless since 'Add App' button exists.
@@ -39,16 +41,20 @@ class StatsCog(AluDevCog):
         * Kicks non-bot accounts from the server if they somehow managed to enter;
         * Gives newly entered bot-accounts @Jailed Bots role.
         """
-        if member.guild.id != self.hideout.guild.id:
+        if member.guild.id != const.Guild.hideout:
             return
 
         if member.bot:
-            await member.add_roles(self.hideout.jailed_bots_role, reason="New bot account: jailed by default")
+            await member.add_roles(
+                discord.Object(self.JAILED_BOTS_ROLE_ID), reason="New bot account: jailed by default"
+            )
         else:
-            await self.hideout.repost.send(f"{member} ({member.id}) joined and I'm kicking them. Please disable invites.")
+            await self.bot.notify_developers(
+                f"{member} ({member.id}) joined and I'm kicking them. Please disable invites."
+            )
             await member.kick(reason="Non-bot account joined hideout (it's private)")
 
 
 async def setup(bot: AluBot) -> None:
-    """Load AluBot extension. Framework of discord.py."""
+    """Load the extension (discord.py entry point)."""
     await bot.add_cog(StatsCog(bot))

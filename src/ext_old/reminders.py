@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import AluCog, AluView
+from core import AluView, Cog
 from shared import clock, fmt
 from utils import MISSING, const, errors, pages, times
 
@@ -102,7 +102,7 @@ class ReminderView(AluView, name="Reminder Buttons"):
         await interaction.response.send_modal(SnoozeModal(self, self.timer))
 
 
-class Reminders(AluCog):
+class Reminders(Cog):
     """Remind yourself of something at sometime."""
 
     @override

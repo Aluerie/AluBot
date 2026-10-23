@@ -16,14 +16,13 @@ import discord
 from discord import app_commands
 from PIL import Image
 
-from core import AluCog
-from utils import const
+from core import Cog
 
 if TYPE_CHECKING:
     from core import AluBot, AluInteraction
 
 
-class DiscordInspect(AluCog, name="Inspect Discord Info."):
+class DiscordInspect(Cog, name="Inspect Discord Info."):
     """Commands to inspect Discord members/roles/servers/etc and get more info about them."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

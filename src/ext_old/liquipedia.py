@@ -9,7 +9,7 @@ import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
 
-from core import AluCog
+from core import Cog
 from utils import cache, const, fmt, pages
 
 if TYPE_CHECKING:
@@ -110,25 +110,25 @@ def scrape_schedule_data(
 
 SELECT_OPTIONS = [
     discord.SelectOption(
-        emoji=const.Emote.PepoRules,
+        emoji=const.Emoji.PepoRules,
         label="Next GameDay: Featured",
         description="Featured games for the closest GameDay",
         value="1",
     ),
     discord.SelectOption(
-        emoji=const.Emote.peepoHappyDank,
+        emoji=const.Emoji.peepoHappyDank,
         label="Featured",
         description="Featured games by Liquidpedia",
         value="2",
     ),
     discord.SelectOption(
-        emoji=const.Emote.PepoG,
+        emoji=const.Emoji.PepoG,
         label="Full Schedule",
         description="All pro games!",
         value="3",
     ),
     discord.SelectOption(
-        emoji=const.Emote.PepoDetective,
+        emoji=const.Emoji.PepoDetective,
         label="Completed",
         description="Already finished games",
         value="4",
@@ -185,7 +185,8 @@ class SchedulePageSource(menus.ListPageSource):
     @override
     async def format_page(self, menu: SchedulePages, matches: list[Match]) -> discord.Embed:
         embed = (
-            discord.Embed(
+            discord
+            .Embed(
                 color=0x042B4C,
                 title="Dota 2 Pro Matches Schedule",
                 url=MATCHES_URL,
@@ -271,7 +272,7 @@ class ScheduleSelect(discord.ui.Select[SchedulePages]):
         return False
 
 
-class Schedule(AluCog, name="Schedules", emote=const.Emote.DankMadgeThreat):
+class Schedule(Cog, name="Schedules", emote=const.Emoji.DankMadgeThreat):
     """Check Pro Matches schedule.
 
     Currently, the bot supports Dota 2 and football.

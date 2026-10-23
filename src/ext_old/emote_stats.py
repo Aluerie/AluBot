@@ -13,7 +13,7 @@ from discord import app_commands
 from discord.ext import commands
 from tabulate import tabulate
 
-from core import AluCog, aluloop
+from core import Cog, aluloop
 from utils import const, errors, fmt, pages
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ EMOJI_REGEX = re.compile(r"<a?:.+?:([0-9]{15,21})>")
 EMOTE_STATS_TRACKING_START = datetime.datetime(2024, 2, 6, tzinfo=datetime.UTC)
 
 
-class EmoteStats(AluCog):
+class EmoteStats(Cog):
     """Usage Stats for Server Emotes.
 
     Rework over my old funky `top_emotes.py` code.
@@ -352,7 +352,8 @@ class EmoteStats(AluCog):
             raise errors.NotFound(msg)
 
         embed = (
-            discord.Embed(color=const.Color.prpl, title=f"`:{emoji.name}:`")
+            discord
+            .Embed(color=const.Color.prpl, title=f"`:{emoji.name}:`")
             .set_author(name="Emote Stats")
             .set_thumbnail(url=emoji.url)
             .add_field(

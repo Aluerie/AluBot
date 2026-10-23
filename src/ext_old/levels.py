@@ -11,7 +11,7 @@ from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from tabulate import tabulate
 
-from core import AluCog, aluloop
+from core import Cog, aluloop
 from utils import const, errors, fmt, pages
 
 if TYPE_CHECKING:
@@ -62,7 +62,7 @@ def get_exp_for_next_level(lvl: int) -> int:
     return exp_lvl_table[lvl]
 
 
-class Levels(AluCog):
+class Levels(Cog):
     """Experience and Levels System.
 
     Just a lame XP per Message system with some fancy images and tables.
@@ -254,7 +254,7 @@ class Levels(AluCog):
                     msg = "Roles were not found in the community guild"
                     raise ValueError(msg)
 
-                text = f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emote.PepoG}"
+                text = f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emoji.PepoG}"
                 embed = discord.Embed(color=const.Color.prpl, description=text)
                 await message.channel.send(embed=embed)
                 await author.remove_roles(previous_level_role)

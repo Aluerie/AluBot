@@ -12,18 +12,18 @@ import asyncio
 import datetime as dt
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, ClassVar, Final, override
 
 import discord
 from discord import app_commands
 
-from core import AluDevCog
+from core import DevCog
 from shared import fmt
 from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluBot, Interaction
 
 __all__ = ("ControlCog",)
 
@@ -31,8 +31,10 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class ControlCog(AluDevCog):
+class ControlCog(DevCog):
     """Control Cog."""
+
+    DATABASE_CHANNEL_ID: Final[int] = 1541985585810378823
 
     @override
     async def cog_load(self) -> None:
@@ -47,6 +49,10 @@ class ControlCog(AluDevCog):
     #########################################################################################################################
     # DATABASE BACKUP
     #########################################################################################################################
+
+    def get_database_channel(self) -> discord.TextChannel:
+        """Get the text channel used for database backups."""
+        return self.bot.get_text_channel(self.DATABASE_CHANNEL_ID)
 
     @loop(time=dt.time(hour=18, minute=5, tzinfo=dt.UTC))
     async def database_backup(self) -> None:
@@ -78,7 +84,7 @@ class ControlCog(AluDevCog):
             if proc.returncode != 0:
                 msg = f"pg_dump exited with {proc.returncode}: {stderr.decode()}"
                 raise RuntimeError(msg)
-            await self.hideout.database.send(file=discord.File(path, filename=path.name))
+            await self.get_database_channel().send(file=discord.File(path, filename=path.name))
         finally:
             path.unlink(missing_ok=True)
 
@@ -101,14 +107,14 @@ class ControlCog(AluDevCog):
 
     @project_group.command(name="logs")
     @app_commands.choices(project=[app_commands.Choice(name=p, value=log_path) for p, log_path in PROJECTS.items()])
-    async def project_logs(self, interaction: AluInteraction, project: str) -> None:
+    async def project_logs(self, interaction: Interaction, project: str) -> None:
         """🔬 Get project's logs."""
         await interaction.response.defer()
         await interaction.followup.send(file=discord.File(project))
 
     @project_group.command(name="restart")
     @app_commands.choices(project=[app_commands.Choice(name=p, value=p) for p in PROJECTS])
-    async def project_restart(self, interaction: AluInteraction, project: str) -> None:
+    async def project_restart(self, interaction: Interaction, project: str) -> None:
         """🔬 Restart project's process.
 
         Usable to restart the bot (or other projects) without logging to VPS machine or committing something.
@@ -136,7 +142,7 @@ class ControlCog(AluDevCog):
 
     @project_group.command(name="journal")
     @app_commands.choices(project=[app_commands.Choice(name=p, value=p) for p in PROJECTS])
-    async def project_journal(self, interaction: AluInteraction, project: str) -> None:
+    async def project_journal(self, interaction: Interaction, project: str) -> None:
         """🔬 Get project's journal.
 
         Parameters

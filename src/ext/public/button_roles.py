@@ -13,10 +13,10 @@ from typing import TYPE_CHECKING, override
 import discord
 from discord import app_commands, ui
 
-from core import AluCog
+from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluBot, Interaction
 
 
 class EmbedRolesModal(ui.Modal, title="Button Roles with an Embed"):
@@ -33,7 +33,7 @@ class EmbedRolesModal(ui.Modal, title="Button Roles with an Embed"):
     # color =
 
     @override
-    async def on_submit(self, interaction: AluInteraction) -> None:
+    async def on_submit(self, interaction: Interaction) -> None:
         embed = discord.Embed(
             # color=self.color,
             title=self.embed_title,
@@ -42,7 +42,7 @@ class EmbedRolesModal(ui.Modal, title="Button Roles with an Embed"):
         await interaction.response.send_message(embed=embed)
 
 
-class ButtonRoles(AluCog):
+class ButtonRoles(Cog):
     """ButtonRoles."""
 
     @override

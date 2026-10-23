@@ -8,7 +8,7 @@ import discord
 from bs4 import BeautifulSoup
 from discord import app_commands
 
-from core import AluCog
+from core import Cog
 from utils import const, fmt
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class Schedule(AluCog, name="Schedules"):
+class Schedule(Cog, name="Schedules"):
     """Check Pro Matches schedule.
 
     Currently, the bot supports Dota 2 and football.

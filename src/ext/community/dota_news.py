@@ -14,25 +14,26 @@ import discord
 from discord.ext import commands
 
 from config import env
-from core import AluCog
-from utils import const
+from core import Cog
 
 if TYPE_CHECKING:
     from core import AluBot
 
 
-class DotaNews(AluCog):
+class DotaNews(Cog):
     """Dota News."""
 
-    #########################################################################################################################
+    ####################################################################################################################
     # STEAM DB REPOSTING
-    #########################################################################################################################
+    ####################################################################################################################
 
     @discord.utils.cached_property
     def news_webhook(self) -> discord.Webhook:
         """Webhook to send Dota 2 News to."""
-        webhook_url = env.WEBHOOK_DOTANEWS if not self.bot.test else env.WEBHOOK_NOTIFICATION
+        webhook_url = env.WEBHOOK_DOTANEWS if not self.bot.test else env.WEBHOOK_SPAM
         return self.bot.webhook_from_url(webhook_url)
+
+    DOTA_STEAM_DB_UPDATES_CHANNEL_ID = 873430376033452053
 
     @commands.Cog.listener("on_message")
     async def filter_steam_db_messages(self, message: discord.Message) -> None:
@@ -45,7 +46,7 @@ class DotaNews(AluCog):
         Reposting from steamDB resources is rude and copyright-tier bad.
         Please, think of other ways to implement this (e.g. ISteamNews/GetNewsForApp or RSS feed)
         """
-        if message.channel.id != const.Channel.dota_updates:
+        if message.channel.id != self.DOTA_STEAM_DB_UPDATES_CHANNEL_ID:
             return
         if "https://steamcommunity.com" not in message.content:
             return

@@ -1,4 +1,4 @@
-"""Reload.
+"""Reload and sync related features.
 
 Notices
 -------
@@ -16,12 +16,14 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import AluDevCog
+from core import DevCog
+from shared import errors
 from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, AluContext, AluInteraction
+    from core import AluBot, Context, Interaction
+
 
 __all__ = ("ReloadCog",)
 
@@ -29,21 +31,21 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 type SyncSpecLiteral = Literal["global", "current", "copy", "clear", "~", "*", "^"]
+type SlashSyncSpecLiteral = Literal["global", "current", "copy", "clear"]
 
 
-# TODO: add errors.Respond when we figure out
+class ReloadCog(DevCog):
+    """Developer tools for keeping Discord's command registry in sync with the bot.
 
-
-class ReloadCog(AluDevCog):
-    """Reload related features Cog.
-
-    * Sync command (both prefix and slash);
-    * Autosync task;
+    Features
+    --------
+    * `sync` prefix command and `/sync-dev` slash command for syncing the app command tree;
+    * `autosync` task that syncs global and Hideout commands shortly once the bot is ready (skipped on the test bot).
     """
 
-    #########################################################################################################################
+    ####################################################################################################################
     # AUTOSYNC
-    #########################################################################################################################
+    ####################################################################################################################
 
     @override
     async def cog_load(self) -> None:
@@ -56,20 +58,18 @@ class ReloadCog(AluDevCog):
         self.autosync.cancel()
         await super().cog_unload()
 
-    @loop(count=1)
+    @loop(count=1, wait_for_ready=True)
     async def autosync(self) -> None:
-        """Auto Syncing bot's application tree task.
+        """Sync global and Hideout guild commands once after startup.
 
-        `?tag ass` and all. But It's too convenient to pass on.
-        If we ever get rate limited then we will think of better measures.
+        Convenient enough to keep over the manual `?tag ass` workflow. If we ever get rate limited,
+        replace it with something smarter (e.g. sync only on changes or more sleep time).
 
         Notes
         -----
-        * There is a different `autosync_hideout` task in the AluBot class. Do not move that task here because
-            we want to run it on every test-bot launch while this cog is not being loaded at all times.
+        * Not related to `AluBot.autosync_hideout`, which must stay on the bot class:
+          it runs on every test-bot launch, while this cog is not always loaded.
         """
-        # Initial wait
-        await asyncio.sleep(30.0)  # 1 minute
         # Global
         await self.bot.tree.sync()
         # Hideout Guild
@@ -78,9 +78,9 @@ class ReloadCog(AluDevCog):
 
         log.info("Synced global and Hideout bound commands.")
 
-    #########################################################################################################################
+    ####################################################################################################################
     # SYNC COMMANDS
-    #########################################################################################################################
+    ####################################################################################################################
 
     async def sync_command_worker(
         self,
@@ -88,18 +88,41 @@ class ReloadCog(AluDevCog):
         current_guild: discord.Guild | None,
         guilds: list[discord.Object],
     ) -> str:
-        """Worker function for both prefix and slash sync commands.
+        """Sync the app command tree according to the given arguments.
 
-        Source
-        ------
-        * Umbra's Sync Command
-            https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html
-        * Discord.py has tag `?tag usc` which should mirror the link above.
+        Shared implementation of the prefix and slash sync commands.
+
+        Parameters
+        ----------
+        spec
+            How to sync:
+
+            * `None` and `"global"` sync globally;
+            * `"current"`/`"~"`, `"copy"`/`"*"` and `"clear"`/`"^"` act on `current_guild`.
+
+            Must be `None` when `guilds` is given.
+        current_guild
+            Guild where the command was invoked, `None` outside of a guild (e.g. DMs).
+        guilds
+            Explicit guilds to sync (prefix command only). Failures are collected per guild instead of aborting
+            the whole batch.
+
+        Returns
+        -------
+        str
+            Human-readable summary of what was synced.
+
+        References
+        ----------
+        Umbra's sync command, which this follows:
+        https://about.abstractumbra.dev/discord.py/2023/01/29/sync-command-example.html
+        (also available as `?tag usc` in the discord.py server).
         """
         # Multiple Guilds sync
         if guilds:
             if spec is not None:
-                return "`spec` can't be combined with explicit guild IDs."
+                msg = "`spec` can't be combined with explicit guild IDs."
+                raise errors.RespondWithError(msg)
             ok = 0
             failed: list[int] = []
             for guild in guilds:
@@ -122,7 +145,8 @@ class ReloadCog(AluDevCog):
 
         # Spec sync
         if current_guild is None:
-            return f"`{spec}` can only be used inside a guild."
+            msg = f"`{spec}` can only be used inside a guild."
+            raise errors.RespondWithError(msg)
 
         match spec:
             case "current" | "~":
@@ -135,7 +159,8 @@ class ReloadCog(AluDevCog):
                 await self.bot.tree.sync(guild=current_guild)
                 return "Cleared all commands from the current guild."
             case _:  # Unreachable via commands.
-                return f"Unknown spec `{spec}`."
+                msg = f"Unknown sync spec: {spec!r}"
+                raise errors.SomethingWentWrongError(msg, data={"spec": spec})
         return f"Synced {len(synced)} commands to the current guild."
 
     @app_commands.guilds(const.Guild.hideout)
@@ -149,16 +174,13 @@ class ReloadCog(AluDevCog):
             app_commands.Choice(name="🗑️ Clear Current Guild", value="clear"),
         ],
     )
-    async def slash_sync_dev(self, interaction: AluInteraction, spec: SyncSpecLiteral = "global") -> None:
+    async def slash_sync_dev(self, interaction: Interaction, spec: SlashSyncSpecLiteral = "global") -> None:
         """🩶 Sync bot's app tree.
-
-        Note that the prefix command can sync multiple guilds, unlike this slash command
-        where I only put most commonly used methods of sync.
 
         Parameters
         ----------
         spec
-            Method to sync bot's commands with.
+            Method to sync the bot's commands with.
         """
         await interaction.response.defer()
         content = await self.sync_command_worker(spec, current_guild=interaction.guild, guilds=[])
@@ -167,25 +189,33 @@ class ReloadCog(AluDevCog):
     @commands.command(name="sync", hidden=True)
     async def prefix_sync(
         self,
-        ctx: AluContext,
+        ctx: Context,
         guilds: commands.Greedy[discord.Object],
         spec: SyncSpecLiteral | None = None,
     ) -> None:
         """🩶 Sync bot's app tree.
 
+        Parameters
+        ----------
+        guilds
+            Guild IDs to sync. Cannot be combined with `spec`.
+        spec
+            Sync method, see examples. Defaults to a global sync.
+
         Examples
         --------
-        * `$sync` or `$sync global` - takes all global commands within the CommandTree and sends them to Discord.
-        * `$sync current` - sync all guild commands for the current context's guild.
-        * `$sync copy` - copies all global commands to the current guild (within the CommandTree) and syncs.
-        * `$sync clear` - remove all guild commands from the CommandTree and syncs,
-            which effectively removes all commands from the guild.
-        * `$sync 123 456 789` - sync the 3 guild ids we passed: 123, 456 and 789. Only their guilds and guild-bound command.
+        | Command             | Alias     | Effect                                                      |
+        | ------------------- | --------- | ----------------------------------------------------------- |
+        | `$sync [global]`    |           | Send all global commands to Discord.                        |
+        | `$sync current`     | `$sync ~` | Sync guild commands of the current guild.                   |
+        | `$sync copy`        | `$sync *` | Copy global commands to the current guild, then sync it.    |
+        | `$sync clear`       | `$sync ^` | Remove all guild-bound commands of the current guild.       |
+        | `$sync 123 456 789` |           | Sync only the listed guilds and their guild-bound commands. |
         """
         content = await self.sync_command_worker(spec, current_guild=ctx.guild, guilds=guilds)
         await ctx.reply(content)
 
 
 async def setup(bot: AluBot) -> None:
-    """Load AluBot extension. Framework of discord.py."""
+    """Load the extension (discord.py entry point)."""
     await bot.add_cog(ReloadCog(bot))

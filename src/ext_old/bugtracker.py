@@ -15,7 +15,7 @@ from discord.ext import commands
 from githubkit.exception import RequestError, RequestFailed
 from PIL import Image
 
-from core import AluCog, aluloop
+from core import Cog, aluloop
 from utils import const
 
 if TYPE_CHECKING:
@@ -297,7 +297,7 @@ class TimeLine:
         return (embed, file)
 
 
-class BugTracker(AluCog):
+class BugTracker(Cog):
     """BugTracker News.
 
     Track Valve developers activity in the Dota2-Gameplay repository

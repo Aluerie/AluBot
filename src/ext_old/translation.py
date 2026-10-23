@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple, TypedDict, override
 import discord
 from discord import app_commands
 
-from core import AluCog
+from core import Cog
 from utils import const, errors
 
 if TYPE_CHECKING:
@@ -119,7 +119,7 @@ async def translate(
         )
 
 
-class Translations(AluCog):
+class Translations(Cog):
     """Translate to English commands."""
 
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:

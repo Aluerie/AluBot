@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Self, override
 import discord
 from discord.ext import commands
 
-from core import AluCog, AluModal, AluView
+from core import AluModal, AluView, Cog
 from utils import const, fmt
 
 if TYPE_CHECKING:
@@ -52,12 +52,12 @@ class ConfessionModal(AluModal):
 
         await channel.send(embeds=[embed])
         saint_string = (
-            f"{const.Emote.bubuChrist} {const.Emote.bubuChrist} {const.Emote.bubuChrist} "
+            f"{const.Emoji.bubuChrist} {const.Emoji.bubuChrist} {const.Emoji.bubuChrist} "
             "\N{CHURCH} \N{CHURCH} \N{CHURCH} "
-            f"{const.Emote.PepoBeliever} {const.Emote.PepoBeliever} {const.Emote.PepoBeliever}"
+            f"{const.Emoji.PepoBeliever} {const.Emoji.PepoBeliever} {const.Emoji.PepoBeliever}"
         )
         await channel.send(saint_string)
-        await interaction.response.send_message(content=f"The Lord be with you {const.Emote.PepoBeliever}", ephemeral=True)
+        await interaction.response.send_message(content=f"The Lord be with you {const.Emoji.PepoBeliever}", ephemeral=True)
         if interaction.message:
             await interaction.message.delete()
         await channel.send(view=ConfessionView())
@@ -90,7 +90,7 @@ class ConfessionView(AluView):
         label="Anonymous confession",
         custom_id="anonconf-button",
         style=discord.ButtonStyle.primary,
-        emoji=const.Emote.bubuChrist,
+        emoji=const.Emoji.bubuChrist,
     )
     async def anonymous_confession(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
         """Make an anonymous confession."""
@@ -100,14 +100,14 @@ class ConfessionView(AluView):
         label="Non-anonymous confession",
         custom_id="nonanonconf-button",
         style=discord.ButtonStyle.primary,
-        emoji=const.Emote.PepoBeliever,
+        emoji=const.Emoji.PepoBeliever,
     )
     async def non_anonymous_confession(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
         """Make a non-anonymous confession."""
         await interaction.response.send_modal(ConfessionModal(title=button.label))
 
 
-class Confessions(AluCog):
+class Confessions(Cog):
     """Community Confessions.
 
     Members can confess their sins to the community.

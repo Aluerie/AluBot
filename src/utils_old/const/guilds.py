@@ -1,3 +1,11 @@
+"""Chatter.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
 from enum import IntEnum
@@ -5,17 +13,12 @@ from typing import TYPE_CHECKING, override
 
 import discord
 
-from .abc import CONSTANTS
-
 if TYPE_CHECKING:
     from core import AluBot
 
 __all__ = (
     "CATEGORY_ROLES",
     "MY_BOTS",
-    "MY_GUILDS",
-    "PREMIUM_GUILDS",
-    "ROLES_IGNORED_FOR_LOGS",
     "Channel",
     "CommunityGuild",
     "Guild",
@@ -33,16 +36,17 @@ class SnowflakeEnum(IntEnum):
     without utilizing actual models from discord.py
     """
 
+    # @override
+    # def __format__(self, format_spec: str) -> str:
+    #     return self.mention
+
     @override
     def __str__(self) -> str:
         return self.mention
 
     @property
     def mention(self) -> str:
-        """Get Discord mention string.
-
-        Usually allows various interactions within Discord.
-        """
+        """Discord object mention. Usually allows various interactions within Discord."""
         raise NotImplementedError
 
 
@@ -78,24 +82,6 @@ class Guild:
 
     community = 702561315478044804
     hideout = 759916212842659850
-
-    # emotes
-
-    brand1 = 1125050799572131982
-    brand2 = 1125050890777268355
-
-
-MY_GUILDS = [Guild.hideout, Guild.community]
-PREMIUM_GUILDS = [Guild.community, Guild.hideout]
-
-
-class EmoteGuilds(CONSTANTS):
-    """Discord IDs for Bot Emote Servers."""  # TODO: remove this when we sort out app emojis.
-
-    DOTA = (1123282491294359563, 1123897964700643399, 1123898231198339083, 1123898374387662909)
-    LOL = (1123898479308185691, 1123898578843205692, 1123899243304861718, 1123899449857548408)
-    EMOTE = (1123901376435589173, 1123901447277379644, 1123901514289774632, 1123901546409762896)
-    BRAND = (1125050799572131982, 1125050890777268355)
 
 
 class Channel(ChannelEnum):
@@ -145,20 +131,16 @@ class Channel(ChannelEnum):
     repost = 971504469995049041
 
     hideout_logs = 869735263209947228
-    dota_updates = 873430376033452053
     alubot_github = 1107050162628595742
-
-    database = 1541985585810378823
 
 
 class Role(RoleEnum):
     """Discord IDs for known/special roles."""
 
     # COMMUNITY
-    sister_of_the_veil = 821051642443071498
+    role_me = 1468682988039569499
     bots = 724981475099017276
     nsfw_bots = 959955573405777981
-    live_stream = 760082390059581471
     discord_mods = 855839522620047420
     level_zero = 852663921085251585
     birthday_lover = 1106342236100243499
@@ -194,8 +176,6 @@ CATEGORY_ROLES = [
     852192240306618419,  # notification
     727492782196916275,  # plebs
 ]
-
-ROLES_IGNORED_FOR_LOGS = [Role.voice, Role.live_stream, *CATEGORY_ROLES]
 
 
 class User(UserEnum):
@@ -244,7 +224,7 @@ class SavedGuild:
 
     @property
     def guild(self) -> discord.Guild:
-        """Get guild object."""
+        """Guild object."""
         guild = self.bot.get_guild(self.id)
         if guild is None:
             msg = f"{self} not in cache."
@@ -282,11 +262,6 @@ class SavedGuild:
             msg = f"Member id={user_id} from {self} not in cache"
             raise RuntimeError(msg)
         return member
-
-    @property
-    def aluerie(self) -> discord.Member:
-        """Get member object for @Aluerie."""
-        return self.get_member(User.aluerie)
 
 
 class CommunityGuild(SavedGuild):
@@ -391,9 +366,9 @@ class CommunityGuild(SavedGuild):
 
     # roles ############################################################################################################
     @property
-    def sister_of_the_veil(self) -> discord.Role:
+    def role_me(self) -> discord.Role:
         """Role with all permissions in community server."""
-        return self.get_role(Role.sister_of_the_veil)
+        return self.get_role(Role.role_me)
 
     @property
     def voice_role(self) -> discord.Role:
@@ -409,11 +384,6 @@ class CommunityGuild(SavedGuild):
     def nsfw_bots_role(self) -> discord.Role:
         """Role for NSFW bots."""
         return self.get_role(Role.nsfw_bots)
-
-    @property
-    def live_stream_role(self) -> discord.Role:
-        """Role for twitch.tv live streamers."""
-        return self.get_role(Role.live_stream)
 
     @property
     def birthday_role(self) -> discord.Role:
@@ -479,11 +449,6 @@ class HideoutGuild(SavedGuild):
     def repost(self) -> discord.TextChannel:
         """Channel where all news/announcements/notifications get posted/reposted."""
         return self.get_channel(Channel.repost, discord.TextChannel)
-
-    @property
-    def database(self) -> discord.TextChannel:
-        """Channel where the bot sends daily database backups."""
-        return self.get_channel(Channel.database, discord.TextChannel)
 
     # roles ############################################################################################################
     @property

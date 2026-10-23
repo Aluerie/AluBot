@@ -14,15 +14,15 @@ from typing import TYPE_CHECKING, ClassVar
 import discord
 from discord import app_commands
 
-from core import AluDevCog
+from core import DevCog
 from shared import fmt
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluBot, Interaction
 
 
-class ToolsCog(AluDevCog):
+class ToolsCog(DevCog):
     """Tools Cog.
 
     These commands aren't public only because I don't think people would find them useful.
@@ -40,8 +40,8 @@ class ToolsCog(AluDevCog):
     KNOWN_CHAR_ABBREVIATIONS: ClassVar[dict[str, str]] = {
         "\u0000": "NUL", "\u0009": "TAB", "\u000a": "LF", "\u000d": "CR", "\u00a0": "NBSP", "\u00ad": "SHY",
         "\u200b": "ZWSP", "\u200c": "ZWNJ", "\u200d": "ZWJ", "\u200e": "LRM", "\u200f": "RLM", "\u202a": "LRE",
-        "\u202b": "RLE", "\u202c": "PDF", "\u202d": "LRO", "\u202e": "RLO", "\u2060": "WJ", "\u2066": "LRI", "\u2067": "RLI",
-        "\u2068": "FSI", "\u2069": "PDI", "\ufe0e": "VS15", "\ufe0f": "VS16", "\ufeff": "BOM",
+        "\u202b": "RLE", "\u202c": "PDF", "\u202d": "LRO", "\u202e": "RLO", "\u2060": "WJ", "\u2066": "LRI",
+        "\u2067": "RLI", "\u2068": "FSI", "\u2069": "PDI", "\ufe0e": "VS15", "\ufe0f": "VS16", "\ufeff": "BOM",
     }
     # fmt: on
 
@@ -70,7 +70,7 @@ class ToolsCog(AluDevCog):
         return escape, f"{markdown_link}: {full_name} \N{EM DASH} {text_view}"
 
     @tools_group.command()
-    async def charinfo(self, interaction: AluInteraction, characters: app_commands.Range[str, 1, 10]) -> None:
+    async def charinfo(self, interaction: Interaction, characters: app_commands.Range[str, 1, 10]) -> None:
         """🪛 Show information about character(-s).
 
         Only up to 10 characters (Unicode code points) at a time though.

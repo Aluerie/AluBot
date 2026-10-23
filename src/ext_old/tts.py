@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 from gtts import gTTS
 
-from core import AluCog
+from core import Cog
 from utils import const, errors
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ class LanguageCollection:
     Literal = Literal["fr", "en", "ru", "es", "pt", "cn", "uk"]
 
 
-class TextToSpeech(AluCog):
+class TextToSpeech(Cog):
     """Text To Speech commands.
 
     Make the bot talk in voice chat.
@@ -96,7 +96,8 @@ class TextToSpeech(AluCog):
         lang: LanguageData = getattr(LanguageCollection, language)
         await self.speak_worker(interaction, lang, text=text)
         embed = (
-            discord.Embed(
+            discord
+            .Embed(
                 color=interaction.user.color,
                 title="Text-To-Speech request",
                 description=text,
@@ -142,7 +143,7 @@ class TextToSpeech(AluCog):
     async def tts_bonjour(self, interaction: AluInteraction) -> None:
         """\N{STUDIO MICROPHONE} Make the bot say "Bonjour !" into both text/voice chats (that you're connected to)."""
         await self.speak_worker(interaction, LanguageCollection.fr, text="Bonjour !")
-        await interaction.response.send_message(content=f"Bonjour {const.Emote.bubuAYAYA}")
+        await interaction.response.send_message(content=f"Bonjour {const.Emoji.bubuAYAYA}")
 
     @commands.Cog.listener(name="on_voice_state_update")
     async def leave_when_everybody_else_disconnects(

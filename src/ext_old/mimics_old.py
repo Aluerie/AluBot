@@ -30,7 +30,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.utils import MISSING
 
-from core import AluBot, AluCog, AluContext
+from core import AluBot, AluContext, Cog
 from shared import clock
 from shared.concepts import loop
 from utils import const, errors
@@ -383,7 +383,7 @@ class Mirror(Mimic):
         return message
 
 
-class MimicsCog(AluCog):
+class MimicsCog(Cog):
     """Mimics."""
 
     def __init__(self, bot: AluBot) -> None:

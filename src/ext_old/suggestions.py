@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import discord
 from discord.ext import commands
 
-from core import AluCog
+from core import Cog
 from utils import const
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 __all__ = ("Suggestions",)
 
 
-class Suggestions(AluCog):
+class Suggestions(Cog):
     """Suggestions."""
 
     @commands.Cog.listener(name="on_thread_create")
@@ -37,11 +37,12 @@ class Suggestions(AluCog):
         """
         suggestion_num = await self.bot.pool.fetchval(query, const.Guild.community)
         embed = (
-            discord.Embed(color=const.Color.prpl, title=f"Suggestion #{suggestion_num}")
+            discord
+            .Embed(color=const.Color.prpl, title=f"Suggestion #{suggestion_num}")
             .add_field(
                 name="Hey chat, don't forget to \n",
                 value=(
-                    f"* upvote the pinned message with {const.Emote.DankApprove} reaction "
+                    f"* upvote the pinned message with {const.Emoji.DankApprove} reaction "
                     "if you like the suggestion and want it to be approved\n"
                     "* or downvote it with \N{CROSS MARK} if you really dislike the proposition.\n\n"
                     "OP, please, don't forget to use proper tags and provide as much info as needed, "

@@ -11,8 +11,8 @@ from __future__ import annotations
 import datetime as dt
 from typing import TYPE_CHECKING, Any, TypedDict, override
 
-from core import AluCog
-from utils import cache
+from core import Cog
+from shared import cache
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 __all__ = ("Mimics",)
 
 
-class Mimics(AluCog):
+class Mimics(Cog):
     """Mimics.
 
     Attributes
@@ -39,7 +39,9 @@ class Mimics(AluCog):
     def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self.guild_config: dict[int, GuildConfig] = {}
-        self.mimic_messages: MutableMapping[int, int] = cache.ExpiringCache(seconds=dt.timedelta(days=7).total_seconds())
+        self.mimic_messages: MutableMapping[int, int] = cache.ExpiringCache(
+            seconds=dt.timedelta(days=7).total_seconds()
+        )
 
     @override
     async def cog_load(self) -> None:

@@ -30,7 +30,7 @@ class Env(EnvConfig):
     WEBHOOK_LOGGER: str
     WEBHOOK_DOTANEWS: str
     WEBHOOK_ERROR: str
-    WEBHOOK_NOTIFICATION: str
+    WEBHOOK_SPAM: str
     PING_PROD_MENTION: str
     PING_TEST_MENTION: str
     WOLFRAM_TOKEN: str

@@ -1,8 +1,9 @@
-"""Custom View subclasses.
+"""Views.
 
-This module provides
-* AluView class - subclass of discord.ui.View
-* AluModal class - subclass of discord.ui.Modal
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
 """
 
 from __future__ import annotations
@@ -11,10 +12,10 @@ from typing import TYPE_CHECKING, override
 
 import discord
 
-from utils import const, errors, fmt, helpers
+from utils import const
 
 if TYPE_CHECKING:
-    from .context import AluInteraction
+    from .tree import Interaction
 
 __all__ = (
     "AluLayoutView",
@@ -26,7 +27,7 @@ __all__ = (
 
 async def on_views_modals_error(
     view: discord.ui.View | discord.ui.Modal | discord.ui.LayoutView,
-    interaction: AluInteraction,
+    interaction: Interaction,
     error: Exception,
     item: discord.ui.Item[discord.ui.View] | None = None,
 ) -> None:
@@ -52,7 +53,8 @@ async def on_views_modals_error(
         )
 
         metadata_embed = (
-            discord.Embed(color=0x2A0553, title=f"Error in View: `{view.__class__.__name__}`")
+            discord
+            .Embed(color=0x2A0553, title=f"Error in View: `{view.__class__.__name__}`")
             .set_author(
                 name=(
                     f"@{interaction.user} in #{interaction.channel} "
@@ -174,7 +176,7 @@ class AluModal(discord.ui.Modal):
     """
 
     @override
-    async def on_error(self, interaction: AluInteraction, error: Exception) -> None:
+    async def on_error(self, interaction: Interaction, error: Exception) -> None:
         await on_views_modals_error(self, interaction, error)
 
 
@@ -220,7 +222,7 @@ class AluLayoutView(discord.ui.LayoutView):
         self.author_id: int | None = author_id
 
     @override
-    async def interaction_check(self, interaction: AluInteraction) -> bool:
+    async def interaction_check(self, interaction: Interaction) -> bool:
         """Interaction check that blocks non-authors from clicking view items."""
         if self.author_id is None:
             # we allow this view to be controlled by everybody
@@ -249,6 +251,6 @@ class AluLayoutView(discord.ui.LayoutView):
             await self.message.edit(view=self)
 
     @override
-    async def on_error(self, interaction: AluInteraction, error: Exception, item: discord.ui.Item[discord.ui.View]) -> None:
+    async def on_error(self, interaction: Interaction, error: Exception, item: discord.ui.Item[discord.ui.View]) -> None:
         """My own Error Handler for Views."""
         await on_views_modals_error(self, interaction, error, item)

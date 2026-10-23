@@ -50,10 +50,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from config import env
-from core import AluBot, AluCog
+from core import AluBot, Cog
 from shared.concepts import loop
-from utils import cache, const, errors, fmt, fuzzy, timezones
-from utils.helpers import measure_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Sequence
@@ -64,7 +62,7 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
-class BetaCog(AluCog):
+class BetaCog(Cog):
     """Base Class for BetaTest cog."""
 
     @override

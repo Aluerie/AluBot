@@ -7,15 +7,15 @@ from typing import TYPE_CHECKING, override
 
 import discord
 from discord import app_commands
-
-from core import AluCog
 from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TC001
+
+from core import Cog
 
 if TYPE_CHECKING:
     from core import AluBot, AluInteraction
 
 
-class TimezoneSettings(AluCog):
+class TimezoneSettings(Cog):
     """Manage your timezone settings."""
 
     @override
@@ -64,7 +64,8 @@ class TimezoneSettings(AluCog):
         dt = now.astimezone(tz=zoneinfo.ZoneInfo(key=timezone.key))
 
         embed = (
-            discord.Embed(color=discord.Color.blurple(), title=timezone.label)
+            discord
+            .Embed(color=discord.Color.blurple(), title=timezone.label)
             .add_field(name="Current Time", value=dt.strftime("%Y-%m-%d %I:%M %p"))
             .add_field(name="UTC Offset", value=self.bot.tz_manager.get_utc_offset_string(timezone.key, now))
             .add_field(name="IANA Database Alias", value=timezone.key)

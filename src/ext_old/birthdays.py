@@ -9,7 +9,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import AluCog
+from core import Cog
 from utils import const, converters, errors, fmt, pages, timezones
 
 if TYPE_CHECKING:
@@ -101,7 +101,7 @@ def birthday_fmt(birthday_date: datetime.datetime) -> str:
     return birthday_date.strftime(fmt)
 
 
-class Birthdays(AluCog):
+class Birthdays(Cog):
     """Set your birthday and get congratulations from the bot.
 
     There is a special role in Eileen's server
@@ -160,7 +160,8 @@ class Birthdays(AluCog):
             raise errors.BadArgument(msg) from None
 
         confirm_embed = (
-            discord.Embed(
+            discord
+            .Embed(
                 color=0xF46344,
                 title="Birthday Confirmation",
                 description="Do you confirm that this is the correct date/timezone for your birthday?",
@@ -215,7 +216,8 @@ class Birthdays(AluCog):
         )
 
         embed = (
-            discord.Embed(color=interaction.user.color, title="Your birthday is successfully set")
+            discord
+            .Embed(color=interaction.user.color, title="Your birthday is successfully set")
             .add_field(name="Data", value=birthday_fmt(birthday))
             .add_field(name="Timezone", value=timezone.label)
             .add_field(name="Next congratulations incoming", value=fmt.format_dt(expires_at, "R"))
@@ -229,7 +231,7 @@ class Birthdays(AluCog):
             DELETE FROM timers
             WHERE event = 'birthday'
             AND data #>> '{user_id}' = $1;
-        """  # noqa: RUF027
+        """  # ruff: ignore[missing-f-string-syntax]
         status = await self.bot.pool.execute(query, str(user_id))
 
         current_timer = self.bot.timers.current_timer
@@ -328,10 +330,11 @@ class Birthdays(AluCog):
                 content += f"\n{member.display_name} is now {now_as_birthday_timezone.year - year} years old !"
 
             embed = (
-                discord.Embed(
+                discord
+                .Embed(
                     color=member.color,
-                    title=f"CONGRATULATIONS !!! {const.Emote.peepoRoseDank * 3}",
-                    description=f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emote.peepoHappyDank}",
+                    title=f"CONGRATULATIONS !!! {const.Emoji.peepoRoseDank * 3}",
+                    description=f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emoji.peepoHappyDank}",
                 )
                 .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
                 .set_thumbnail(url=member.display_avatar.url)

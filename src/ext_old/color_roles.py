@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Self
 import discord
 from discord.ext import commands
 
-from core import AluCog
+from core import Cog
 from utils import const
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ class ColorRolesView(discord.ui.View):
         """Dropdown Roles Select for color roles."""
         if not len(select.values):
             error_embed = discord.Embed(
-                description=f"You've selected zero roles and thus I did nothing {const.Emote.peepoComfy}",
+                description=f"You've selected zero roles and thus I did nothing {const.Emoji.peepoComfy}",
             )
             await interaction.response.send_message(embed=error_embed, ephemeral=True)
             return
@@ -76,7 +76,7 @@ class ColorRolesView(discord.ui.View):
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-class ColorRoles(AluCog):
+class ColorRoles(Cog):
     """Color Roles for the community server."""
 
     @commands.Cog.listener(name="on_ready")

@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, NamedTuple, TypedDict, override
 import discord
 from discord.ext import commands
 
-from core import AluCog, aluloop
-from utils.const import DIGITS, Channel, Color, Emote, Role, User
+from core import Cog, aluloop
+from utils.const import DIGITS, Channel, Color, Emoji, Role, User
 
 if TYPE_CHECKING:
     from core import AluBot, Timer
@@ -44,27 +44,27 @@ ADVICE_BANK = [
         f"bot commands. Even more to come in future !"
     ),
     "Hey chat, follow me on twitch if you haven't done it yet: "
-    f"[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {Emote.DankLove} {Emote.DankLove} {Emote.DankLove}\n",
+    f"[twitch.tv/aluerie](https://www.twitch.tv/aluerie) {Emoji.DankLove} {Emoji.DankLove} {Emoji.DankLove}\n",
     f"Hey chat, you can get list of {Role.bots} available to use in {Channel.bot_spam} and "
     f"{Role.nsfw_bots} in {Channel.nsfw_bot_spam} by respectively checking pins in those channels.",
 ]
 
 IMPORTANT_BANK = [
-    f"Hey chat, check out rules in {Channel.rules}. Follow them or {Emote.bubuGun} {Emote.bubuGun} {Emote.bubuGun}",
+    f"Hey chat, check out rules in {Channel.rules}. Follow them or {Emoji.bubuGun} {Emoji.bubuGun} {Emoji.bubuGun}",
     f"Hey chat, remember to grab some roles in {Channel.role_selection} including a custom colour from 140 available !",
     "Hey chat, if you have any suggestions about server/stream/emotes/anything - "
     f"suggest them in {Channel.suggestions} with `$suggest ***` command and discuss them there !",
     "Hey chat, you can set up your birthday date with `$birthday` command for some sweet congratulations "
     f"from us on that day and in {Channel.bday_notifs}.",
-    f"Hey chat, {Channel.confessions} exist {Emote.PepoBeliever} {Emote.PepoBeliever} {Emote.PepoBeliever}",
-    f"Hey chat, fix your posture {Emote.PepoBeliever}",
+    f"Hey chat, {Channel.confessions} exist {Emoji.PepoBeliever} {Emoji.PepoBeliever} {Emoji.PepoBeliever}",
+    f"Hey chat, fix your posture {Emoji.PepoBeliever}",
     "Hey chat, remember to smile \N{SLIGHTLY SMILING FACE}",
-    f"Hey chat, feel free to invite new people to this server {Emote.peepoComfy} {Emote.peepoComfy} {Emote.peepoComfy}",
+    f"Hey chat, feel free to invite new people to this server {Emoji.peepoComfy} {Emoji.peepoComfy} {Emoji.peepoComfy}",
     "Hey chat, follow étiquette.",
     f"Hey chat, if you ever see {User.alubot} offline (it should be always at the top of the members list online) - "
     "immediately ping me",
     f"Hey chat, if while watching my stream you see some cool moment - clip it and post to {Channel.clips}",
-    f"Hey chat, remember to stay hydrated ! {Emote.peepoWater} {Emote.peepoWater} {Emote.peepoWater}",
+    f"Hey chat, remember to stay hydrated ! {Emoji.peepoWater} {Emoji.peepoWater} {Emoji.peepoWater}",
     f"Hey chat, if you have any problems then {Role.discord_mods} can solve it! Especially if it is about this server",
 ]
 
@@ -114,7 +114,7 @@ class DailyEmbedMessageEnum(Enum):
     Rule = DailyEmbedMessageTuple("Daily Rule Message", 0x66FFBF, "rule", RULE_BANK)
 
 
-class OldTimers(AluCog):
+class OldTimers(Cog):
     """Old Timers."""
 
     @override

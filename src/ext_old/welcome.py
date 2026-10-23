@@ -4,10 +4,10 @@ import asyncio
 from typing import TYPE_CHECKING, TypedDict
 
 import discord
-from core import AluCog
 from discord.ext import commands
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from core import Cog
 from utils import const
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
         name: str
 
 
-class Welcome(AluCog):
+class Welcome(Cog):
     async def welcome_image(self, member: discord.User | discord.Member) -> Image.Image:
         avatar_asset = await self.bot.transposer.url_to_image(member.display_avatar.url)
 
@@ -65,25 +65,25 @@ class Welcome(AluCog):
         image = await self.welcome_image(member)
 
         if back:
-            wave_emote, the_word = const.Emote.DankLove, "BACK"
+            wave_emote, the_word = const.Emoji.DankLove, "BACK"
         else:
-            wave_emote, the_word = const.Emote.DankHey, ""
+            wave_emote, the_word = const.Emoji.DankHey, ""
         content_text = (
             f"**💜 Welcome {the_word} to Aluerie's server, {member.mention} !** {wave_emote} {wave_emote} {wave_emote}"
         )
 
         if not member.bot:
             description = (
-                f"**💜 {const.User.aluerie} is our princess and I'm her bot ! {const.Emote.peepoRoseDank}**\n"
-                f"{const.DIGITS[1]} Read the rules and useful info in {const.Channel.rules} {const.Emote.PepoG}\n"
-                f"{const.DIGITS[2]} Choose some fancy roles in {const.Channel.role_selection} {const.Emote.peepoNiceDay}\n"  # noqa: E501
-                f"{const.DIGITS[3]} Go to {const.Channel.general} or any other channel and chat with us {const.Emote.peepoComfy}\n"  # noqa: E501
-                f"{const.DIGITS[4]} Check out <id:customize>, <id:guide>, <id:browse> {const.Emote.DankApprove}\n"
+                f"**💜 {const.User.aluerie} is our princess and I'm her bot ! {const.Emoji.peepoRoseDank}**\n"
+                f"{const.DIGITS[1]} Read the rules and useful info in {const.Channel.rules} {const.Emoji.PepoG}\n"
+                f"{const.DIGITS[2]} Choose some fancy roles in {const.Channel.role_selection} {const.Emoji.peepoNiceDay}\n"  # noqa: E501
+                f"{const.DIGITS[3]} Go to {const.Channel.general} or any other channel and chat with us {const.Emoji.peepoComfy}\n"  # ruff: ignore[line-too-long]
+                f"{const.DIGITS[4]} Check out <id:customize>, <id:guide>, <id:browse> {const.Emoji.DankApprove}\n"
                 # f"{const.DIGITS[5]} Use `/help` in {const.Channel.bot_spam} to see insane Aluerie's coding skills {const.Emote.PogChampPepe}\n"  # noqa: E501, ERA001
-                f"{const.DIGITS[5]} Have fun ! (but follow the rules {const.Emote.bubuGun} )"
+                f"{const.DIGITS[5]} Have fun ! (but follow the rules {const.Emoji.bubuGun} )"
             )
         else:
-            description = f"Chat, it's a new bot in our server. Use it wisely {const.Emote.peepoComfy}"
+            description = f"Chat, it's a new bot in our server. Use it wisely {const.Emoji.peepoComfy}"
 
         embed = discord.Embed(color=const.Color.prpl, description=description)
         return {"content": content_text, "embed": embed, "file": self.bot.transposer.image_to_file(image)}
@@ -143,9 +143,9 @@ class Welcome(AluCog):
             icon_url=member.display_avatar.url,
         )
         message = await self.bot.community.welcome.send(
-            f"{const.Emote.SmogeInTheRain} {const.Emote.SmogeInTheRain} {const.Emote.SmogeInTheRain}", embed=embed
+            f"{const.Emoji.SmogeInTheRain} {const.Emoji.SmogeInTheRain} {const.Emoji.SmogeInTheRain}", embed=embed
         )
-        await message.add_reaction(const.Emote.SmogeInTheRain)
+        await message.add_reaction(const.Emoji.SmogeInTheRain)
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, member: discord.Member) -> None:
@@ -156,9 +156,9 @@ class Welcome(AluCog):
             icon_url=member.display_avatar.url,
         )
         message = await self.bot.community.welcome.send(
-            f"{const.Emote.peepoPolice} {const.Emote.peepoPolice} {const.Emote.peepoPolice}", embed=embed
+            f"{const.Emoji.peepoPolice} {const.Emoji.peepoPolice} {const.Emoji.peepoPolice}", embed=embed
         )
-        await message.add_reaction(const.Emote.peepoPolice)
+        await message.add_reaction(const.Emoji.peepoPolice)
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, member: discord.Member) -> None:
@@ -169,9 +169,9 @@ class Welcome(AluCog):
             icon_url=member.display_avatar.url,
         )
         msg = await self.bot.community.welcome.send(
-            f"{const.Emote.PogChampPepe} {const.Emote.PogChampPepe} {const.Emote.PogChampPepe}", embed=embed
+            f"{const.Emoji.PogChampPepe} {const.Emoji.PogChampPepe} {const.Emoji.PogChampPepe}", embed=embed
         )
-        await msg.add_reaction(const.Emote.PogChampPepe)
+        await msg.add_reaction(const.Emoji.PogChampPepe)
 
     @commands.is_owner()
     @commands.command(hidden=True)

@@ -6,6 +6,8 @@ Notices
 * Copyright (C) 2020-present @Aluerie.
 """
 
-from .bases import *
 from .bot import *
-from .timer_manager import *
+from .cog import *
+from .scheduler import *
+from .tree import *
+from .views import *

@@ -10,7 +10,7 @@ import discord
 from discord.ext import tasks
 
 from config import config
-from core import AluCog
+from core import Cog
 from utils import const, fmt
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ class LoggingHandler(logging.Handler):
         self.cog.add_record(record)
 
 
-class LogsViaWebhook(AluCog):
+class LogsViaWebhook(Cog):
     """Mirroring logs to discord webhook messages.
 
     This cog is responsible for rate-limiting, formatting, fine-tuning and sending the log messages.

@@ -1,3 +1,11 @@
+"""Scheduler.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,8 +22,8 @@ if TYPE_CHECKING:
     from core import AluBot
 
 __all__: tuple[str, ...] = (
+    "Scheduler",
     "Timer",
-    "TimerManager",
     "TimerRow",
 )
 
@@ -114,7 +122,7 @@ class Timer[TimerDataT]:
     def temporary(
         cls,
         *,
-        id: int,  # noqa: A002
+        id: int,  # ruff: ignore[builtin-argument-shadowing]
         event: str,
         expires_at: datetime.datetime,
         created_at: datetime.datetime,
@@ -138,7 +146,7 @@ class Timer[TimerDataT]:
         return f"{self.event}_timer_complete"
 
 
-class TimerManager:
+class Scheduler:
     """Class to create and manage timers.
 
     Sources
@@ -217,9 +225,9 @@ class TimerManager:
                 await self.call(timer)
         except asyncio.CancelledError:
             raise
-        except (OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError):
+        except OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError:
             self.reschedule()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # ruff: ignore[blind-except]
             embed = discord.Embed(
                 color=0xFF8243,
                 title="Dispatching Timers Error",
@@ -398,7 +406,7 @@ class TimerManager:
         await asyncio.sleep(seconds)
         await self.call(timer)
 
-    async def get_by_id(self, id: int) -> Timer[TimerData] | None:  # noqa: A002
+    async def get_by_id(self, id: int) -> Timer[TimerData] | None:  # ruff: ignore[builtin-argument-shadowing]
         """Get a timer from its ID.
 
         Parameters
@@ -451,7 +459,7 @@ class TimerManager:
         rows = await self.bot.pool.fetch("SELECT * FROM timers")
         return [Timer(row=row) for row in rows]
 
-    async def cleanup(self, id: int) -> None:  # noqa: A002
+    async def cleanup(self, id: int) -> None:  # ruff: ignore[builtin-argument-shadowing]
         """Cleanup a timer by its ID.
 
         Important! This is supposed to be called in the end of listeners coro.

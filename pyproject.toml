@@ -87,7 +87,7 @@ unsound-yield = "ignore" # `Any` is fine
 
 [tool.ruff]
 preview = true
-line-length = 125
+line-length = 120
 target-version = "py314"
 exclude = [".venv"]
 src = ["src"]

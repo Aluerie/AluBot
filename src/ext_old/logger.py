@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, override
 import discord
 from discord.ext import commands
 
-from core import AluCog, aluloop
+from core import Cog, aluloop
 from utils import const, fmt
 
 if TYPE_CHECKING:
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from core import AluBot, AluContext
 
 
-class Logger(AluCog):
+class Logger(Cog):
     """Logging actions of community members.
 
     Notes
@@ -88,9 +88,10 @@ class Logger(AluCog):
             verb = "changed"
 
         return (
-            discord.Embed(
+            discord
+            .Embed(
                 color=member.color,
-                description=(f"{member.mention}'s {attribute_locale} was {verb} {const.Emote.PepoDetective}\n"),
+                description=(f"{member.mention}'s {attribute_locale} was {verb} {const.Emoji.PepoDetective}\n"),
             )
             .set_author(
                 name=str(member),
@@ -218,7 +219,7 @@ class Logger(AluCog):
 
         if "Stone" in after.nick and after not in rolling_stones_role.members:
             e = discord.Embed(color=rolling_stones_role.color)
-            e.description = f"{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emote.PogChampPepe}"
+            e.description = f"{after.mention} gets lucky {rolling_stones_role.mention} role {const.Emoji.PogChampPepe}"
             await self.bot.community.bot_spam.send(embed=e)
             await after.add_roles(rolling_stones_role)
         elif "Stone" not in after.nick and after in rolling_stones_role.members:
@@ -286,7 +287,7 @@ class Logger(AluCog):
         if message.author.bot or (message.guild and message.guild.id != const.Guild.community):
             return
         if re.search(const.Regex.IS_DELETED_BY_NQN, message.content):  # -bug_check
-            # todo: this leads to any messages with emotes being ignored.
+            # TODO: this leads to any messages with emotes being ignored.
             return
         if message.content.startswith("$"):
             return

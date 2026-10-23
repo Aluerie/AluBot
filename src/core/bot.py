@@ -20,11 +20,10 @@ from config import env
 from ext import DISABLED_EXTENSIONS, EXT_PACKAGE
 from shared import clock, fmt
 from shared.concepts import BotBase
-from utils import MISSING, const, disambiguator
+from utils import const
 
-from .bases import AluContext
-from .timer_manager import TimerManager
-from .tree import AluAppCommandTree
+from .scheduler import Scheduler
+from .tree import AppCommandTree
 
 if TYPE_CHECKING:
     import datetime as dt
@@ -35,9 +34,14 @@ if TYPE_CHECKING:
     from shared.concepts.db import PoolTypedWithAny
 
 
-__all__ = ("AluBot",)
+__all__ = (
+    "AluBot",
+    "Context",
+)
 
 log = logging.getLogger(__name__)
+
+type Context = commands.Context[AluBot]
 
 
 class AluBot(BotBase, commands.Bot):
@@ -52,7 +56,7 @@ class AluBot(BotBase, commands.Bot):
         command_prefix: set[Literal["~", "$"]]  # ty: ignore[invalid-mutable-override]
         listener_connection: asyncpg.Connection[asyncpg.Record]
         logs_via_webhook_handler: Any
-        tree: AluAppCommandTree
+        tree: AppCommandTree
         user: discord.ClientUser
 
     def __init__(
@@ -104,18 +108,16 @@ class AluBot(BotBase, commands.Bot):
                 voice_states=True,
             ),
             allowed_mentions=discord.AllowedMentions(everyone=False, users=True, roles=True, replied_user=False),
-            tree_cls=AluAppCommandTree,
+            tree_cls=AppCommandTree,
             strip_after_prefix=True,
             case_insensitive=True,
             help_command=None,
-            # allowed_contexts=discord.app_commands.AppCommandContext(guild=True, dm_channel=True, private_channel=True),
-            # allowed_installs=discord.app_commands.AppInstallationType(guild=True, user=True),
         )
         super().__init__(
             session,
             dev_ping=ping_role_mention,
             error_webhook_url=env.WEBHOOK_ERROR,
-            notification_webhook_url=env.WEBHOOK_NOTIFICATION,
+            notification_webhook_url=env.WEBHOOK_SPAM,
         )
 
         self.pool: PoolTypedWithAny = pool
@@ -129,12 +131,6 @@ class AluBot(BotBase, commands.Bot):
         self.bot_app_info: discord.AppInfo
         self.ready_flag: bool = False
         self.launch_time: dt.datetime = clock.utcnow()
-
-        # idk
-        # self.transposer: transposer.TransposeClient = transposer.TransposeClient(session=session)
-        self.disambiguator: disambiguator.Disambiguator = disambiguator.Disambiguator()
-        self.app_emojis: list[discord.Emoji] = []
-        self.launch_time: dt.datetime = MISSING
 
     @discord.utils.cached_property
     def invite_link(self) -> str:
@@ -203,11 +199,11 @@ class AluBot(BotBase, commands.Bot):
     @override
     async def on_command_error(
         self,
-        ctx: AluContext,
+        ctx: Context,
         error: commands.CommandError,
-    ) -> None:  # ty: ignore[invalid-method-override]
+    ) -> None:
         """Command error: called when an error is raised while invoking a ctx command."""
-        # if ctx.is_error_handled is True:
+        # if ctx.is_error_handled is True:W
         #     return
 
         if isinstance(error, commands.CommandInvokeError | commands.HybridCommandError):
@@ -238,6 +234,7 @@ class AluBot(BotBase, commands.Bot):
     @override
     async def setup_hook(self) -> None:
         self.bot_app_info = await self.application_info()
+        await const.load_emojis(self)
 
         failed_to_load_extensions = False
         for ext in self.extensions_to_load:
@@ -251,11 +248,11 @@ class AluBot(BotBase, commands.Bot):
                 ).set_footer(text=f'setup_hook: loading extension "{ext}"')
                 await self.error_notification_manager.register(error, embed)
 
-        self.timers = TimerManager(bot=self)
+        self.timers = Scheduler(bot=self)
 
         if self.test:
             if failed_to_load_extensions:
-                log.info("Autosync: cancelled %s One or more cogs failed to load.", const.Tick.No)
+                log.info("Autosync: cancelled ❌ One or more cogs failed to load.")
             else:
                 self.loop.create_task(self.try_autosync_hideout())
 
@@ -264,9 +261,9 @@ class AluBot(BotBase, commands.Bot):
         try:
             result = await self.autosync_hideout()
         except Exception as err:
-            log.exception("Autosync: failed %s.", const.Tick.No, exc_info=err)
+            log.exception("Autosync: failed ❌", exc_info=err)
         else:
-            phrase = f"success {const.Tick.Yes}" if result else f"not needed {const.Tick.Black}"
+            phrase = "success ✅" if result else "not needed 🫰"
             log.info("Autosync: %s.", phrase)
 
     async def autosync_hideout(self) -> bool:
@@ -283,7 +280,7 @@ class AluBot(BotBase, commands.Bot):
         # safeguard. Need the app id.
         await self.wait_until_ready()
 
-        guild = discord.Object(id=self.hideout.id)
+        guild = discord.Object(id=const.Guild.hideout)
         self.tree.copy_global_to(guild=guild)
 
         new: list[dict[str, Any]] = [cmd.to_dict(self.tree) for cmd in self.tree.get_commands(guild=guild)]
@@ -324,16 +321,6 @@ class AluBot(BotBase, commands.Bot):
         await self.session.close()
 
     @override
-    async def get_context(
-        self,
-        origin: discord.Interaction | discord.Message,
-        /,
-        *,
-        cls: type[commands.Context[Any]] = AluContext,
-    ) -> AluContext:
-        return await super().get_context(origin, cls=AluContext)
-
-    @override
     async def on_message(self, message: discord.Message) -> None:
         """Listen to discord messages.
 
@@ -367,15 +354,89 @@ class AluBot(BotBase, commands.Bot):
         """
         return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
-    @property
-    def hideout(self) -> const.HideoutGuild:
-        """Shortcut for Hideout guild, its channels and roles."""
-        return const.HideoutGuild(self)
+    #########################################################################################################################
+    # TYPE SAFE LOOKUPS (Kinda unnecessary but hey)
+    #########################################################################################################################
 
-    @property
-    def community(self) -> const.CommunityGuild:
-        """Shortcut for Community guild, its channels and roles."""
-        return const.CommunityGuild(self)
+    def get_text_channel(self, channel_id: int) -> discord.TextChannel:
+        """Return the cached text channel with the given ID.
+
+        Parameters
+        ----------
+        channel_id
+            The ID of the channel to look up.
+
+        Returns
+        -------
+        The matching text channel.
+
+        Raises
+        ------
+        LookupError
+            If no channel with this ID is in the bot's cache.
+        TypeError
+            If the channel exists but is not a ``discord.TextChannel``.
+        """
+        channel = self.get_channel(channel_id)
+        if channel is None:
+            msg = f"Channel {channel_id} not found in cache"
+            raise LookupError(msg)
+        if not isinstance(channel, discord.TextChannel):
+            msg = f"Channel {channel_id} is {type(channel).__name__}, expected TextChannel"
+            raise TypeError(msg)
+        return channel
+
+    def get_role(self, guild_id: int, role_id: int) -> discord.Role:
+        """Return the cached role with the given ID.
+
+        Parameters
+        ----------
+        guild_id
+            The ID of the guild containing the role.
+        role_id
+            The ID of the role to look up.
+
+        Returns
+        -------
+        The matching role.
+
+        Raises
+        ------
+        LookupError
+            If the guild or role is not in the bot's cache.
+        """
+        guild = self.get_guild(guild_id)
+        role = guild.get_role(role_id) if guild else None
+        if role is None:
+            msg = f"Role {role_id} not found in guild {guild_id}"
+            raise LookupError(msg)
+        return role
+
+    # @staticmethod
+    # def get_guild_role(guild: discord.Guild, role_id: int) -> discord.Role:
+    #     """Return the role with the given ID from the guild.
+
+    #     Parameters
+    #     ----------
+    #     guild
+    #         The guild to search.
+    #     role_id
+    #         The ID of the role to look up.
+
+    #     Returns
+    #     -------
+    #     The matching role.
+
+    #     Raises
+    #     ------
+    #     LookupError
+    #         If the role is not in the guild.
+    #     """
+    #     role = guild.get_role(role_id)
+    #     if role is None:
+    #         msg = f"Role {role_id} not found in guild {guild.id}"
+    #         raise LookupError(msg)
+    #     return role
 
     #########################################################################################################################
     # TRANSPOSE X TO Y (Mainly to transpose to/from ``discord.File``, but some other types too)

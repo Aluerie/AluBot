@@ -10,13 +10,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from core import AluCog
+from core import Cog
 
 if TYPE_CHECKING:
     from core import AluBot
 
 
-class NewCog(AluCog):
+class NewCog(Cog):
     """NewCog."""
 
 

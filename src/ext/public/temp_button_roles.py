@@ -6,10 +6,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import AluCog
+from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluBot, Interaction
 
 
 class ButtonRolesView(discord.ui.View):  # ruff: ignore[undocumented-public-class]
@@ -29,7 +29,7 @@ class RoleButton(discord.ui.Button):  # ty: ignore[missing-type-argument]  # ruf
         self.custom_id = str(role.id)
 
     @override
-    async def callback(self, interaction: AluInteraction) -> None:
+    async def callback(self, interaction: Interaction) -> None:
         assert self.view is not None
         assert isinstance(interaction.user, discord.Member)
         if self.role in interaction.user.roles:
@@ -40,7 +40,7 @@ class RoleButton(discord.ui.Button):  # ty: ignore[missing-type-argument]  # ruf
             await interaction.response.send_message(f"Added {self.role.mention}", ephemeral=True)
 
 
-class ImageTools(AluCog):
+class ImageTools(Cog):
     """Some useful stuff.
 
     Maybe one day it's going to be helpful for somebody.
@@ -60,7 +60,7 @@ class ImageTools(AluCog):
     @app_commands.default_permissions(manage_roles=True)
     async def create_button_roles(  # ruff: ignore[undocumented-public-method]
         self,
-        interaction: AluInteraction,
+        interaction: Interaction,
         role_1: discord.Role | None = None,
         role_2: discord.Role | None = None,
         role_3: discord.Role | None = None,

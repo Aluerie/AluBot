@@ -15,13 +15,14 @@ from typing import TYPE_CHECKING, ClassVar
 import discord
 from discord.ext import commands
 
-from core import AluCog
+from core import Cog
+from utils import const
 
 if TYPE_CHECKING:
     from core import AluBot
 
 
-class Chatter(AluCog):
+class Chatter(Cog):
     """Community Chatter."""
 
     MENTION_REACTIONS: ClassVar[tuple[str, ...]] = ("❔", "❕", "🤔")
@@ -49,7 +50,7 @@ class Chatter(AluCog):
     @commands.Cog.listener("on_message")
     async def chatter(self, message: discord.Message) -> None:
         """React and respond to community member's messages."""
-        if message.guild is None or message.guild.id != self.community.id:
+        if message.guild is None or message.guild.id != const.Guild.community:
             return
         if message.author.bot or message.webhook_id:
             return

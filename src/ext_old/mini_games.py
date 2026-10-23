@@ -8,7 +8,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import AluCog, AluView
+from core import AluView, Cog
 from utils import const
 
 if TYPE_CHECKING:
@@ -111,7 +111,7 @@ class RPSView(AluView):
             return f"{c1.emote_name} {c1.value.word} {c2.emote_name}", f"{self.player1.mention} wins", self.player1
 
         winning_strings = winning_choice(c1, c2)
-        ggwp = f"\n\n**Good Game, Well Played {const.Emote.DankL} {const.Emote.DankL} {const.Emote.DankL}**"
+        ggwp = f"\n\n**Good Game, Well Played {const.Emoji.DankL} {const.Emoji.DankL} {const.Emoji.DankL}**"
         return f"{choices_string}\n{winning_strings[0]}{ggwp}\n{winning_strings[1]}", winning_strings[2]
 
     async def rps_button_callback(self, interaction: AluInteraction, choice: RPSChoice) -> None:
@@ -151,7 +151,7 @@ class RPSView(AluView):
         await self.rps_button_callback(interaction, RPSChoice.Scissors)
 
 
-class MiniGames(AluCog):
+class MiniGames(Cog):
     """Just one command cog.
 
     Rock Paper Scissors mini-game.
@@ -169,7 +169,8 @@ class MiniGames(AluCog):
 
         player1, player2 = (interaction.user, user)
         embed = (
-            discord.Embed(
+            discord
+            .Embed(
                 color=const.Color.prpl,
                 title="Rock Paper Scissors Game",
             )

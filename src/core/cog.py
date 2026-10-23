@@ -13,17 +13,16 @@ from typing import TYPE_CHECKING, Any, override
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from core import AluBot, AluContext, AluInteraction
-    from utils import const
+    from . import AluBot, Context, Interaction
 
 
 __all__ = (
-    "AluCog",
-    "AluDevCog",
+    "Cog",
+    "DevCog",
 )
 
 
-class AluCogBase(commands.Cog):
+class CogBase(commands.Cog):
     """AluCogBase.
 
     Attributes
@@ -37,31 +36,21 @@ class AluCogBase(commands.Cog):
         super().__init__(*args, **kwargs)
         self.bot: AluBot = bot
 
-    @property
-    def community(self) -> const.CommunityGuild:
-        """Shortcut to get Community Guild object."""
-        return self.bot.community
 
-    @property
-    def hideout(self) -> const.HideoutGuild:
-        """Shortcut to get Hideout Guild object."""
-        return self.bot.hideout
+class Cog(CogBase):
+    """Cog."""
 
 
-class AluCog(AluCogBase):
-    """AluCog."""
-
-
-class AluDevCog(AluCog):
-    """Alu Dev Cog class.
+class DevCog(Cog):
+    """Dev Cog class.
 
     Double-ensures that commands have owner-only check.
     """
 
     @override
-    async def cog_check(self, ctx: AluContext) -> bool:  # ty: ignore[invalid-method-override]
+    async def cog_check(self, ctx: Context) -> bool:
         return await self.bot.is_owner(ctx.author)  # ty: ignore[invalid-argument-type]
 
     @override
-    async def interaction_check(self, interaction: AluInteraction) -> bool:
+    async def interaction_check(self, interaction: Interaction) -> bool:
         return await self.bot.is_owner(interaction.user)  # ty: ignore[invalid-argument-type]

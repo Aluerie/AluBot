@@ -14,17 +14,17 @@ from typing import TYPE_CHECKING
 import discord
 from discord import app_commands
 
-from core import AluCog
+from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluBot, Interaction
 
 
-class FunCog(AluCog):
+class FunCog(Cog):
     """Fun Cog."""
 
     @app_commands.command(name="coin-flip")
-    async def coin_flip(self, interaction: AluInteraction) -> None:
+    async def coin_flip(self, interaction: Interaction) -> None:
         """🪙 Flip a coin: Heads or Tails?"""  # ruff: ignore[missing-trailing-period]
         word = random.choice(["Heads", "Tails"])
         await interaction.response.send_message(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))

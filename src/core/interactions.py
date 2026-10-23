@@ -7,7 +7,8 @@ Notices
 """
 
 import contextlib
-from typing import TYPE_CHECKING, override
+import functools
+from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord import app_commands, ui
@@ -26,7 +27,7 @@ __all__ = (
 type Interaction = discord.Interaction[Bot]
 
 
-async def respond(interaction: Interaction, response: str) -> None:
+async def _respond(interaction: Interaction, response: str) -> None:
     with contextlib.suppress(discord.NotFound):
         if not interaction.response.is_done():
             await interaction.response.send_message(response, ephemeral=True)
@@ -34,10 +35,13 @@ async def respond(interaction: Interaction, response: str) -> None:
             await interaction.followup.send(response, ephemeral=True)
 
 
-def _build_interaction_error_embed(interaction: Interaction) -> discord.Embed:
+def _build_interaction_error_embed(interaction: Interaction, *, title: str, color: int) -> discord.Embed:
+    """Build the base error report embed for an interaction."""
     embed = (
         discord
         .Embed(
+            color=color,
+            title=title,
             timestamp=interaction.created_at,
         )
         .set_author(
@@ -49,7 +53,6 @@ def _build_interaction_error_embed(interaction: Interaction) -> discord.Embed:
             icon_url=interaction.guild.icon if interaction.guild else interaction.user.display_avatar,
         )
     )
-    fmt.add_mapping_field(embed, "Namespace `__dict__`", mapping=interaction.namespace.__dict__)
     fmt.add_mapping_field(
         embed,
         name="Snowflake IDs",
@@ -66,8 +69,6 @@ def _build_interaction_error_embed(interaction: Interaction) -> discord.Embed:
             "response_done": interaction.response.is_done(),
             "age_seconds": round((clock.utcnow() - interaction.created_at).total_seconds(), 2),
             "locale": interaction.locale.value,
-            # "user_perms": interaction.permissions.value,
-            # "bot_perms": interaction.app_permissions.value,
         },
     )
     return embed
@@ -88,16 +89,16 @@ class AppCommandTree(app_commands.CommandTree["Bot"]):
 
         match original:
             case app_commands.CommandOnCooldown():
-                await respond(interaction, f"Please retry in {original.retry_after:.1f} sec")
+                await _respond(interaction, f"Please retry in {original.retry_after:.1f} sec")
             case app_commands.CommandSignatureMismatch():
-                await respond(
+                await _respond(
                     interaction,
                     "This command's signature is out of date!\n"
                     "I've warned Irene about this and it will be fixed as soon as possible.",
                 )
                 await interaction.client.notify_developers(str(original))
             case app_commands.CommandNotFound():
-                await respond(
+                await _respond(
                     interaction,
                     "This slash command could not be found. "
                     "I've warned Irene about this and it will be fixed as soon as possible.",
@@ -109,45 +110,61 @@ class AppCommandTree(app_commands.CommandTree["Bot"]):
             case _:
                 if not await interaction.client.respond_per_policy(
                     original,
-                    respond=lambda msg: respond(interaction, response=msg),
+                    respond=functools.partial(_respond, interaction),
                 ):
                     return
 
-                embed = _build_interaction_error_embed(interaction)
-                embed.color = 0x2C0703
-                embed.title = f"/{interaction.command.qualified_name}" if interaction.command else "non-cmd interaction"
+                embed = _build_interaction_error_embed(
+                    interaction,
+                    title=f"/{interaction.command.qualified_name}" if interaction.command else "non-cmd interaction",
+                    color=0x2C0703,
+                )
+                fmt.add_mapping_field(embed, name="Namespace `__dict__`", mapping=interaction.namespace.__dict__)
                 await interaction.client.error_notification_manager.register(original, embed)
 
 
-class UiMixin(ui.view.BaseView):
-    """UI Mixin."""
+_DISABLEABLE = (ui.Button, ui.Select, ui.UserSelect, ui.RoleSelect, ui.ChannelSelect, ui.MentionableSelect)
 
-    if TYPE_CHECKING:
-        message: discord.Message | discord.WebhookMessage  # or doesn't exist
+
+class UiMixin(ui.view.BaseView):
+    """Some boilerplate features for views.
+
+    List it before `ui.View` or `ui.Modal` in the bases.
+    """
+
+    message: discord.Message | discord.WebhookMessage | None = None
 
     @override
     async def on_timeout(self) -> None:
-        """On timeout we disable items in view so they are not clickable any longer if possible.
+        """Disable the items on timeout. Requires `message` to be assigned so the view can edit it."""
+        if self.message is None:
+            return
 
-        Requires us to assign message object to view so it can edit the message.
-        """
-        if hasattr(self, "message"):
-            for item in self.children:
-                # item in self.children is Select/Button which have ``.disable`` but type-hinted as Item
-                item.disabled = True  # ty: ignore[unresolved-attribute]
+        for child in self.walk_children():
+            if isinstance(child, _DISABLEABLE):
+                child.disabled = True
+        with contextlib.suppress(discord.HTTPException):
             await self.message.edit(view=self)
 
     @override
     async def on_error(
-        self, interaction: Interaction, error: Exception, item: discord.ui.Item[discord.ui.View]
+        self,
+        interaction: Interaction,
+        error: Exception,
+        item: discord.ui.Item[Any] | None = None,  # `None` for modals: `Modal.on_error` has no item
+        /,
     ) -> None:
-        if not await interaction.client.respond_per_policy(
-            error, respond=lambda msg: respond(interaction, response=msg)
-        ):
+        """Event: called when a view item's callback or a modal's submit raises an exception."""
+        if not await interaction.client.respond_per_policy(error, respond=functools.partial(_respond, interaction)):
             return
 
-        embed = _build_interaction_error_embed(interaction)
-        embed.color = 0x2A0553
-        embed.title = f"View Error: `{self.__class__.__name__}`"
-        embed.add_field(name="View Item", value=repr(item))
+        kind = "Modal" if isinstance(self, ui.Modal) else "View"
+        embed = _build_interaction_error_embed(
+            interaction,
+            title=f"{kind} Error: `{type(self).__name__}`",
+            color=0x2A0553,
+        )
+        fmt.add_mapping_field(embed, name="Interaction Data", mapping=dict(interaction.data or {}))
+        if item is not None:
+            fmt.add_mapping_field(embed, name="View Item", mapping={"item": item})
         await interaction.client.error_notification_manager.register(error, embed)

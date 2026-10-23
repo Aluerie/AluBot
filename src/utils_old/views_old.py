@@ -25,44 +25,6 @@ __all__ = (
 )
 
 
-async def on_views_modals_error(
-    view: discord.ui.View | discord.ui.Modal | discord.ui.LayoutView,
-    interaction: Interaction,
-    error: Exception,
-    item: discord.ui.Item[discord.ui.View] | None = None,
-) -> None:
-    """Handler called when an error is raised within an AluView or AluModal objects.
-
-    Basically, error handler for views and modals.
-    """
-    # error handler variables
-    desc: str = "No description"
-    is_unexpected: bool = False
-
-    if isinstance(error, errors.AluBotError):
-        desc = str(error)
-    else:
-        # error is unexpected
-        is_unexpected = True
-
-        args_join = f"[view]: {view}" + (f"\n[item]: {item}" if item else "")
-
-        metadata_embed = discord.Embed().add_field(name="View Objects", value=fmt.code(args_join, "ps"), inline=False)
-
-        await interaction.client.exc_manager.register_error(error, metadata_embed, interaction.channel_id)
-        if interaction.channel_id == interaction.client.hideout.spam_channel_id:
-            # we don't need any extra embeds;
-            if not interaction.response.is_done():
-                await interaction.response.send_message(":(", ephemeral=True)
-            return
-
-    response_to_user_embed = helpers.error_handler_response_embed(error, desc, unexpected=is_unexpected)
-    if interaction.response.is_done():
-        await interaction.followup.send(embed=response_to_user_embed)
-    else:
-        await interaction.response.send_message(embed=response_to_user_embed)
-
-
 class AluView(discord.ui.View):
     """Subclass for discord.ui.View.
 

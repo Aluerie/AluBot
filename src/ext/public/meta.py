@@ -222,7 +222,7 @@ class Meta(Cog):
         try:
             async with self.bot.session.get("https://ipinfo.io/json", timeout=aiohttp.ClientTimeout(total=10)) as resp:
                 if resp.ok:
-                    await ctx.reply(fmt.pformat_kwargs(**(await resp.json())))
+                    await ctx.reply(fmt.pformat_mapping(await resp.json()))
                 else:
                     await ctx.reply(f"Sorry! Couldn't fetch the data (HTTP {resp.status}).")
         except TimeoutError, aiohttp.ClientError:

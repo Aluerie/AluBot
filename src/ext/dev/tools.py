@@ -100,6 +100,26 @@ class ToolsCog(DevCog):
             suppress_embeds=True,
         )
 
+    test_group = app_commands.Group(
+        name="test-dev",
+        description="🔦 Test various technicalities.",
+        guild_ids=[const.Guild.hideout],
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
+
+    @test_group.command(name="webhook-emote")
+    async def webhook_emote(self, interaction: Interaction) -> None:
+        """🔦 Test if webhooks can properly send emotes from bots' dashboards.
+
+        For some reason, channel webhooks are not allowed to use emotes from bots' application emojis.
+        This command tests, if it works.
+        """
+        content = (
+            "AluBot dashboard emote - <:hu:1563317778713149502>\nYenBot dashboard emote - <:hu:1563317907864428695>"
+        )
+        await interaction.response.send_message(f"## 1. The Interaction.\n{content}")
+        await self.bot.spam_webhook.send(f"## 2. Webhook (owned by AluBot).\n{content}")
+
 
 async def setup(bot: Bot) -> None:
     """Load the extension (discord.py entry point)."""

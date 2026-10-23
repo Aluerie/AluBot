@@ -118,7 +118,7 @@ class Bot(BotBase, commands.Bot):
             session,
             dev_ping=ping_role_mention,
             error_webhook_url=env.WEBHOOK_ERROR,
-            notification_webhook_url=env.WEBHOOK_SPAM,
+            spam_webhook_url=env.WEBHOOK_SPAM,
         )
 
         self.pool: PoolTypedWithAny = pool

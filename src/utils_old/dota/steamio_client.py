@@ -16,7 +16,7 @@ from .storage import Abilities, Facets, Heroes, Items
 if TYPE_CHECKING:
     from steam.ext.dota2 import PartialUser
 
-    from core import AluBot
+    from core import Bot
 
 log = logging.getLogger(__name__)
 
@@ -33,9 +33,9 @@ class DotaClient(Client):
     * etc.
     """
 
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: Bot) -> None:
         super().__init__(state=PersonaState.Online)  # .Invisible
-        self.bot: AluBot = bot
+        self.bot: Bot = bot
         self.started: bool = False
 
         # # TODO: EXPERIMENT
@@ -68,8 +68,8 @@ class DotaClient(Client):
         """
         if not self.started:
             # clients
-            await self.stratz.__aenter__()  # noqa: PLC2801
-            await self.opendota_constants.__aenter__()  # noqa: PLC2801
+            await self.stratz.__aenter__()  # ruff: ignore[unnecessary-dunder-call]
+            await self.opendota_constants.__aenter__()  # ruff: ignore[unnecessary-dunder-call]
 
             # caches
             self.abilities.start()
@@ -115,7 +115,8 @@ class DotaClient(Client):
         args_join = "\n".join(f"[{index}]: {arg!r}" for index, arg in enumerate(args)) if args else "No Args"
         kwargs_join = "\n".join(f"[{name}]: {value!r}" for name, value in kwargs.items()) if kwargs else "No Kwargs"
         embed = (
-            discord.Embed(
+            discord
+            .Embed(
                 color=discord.Color.dark_red(),
                 title=f"Error in steam.py's {self.__class__.__name__}",
             )

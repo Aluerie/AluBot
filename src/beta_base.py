@@ -50,13 +50,13 @@ from discord import app_commands
 from discord.ext import commands
 
 from config import env
-from core import AluBot, Cog
+from core import Bot, Cog
 from shared.concepts import loop
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Sequence
 
-    from core import AluContext, AluInteraction
+    from core import Context, Interaction
 
 
 log = logging.getLogger(__name__)

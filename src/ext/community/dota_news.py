@@ -17,11 +17,13 @@ from config import env
 from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot
+    from core import Bot
 
 
 class DotaNews(Cog):
     """Dota News."""
+
+    DOTA_STEAM_DB_UPDATES_CHANNEL_ID = 873430376033452053
 
     ####################################################################################################################
     # STEAM DB REPOSTING
@@ -32,8 +34,6 @@ class DotaNews(Cog):
         """Webhook to send Dota 2 News to."""
         webhook_url = env.WEBHOOK_DOTANEWS if not self.bot.test else env.WEBHOOK_SPAM
         return self.bot.webhook_from_url(webhook_url)
-
-    DOTA_STEAM_DB_UPDATES_CHANNEL_ID = 873430376033452053
 
     @commands.Cog.listener("on_message")
     async def filter_steam_db_messages(self, message: discord.Message) -> None:
@@ -55,6 +55,6 @@ class DotaNews(Cog):
         await msg.publish()
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(DotaNews(bot))

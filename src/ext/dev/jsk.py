@@ -19,7 +19,7 @@ os.environ.setdefault("JISHAKU_HIDE", "True")
 from jishaku.cog import OPTIONAL_FEATURES, STANDARD_FEATURES
 
 if TYPE_CHECKING:
-    from core import AluBot
+    from core import Bot
 
 
 class AluJishaku(*STANDARD_FEATURES, *OPTIONAL_FEATURES):
@@ -29,11 +29,11 @@ class AluJishaku(*STANDARD_FEATURES, *OPTIONAL_FEATURES):
     """
 
     if TYPE_CHECKING:
-        bot: AluBot  # ty: ignore[invalid-mutable-override]
+        bot: Bot  # ty: ignore[invalid-mutable-override]
 
     __is_jishaku__: bool = True
 
 
-async def setup(bot: AluBot) -> None:
-    """Load AluBot extension. Framework of discord.py."""
+async def setup(bot: Bot) -> None:
+    """Load the extension (discord.py entry point)."""
     await bot.add_cog(AluJishaku(bot=bot))

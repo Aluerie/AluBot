@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-import unicodedata
 from typing import TYPE_CHECKING
 
 import discord
@@ -12,7 +11,7 @@ from utils import const
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 class Tools(BaseDevCog):
@@ -76,6 +75,6 @@ class Tools(BaseDevCog):
         # to yoink from messages;
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Tools(bot))

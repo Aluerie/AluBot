@@ -14,7 +14,7 @@ from utils import const, fmt
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from core import AluBot, AluContext
+    from core import AluContext, Bot
 
 
 class Logger(Cog):
@@ -279,7 +279,9 @@ class Logger(Cog):
         # TODO: inline word by word doesn't really work well on emote changes too
         # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result
         # since discord formats emotes first.
-        e.description = f"[**Jump link**]({after.jump_url}) {fmt.inline_word_by_word_diff(before.content, after.content)}"
+        e.description = (
+            f"[**Jump link**]({after.jump_url}) {fmt.inline_word_by_word_diff(before.content, after.content)}"
+        )
         await self.community.logs.send(embed=e)
 
     @commands.Cog.listener()
@@ -326,7 +328,9 @@ class Logger(Cog):
             jump_url = ctx.message.jump_url
             cmd_text = ctx.message.content
 
-        channel_name = "DMs" if isinstance(ctx.channel, discord.DMChannel) else getattr(ctx.channel, "name", "somewhere 🤔")
+        channel_name = (
+            "DMs" if isinstance(ctx.channel, discord.DMChannel) else getattr(ctx.channel, "name", "somewhere 🤔")
+        )
         embed = discord.Embed(
             color=ctx.author.color,
             description=f"{cmd_text}\n{cmd_kwargs}",
@@ -475,6 +479,6 @@ class Logger(Cog):
                 await channel.send(embed=embed)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Logger(bot))

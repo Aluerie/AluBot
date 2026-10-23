@@ -13,13 +13,13 @@ from typing import TYPE_CHECKING
 from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot
+    from core import Bot
 
 
 class UncategorizedCog(Cog):
     """Uncategorized Cog."""
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(UncategorizedCog(bot))

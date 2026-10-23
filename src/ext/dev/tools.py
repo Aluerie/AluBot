@@ -13,13 +13,14 @@ from typing import TYPE_CHECKING, ClassVar
 
 import discord
 from discord import app_commands
+from discord.ext import commands
 
 from core import DevCog
 from shared import fmt
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, Interaction
+    from core import Bot, Context, Interaction
 
 
 class ToolsCog(DevCog):
@@ -28,6 +29,15 @@ class ToolsCog(DevCog):
     These commands aren't public only because I don't think people would find them useful.
     It's just some helping commands that I use myself when coding the bot.
     """
+
+    @commands.command(name="invite-link")
+    async def invite_link(self, ctx: Context) -> None:
+        """Get invite link for the bot.
+
+        Somewhat pointless since 'Add App' button exists.
+        But it's useful to have for @YenBot where I removed that button.
+        """
+        await ctx.send(self.bot.invite_link)
 
     tools_group = app_commands.Group(
         name="tools-dev",
@@ -91,6 +101,6 @@ class ToolsCog(DevCog):
         )
 
 
-async def setup(bot: AluBot) -> None:
-    """Load AluBot extension. Framework of discord.py."""
+async def setup(bot: Bot) -> None:
+    """Load the extension (discord.py entry point)."""
     await bot.add_cog(ToolsCog(bot))

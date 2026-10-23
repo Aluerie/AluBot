@@ -27,7 +27,7 @@ import aiohttp
 import click
 
 from config import env
-from core import AluBot
+from core import Bot
 from shared import ut
 from shared.concepts import db, logs
 
@@ -56,7 +56,7 @@ async def start_the_bot(
             env.POSTGRES_TEST,
             is_test=is_test_account,
         ) as pool,
-        AluBot(
+        Bot(
             session=session,
             pool=pool,
             is_subset_mode=is_subset_mode,

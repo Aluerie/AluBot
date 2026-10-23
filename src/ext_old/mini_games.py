@@ -12,7 +12,7 @@ from core import AluView, Cog
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 class RPSElement(NamedTuple):
@@ -189,6 +189,6 @@ class MiniGames(Cog):
             await view.bot_choice_edit()
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(MiniGames(bot))

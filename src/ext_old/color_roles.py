@@ -10,7 +10,7 @@ from core import Cog
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, AluGuildContext, AluInteraction
+    from core import AluGuildContext, AluInteraction, Bot
 
 
 __all__ = ("ColorRoles",)
@@ -96,6 +96,6 @@ class ColorRoles(Cog):
         await ctx.message.delete()
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ColorRoles(bot))

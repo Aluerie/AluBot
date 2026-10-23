@@ -19,7 +19,7 @@ from utils import const, errors, fmt, pages
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
     class BatchLastYearEntry(TypedDict):
         emote_id: int
@@ -41,7 +41,7 @@ class EmoteStats(Cog):
     Currently only community server stats are supported.
     """
 
-    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: Bot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self._batch_total: defaultdict[int, Counter[int]] = defaultdict(Counter)
         self._batch_last_year: list[BatchLastYearEntry] = []
@@ -424,12 +424,14 @@ class EmoteStats(Cog):
             )
 
         else:
-            server_stats = "Sorry! At the moment, we only track server stats for only Aluerie's Community Server emotes."
+            server_stats = (
+                "Sorry! At the moment, we only track server stats for only Aluerie's Community Server emotes."
+            )
 
         embed.add_field(name="Server Usage Stats", value=server_stats, inline=False)
         await interaction.response.send_message(embed=embed)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(EmoteStats(bot))

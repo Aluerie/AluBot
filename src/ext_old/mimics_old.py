@@ -30,7 +30,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.utils import MISSING
 
-from core import AluBot, AluContext, Cog
+from core import AluContext, Bot, Cog
 from shared import clock
 from shared.concepts import loop
 from utils import const, errors
@@ -73,16 +73,16 @@ class Mimic:
 
     def __init__(
         self,
-        bot: AluBot,
+        bot: Bot,
         channel: WebhookSourceChannel,
         thread: discord.Thread | None,
     ) -> None:
-        self.bot: AluBot = bot
+        self.bot: Bot = bot
         self.channel: WebhookSourceChannel = channel
         self.thread: discord.Thread | None = thread
 
     @classmethod
-    def from_channel(cls, bot: AluBot, channel: discord.abc.MessageableChannel) -> Self:
+    def from_channel(cls, bot: Bot, channel: discord.abc.MessageableChannel) -> Self:
         """From channel."""
         channel_, thread = cls.get_channel_thread(channel)
         return cls(bot, channel_, thread)
@@ -100,7 +100,7 @@ class Mimic:
         return cls(ctx.bot, channel, thread)
 
     @classmethod
-    def from_message(cls, bot: AluBot, message: discord.Message) -> Self:
+    def from_message(cls, bot: Bot, message: discord.Message) -> Self:
         """From message."""
         channel, thread = cls.get_channel_thread(message.channel)
         return cls(bot, channel, thread)
@@ -318,7 +318,9 @@ class Mimic:
                     embeds=embeds,
                     thread=discord.Object(id=self.thread.id) if self.thread else discord.utils.MISSING,
                     wait=wait,
-                    allowed_mentions=discord.AllowedMentions(roles=False, everyone=False, replied_user=True, users=True),
+                    allowed_mentions=discord.AllowedMentions(
+                        roles=False, everyone=False, replied_user=True, users=True
+                    ),
                 )
             except discord.NotFound:
                 log.warning("Webhook %r for channel %r is not found", webhook, self.channel)
@@ -386,7 +388,7 @@ class Mirror(Mimic):
 class MimicsCog(Cog):
     """Mimics."""
 
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: Bot) -> None:
         super().__init__(bot)
         self.context_menu_fix_links = app_commands.ContextMenu(
             name="Fix Social Links",
@@ -573,7 +575,11 @@ class MimicsCog(Cog):
 
         Currently only enabled in the community and hideout servers.
         """
-        if not message.guild or message.guild.id not in const.MY_GUILDS or message.channel.id == const.Channel.jailed_bots:
+        if (
+            not message.guild
+            or message.guild.id not in const.MY_GUILDS
+            or message.channel.id == const.Channel.jailed_bots
+        ):
             # Don't allow outside of community/hideout servers.
             # Don't allow in #jailed_bots as this is where I test other embed fix bots.
             return
@@ -622,7 +628,9 @@ class MimicsCog(Cog):
 
             same_message_but_with_meta_embeds = await message.channel.fetch_message(message.id)
             if correct_embed_count != (embed_count := len(same_message_but_with_meta_embeds.embeds)):
-                results.append(f"* Test #{test_number + 1} failed: expected {correct_embed_count}, but we got {embed_count}")
+                results.append(
+                    f"* Test #{test_number + 1} failed: expected {correct_embed_count}, but we got {embed_count}"
+                )
 
         content = "# ❌ Failed\n" + "\n".join(results) if results else "# ✅ All Tests passed"
         await ctx.send(content)
@@ -712,6 +720,6 @@ class MimicsCog(Cog):
             await asyncio.sleep(30)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(MimicsCog(bot))

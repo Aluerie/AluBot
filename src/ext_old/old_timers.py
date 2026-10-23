@@ -12,7 +12,7 @@ from core import Cog, aluloop
 from utils.const import DIGITS, Channel, Color, Emoji, Role, User
 
 if TYPE_CHECKING:
-    from core import AluBot, Timer
+    from core import Bot, Timer
 
     class OldTimerTimerData(TypedDict):
         """Schema."""
@@ -214,6 +214,6 @@ class OldTimers(Cog):
         )
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(OldTimers(bot))

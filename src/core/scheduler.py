@@ -19,7 +19,7 @@ import asyncpg
 import discord
 
 if TYPE_CHECKING:
-    from core import AluBot
+    from core import Bot
 
 __all__: tuple[str, ...] = (
     "Scheduler",
@@ -176,8 +176,8 @@ class Scheduler:
         "name",
     )
 
-    def __init__(self, *, bot: AluBot) -> None:
-        self.bot: AluBot = bot
+    def __init__(self, *, bot: Bot) -> None:
+        self.bot: Bot = bot
 
         self._temporary_timer_id_count: int = -1
         """Not really useful attribute, but just so `__eq__` can properly work on temporary timers."""

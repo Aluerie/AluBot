@@ -11,7 +11,7 @@ from core import Cog
 from utils import const, errors
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 __all__ = ("TextToSpeech",)
@@ -158,6 +158,6 @@ class TextToSpeech(Cog):
                 await vc.disconnect()
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(TextToSpeech(bot))

@@ -12,7 +12,7 @@ from core import AluContext
 from . import cache, errors, fuzzy
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 class TimeZone(NamedTuple):
@@ -112,8 +112,8 @@ class TimezoneManager:
     in cogs with timezone functionality.
     """
 
-    def __init__(self, bot: AluBot) -> None:
-        self.bot: AluBot = bot
+    def __init__(self, bot: Bot) -> None:
+        self.bot: Bot = bot
 
         self._timezone_aliases: dict[str, str] = {}
         self.valid_timezones: set[str] = zoneinfo.available_timezones()

@@ -1,4 +1,4 @@
-"""Control.
+"""Projects.
 
 Notices
 -------
@@ -23,15 +23,15 @@ from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, Interaction
+    from core import Bot, Interaction
 
-__all__ = ("ControlCog",)
+__all__ = ("ProjectsCog",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class ControlCog(DevCog):
+class ProjectsCog(DevCog):
     """Control Cog."""
 
     DATABASE_CHANNEL_ID: Final[int] = 1541985585810378823
@@ -165,6 +165,6 @@ class ControlCog(DevCog):
         await interaction.followup.send(file=self.bot.str_to_file(stdout.decode(), f"{project}-journal.log"))
 
 
-async def setup(bot: AluBot) -> None:
-    """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(ControlCog(bot))
+async def setup(bot: Bot) -> None:
+    """Load the extension (discord.py entry point)."""
+    await bot.add_cog(ProjectsCog(bot))

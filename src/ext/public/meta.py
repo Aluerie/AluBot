@@ -31,7 +31,7 @@ from utils import const
 if TYPE_CHECKING:
     from collections.abc import Awaitable
 
-    from core import AluBot, Context, Interaction
+    from core import Bot, Context, Interaction
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -56,7 +56,7 @@ def _cell(value: float | None) -> str:
 class Meta(Cog):
     """Meta."""
 
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: Bot) -> None:
         super().__init__(bot)
         self.process = psutil.Process()
         self.process.cpu_percent()
@@ -255,6 +255,6 @@ class Meta(Cog):
         )
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Meta(bot))

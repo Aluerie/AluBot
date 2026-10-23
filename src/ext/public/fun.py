@@ -17,7 +17,7 @@ from discord import app_commands
 from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot, Interaction
+    from core import Bot, Interaction
 
 
 class FunCog(Cog):
@@ -30,6 +30,6 @@ class FunCog(Cog):
         await interaction.response.send_message(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(FunCog(bot))

@@ -15,7 +15,7 @@ from core import Cog, aluloop
 from utils import const, errors, fmt, pages
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
     class RemoveLongGoneRow(TypedDict):
         id: int
@@ -322,6 +322,6 @@ class Levels(Cog):
                 await self.community.logs.send(embed=embed)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Levels(bot))

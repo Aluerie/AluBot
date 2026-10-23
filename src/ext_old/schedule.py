@@ -12,7 +12,7 @@ from core import Cog
 from utils import const, fmt
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -71,6 +71,6 @@ class Schedule(Cog, name="Schedules"):
                 await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Schedule(bot))

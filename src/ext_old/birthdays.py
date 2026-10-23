@@ -13,7 +13,7 @@ from core import Cog
 from utils import const, converters, errors, fmt, pages, timezones
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction, Timer, TimerRow
+    from core import AluInteraction, Bot, Timer, TimerRow
 
     class BirthdayTimerData(TypedDict):
         user_id: int
@@ -339,7 +339,9 @@ class Birthdays(Cog):
                 .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
                 .set_thumbnail(url=member.display_avatar.url)
                 .set_image(url=random.choice(GIF_URLS_BANK))
-                .set_footer(text=(f"Their birthday: {birthday_fmt(now_as_birthday_timezone)}. Timezone: {timer.timezone}."))
+                .set_footer(
+                    text=(f"Their birthday: {birthday_fmt(now_as_birthday_timezone)}. Timezone: {timer.timezone}.")
+                )
             )
 
             await self.birthday_channel.send(content=content, embed=embed)
@@ -391,7 +393,11 @@ class Birthdays(Cog):
         for row in rows:
             birthday_person = guild.get_member(row["data"]["user_id"])
             if birthday_person is not None:
-                date = row["expires_at"].astimezone(zoneinfo.ZoneInfo(key=row["timezone"])).replace(year=row["data"]["year"])
+                date = (
+                    row["expires_at"]
+                    .astimezone(zoneinfo.ZoneInfo(key=row["timezone"]))
+                    .replace(year=row["data"]["year"])
+                )
                 string_list.append(f"{birthday_fmt(date)}, {row['timezone']} - {birthday_person.mention}")
 
         pgs = pages.EmbedDescriptionPaginator(
@@ -407,6 +413,6 @@ class Birthdays(Cog):
         await pgs.start()
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Birthdays(bot))

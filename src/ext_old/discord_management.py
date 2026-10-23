@@ -8,12 +8,12 @@ from discord.ext import commands
 from tabulate import tabulate
 
 from shared import fmt as shared_fmt  # TODO: fix
-from utils import const, errors, fmt, fuzzy
+from utils import const, errors, fuzzy
 
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 __all__ = ("DiscordManagement",)
@@ -74,7 +74,9 @@ class DiscordManagement(BaseDevCog):
 
         bots = sum(m.bot for m in guild.members)
         total = guild.member_count or 1
-        guild_stats = tabulate(tabular_data=[("Members", total), ("Bots", f"{bots} ({bots / total:.2%})")], tablefmt="plain")
+        guild_stats = tabulate(
+            tabular_data=[("Members", total), ("Bots", f"{bots} ({bots / total:.2%})")], tablefmt="plain"
+        )
         embed.add_field(name="Guild Stats", value=shared_fmt.codeblock(guild_stats))
         if guild.me:
             embed.timestamp = guild.me.joined_at
@@ -197,6 +199,6 @@ class DiscordManagement(BaseDevCog):
     #     await ctx.reply('Done')
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(DiscordManagement(bot))

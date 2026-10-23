@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, override
 import discord
 
 if TYPE_CHECKING:
-    from core import AluBot
+    from core import Bot
 
 __all__ = (
     "CATEGORY_ROLES",
@@ -214,8 +214,8 @@ class SavedGuild:
 
     """
 
-    def __init__(self, bot: AluBot, guild_id: int) -> None:
-        self.bot: AluBot = bot
+    def __init__(self, bot: Bot, guild_id: int) -> None:
+        self.bot: Bot = bot
         self.id: int = guild_id
 
     @override
@@ -270,7 +270,7 @@ class CommunityGuild(SavedGuild):
     Just a small comfy server for my community that somehow find it across the Internet.
     """
 
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: Bot) -> None:
         super().__init__(bot, Guild.community)
 
     # channels #########################################################################################################
@@ -412,7 +412,7 @@ class HideoutGuild(SavedGuild):
     A private server of mine with all the notifications, project management, bot logs, reposts, sandbox, etc.
     """
 
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: Bot) -> None:
         super().__init__(bot, Guild.hideout)
 
     # 1. CHANNELS

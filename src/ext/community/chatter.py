@@ -19,7 +19,7 @@ from core import Cog
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot
+    from core import Bot
 
 
 class Chatter(Cog):
@@ -58,6 +58,6 @@ class Chatter(Cog):
         await self._your_life_joke(message)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Chatter(bot))

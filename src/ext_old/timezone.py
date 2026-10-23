@@ -12,7 +12,7 @@ from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TC001
 from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 class TimezoneSettings(Cog):
@@ -105,6 +105,6 @@ class TimezoneSettings(Cog):
         await interaction.response.send_message("Your timezone has been cleared.", ephemeral=True)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(TimezoneSettings(bot))

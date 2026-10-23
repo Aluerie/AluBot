@@ -14,7 +14,7 @@ from shared import clock, fmt
 from utils import MISSING, const, errors, pages, times
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction, Timer
+    from core import AluInteraction, Bot, Timer
 
     class RemindTimerData(TypedDict):
         author_id: int
@@ -347,6 +347,6 @@ class Reminders(Cog):
         await self.bot.timers.cleanup(timer.id)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Reminders(bot))

@@ -17,7 +17,7 @@ from shared import cache
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
-    from core import AluBot
+    from core import Bot
 
     class GuildConfig(TypedDict):
         enabled: bool
@@ -36,7 +36,7 @@ class Mimics(Cog):
         Mapping of `message_id -> user_id` for Mimic Messages.
     """
 
-    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: Bot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self.guild_config: dict[int, GuildConfig] = {}
         self.mimic_messages: MutableMapping[int, int] = cache.ExpiringCache(
@@ -56,6 +56,6 @@ class Mimics(Cog):
     #########################################################################################################################
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Mimics(bot))

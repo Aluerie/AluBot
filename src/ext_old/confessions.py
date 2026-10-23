@@ -10,7 +10,7 @@ from core import AluModal, AluView, Cog
 from utils import const, fmt
 
 if TYPE_CHECKING:
-    from core import AluBot, AluGuildContext, AluInteraction
+    from core import AluGuildContext, AluInteraction, Bot
 
 
 __all__ = ("Confessions",)
@@ -57,7 +57,9 @@ class ConfessionModal(AluModal):
             f"{const.Emoji.PepoBeliever} {const.Emoji.PepoBeliever} {const.Emoji.PepoBeliever}"
         )
         await channel.send(saint_string)
-        await interaction.response.send_message(content=f"The Lord be with you {const.Emoji.PepoBeliever}", ephemeral=True)
+        await interaction.response.send_message(
+            content=f"The Lord be with you {const.Emoji.PepoBeliever}", ephemeral=True
+        )
         if interaction.message:
             await interaction.message.delete()
         await channel.send(view=ConfessionView())
@@ -131,6 +133,6 @@ class Confessions(Cog):
         await ctx.message.delete()
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Confessions(bot))

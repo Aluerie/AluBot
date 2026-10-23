@@ -20,7 +20,7 @@ from ._base import BaseDevCog
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from core import AluBot, AluContext
+    from core import AluContext, Bot
 
 __all__ = ("Reload",)
 
@@ -251,6 +251,6 @@ class Reload(BaseDevCog):
         await self.reload_pull_worker(ctx)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Reload(bot))

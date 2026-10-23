@@ -11,6 +11,7 @@ from __future__ import annotations
 import io
 import logging
 import sys
+import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
@@ -35,16 +36,64 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "AluBot",
+    "Bot",
     "Context",
 )
 
 log = logging.getLogger(__name__)
 
-type Context = commands.Context[AluBot]
+type Context = commands.Context[Bot]
 
 
-class AluBot(BotBase, commands.Bot):
+def _build_ctx_error_embed(ctx: Context) -> discord.Embed:
+    """Build the error report embed for a prefix command invocation."""
+    embed = (
+        discord
+        .Embed(
+            color=0x890620,
+            title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
+            url=ctx.message.jump_url,
+            description=textwrap.shorten(ctx.message.content, width=1024),
+            timestamp=ctx.message.created_at,
+        )
+        .set_author(
+            name=f"@{ctx.author} in #{ctx.channel}",
+            icon_url=ctx.author.display_avatar,
+        )
+        .set_footer(
+            text=ctx.guild.name if ctx.guild else "DM Channel",
+            icon_url=ctx.guild.icon if ctx.guild else ctx.author.display_avatar,
+        )
+    )
+    fmt.add_args_field(embed, "Ctx Args", *ctx.args[2:])  # cut `self, ctx: Context`
+    fmt.add_mapping_field(embed, "Ctx Kwargs", ctx.kwargs)
+    fmt.add_mapping_field(
+        embed,
+        "Snowflake IDs",
+        {
+            "author": ctx.author.id,
+            "channel": ctx.channel.id,
+            "guild": ctx.guild.id if ctx.guild else None,
+            "message": ctx.message.id,
+        },
+    )
+    return embed
+
+
+def _build_event_error_embed(event: str, /, *args: Any, **kwargs: Any) -> discord.Embed:
+    """Build the error report embed for an exception raised inside an event listener."""
+    embed = discord.Embed(
+        color=0xA32952,
+        title=f"Event Error: `{event}`",
+    )
+    if args:
+        fmt.add_args_field(embed, "Event Args", *args)
+    if kwargs:
+        fmt.add_mapping_field(embed, "Event Kwargs", kwargs)
+    return embed
+
+
+class Bot(BotBase, commands.Bot):
     """AluBot.
 
     Extended subclass over discord.py's `commands.Bot`
@@ -174,7 +223,7 @@ class AluBot(BotBase, commands.Bot):
     #########################################################################################################################
 
     @override
-    async def on_error(self, event: str, *args: Any, **kwargs: Any) -> None:
+    async def on_error(self, event: str, /, *args: Any, **kwargs: Any) -> None:
         """Event error: called when an exception is raised in an event listener.
 
         Parameters
@@ -189,11 +238,7 @@ class AluBot(BotBase, commands.Bot):
         (_exception_type, exception, _traceback) = sys.exc_info()
         assert exception is not None, "Somehow `on_error` fired with exception being `None`."
 
-        embed = discord.Embed(
-            color=0xA32952,
-            title=f"Event Error: `{event}`",
-            description=f"Event Args:\n{fmt.pformat_args(*args)}",
-        ).set_footer(text=f"{self.__class__.__name__}.on_error: {event}")
+        embed = _build_event_error_embed(event, *args, **kwargs)
         await self.error_notification_manager.register(exception, embed)
 
     @override
@@ -218,13 +263,10 @@ class AluBot(BotBase, commands.Bot):
             case commands.UserInputError() | commands.CheckFailure():
                 await ctx.reply(str(error))
             case _:
-                if not await self._respond_per_policy(error, respond=ctx.reply):
+                if not await self.respond_per_policy(error, respond=ctx.reply):
                     return
 
-                embed = discord.Embed(
-                    color=0x890620,
-                    title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
-                )
+                embed = _build_ctx_error_embed(ctx)
                 await ctx.bot.error_notification_manager.register(error, embed)
 
     #########################################################################################################################

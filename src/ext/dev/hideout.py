@@ -1,4 +1,4 @@
-"""Stats.
+"""Hideout.
 
 Notices
 -------
@@ -19,21 +19,22 @@ from shared.concepts.discord_logs import DiscordWebhookLogs
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, Context
+    from core import Bot
 
 
-class StatsCog(DiscordWebhookLogs, DevCog):
-    """Stats Cog."""
+class HideoutCog(DiscordWebhookLogs, DevCog):
+    """Hideout Discord Guild Related Features."""
 
     JAILED_BOTS_ROLE_ID = 1090428532162822234
 
-    def __init__(self, bot: AluBot) -> None:
+    def __init__(self, bot: Bot) -> None:
         super().__init__(env.WEBHOOK_LOGGER, bot.session)
         super(DevCog, self).__init__(bot)
 
         self.extra_exact_avatar_mapping: dict[str, str] = {
             "discord.gateway": "https://em-content.zobj.net/source/microsoft/476/broken-heart_1f494.png",
             "core.bot": "https://em-content.zobj.net/source/microsoft/476/swan_1f9a2.png",
+            "ext.dev.reload": "https://em-content.zobj.net/source/microsoft/476/counterclockwise-arrows-button_1f504.png",
         }
 
     @override
@@ -45,15 +46,6 @@ class StatsCog(DiscordWebhookLogs, DevCog):
     async def cog_unload(self) -> None:
         await self.teardown()
         await super().cog_unload()
-
-    @commands.command(name="invite-link")
-    async def invite_link(self, ctx: Context) -> None:
-        """Get invite link for the bot.
-
-        Somewhat pointless since 'Add App' button exists.
-        But it's useful to have for @YenBot where I removed that button.
-        """
-        await ctx.send(self.bot.invite_link)
 
     @commands.Cog.listener(name="on_member_join")
     async def moderate_hideout_joiners(self, member: discord.Member) -> None:
@@ -76,6 +68,6 @@ class StatsCog(DiscordWebhookLogs, DevCog):
             await member.kick(reason="Non-bot account joined hideout (it's private)")
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load the extension (discord.py entry point)."""
-    await bot.add_cog(StatsCog(bot))
+    await bot.add_cog(HideoutCog(bot))

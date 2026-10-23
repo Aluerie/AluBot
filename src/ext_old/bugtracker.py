@@ -21,7 +21,7 @@ from utils import const
 if TYPE_CHECKING:
     from githubkit.rest import Issue, SimpleUser
 
-    from core import AluBot, AluContext
+    from core import AluContext, Bot
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -248,7 +248,7 @@ class TimeLine:
             last_comment_url = None
         return last_comment_url
 
-    def embed_and_file(self, bot: AluBot) -> tuple[discord.Embed, discord.File]:
+    def embed_and_file(self, bot: Bot) -> tuple[discord.Embed, discord.File]:
         """Get embed and file to send in the discord."""
         title = textwrap.shorten(self.issue.title, width=const.Limit.Embed.title)
         embed = discord.Embed(title=title, url=self.issue.html_url)
@@ -320,7 +320,7 @@ class BugTracker(Cog):
 
     """
 
-    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: Bot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self.valve_devs: list[str]
 
@@ -592,6 +592,6 @@ class BugTracker(Cog):
         ).parsed_data
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(BugTracker(bot))

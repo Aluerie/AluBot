@@ -11,7 +11,7 @@ from core import Cog
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, AluContext
+    from core import AluContext, Bot
 
     class SendWelcomeKwargs(TypedDict):
         content: str
@@ -76,7 +76,7 @@ class Welcome(Cog):
             description = (
                 f"**💜 {const.User.aluerie} is our princess and I'm her bot ! {const.Emoji.peepoRoseDank}**\n"
                 f"{const.DIGITS[1]} Read the rules and useful info in {const.Channel.rules} {const.Emoji.PepoG}\n"
-                f"{const.DIGITS[2]} Choose some fancy roles in {const.Channel.role_selection} {const.Emoji.peepoNiceDay}\n"  # noqa: E501
+                f"{const.DIGITS[2]} Choose some fancy roles in {const.Channel.role_selection} {const.Emoji.peepoNiceDay}\n"  # ruff: ignore[line-too-long]
                 f"{const.DIGITS[3]} Go to {const.Channel.general} or any other channel and chat with us {const.Emoji.peepoComfy}\n"  # ruff: ignore[line-too-long]
                 f"{const.DIGITS[4]} Check out <id:customize>, <id:guide>, <id:browse> {const.Emoji.DankApprove}\n"
                 # f"{const.DIGITS[5]} Use `/help` in {const.Channel.bot_spam} to see insane Aluerie's coding skills {const.Emote.PogChampPepe}\n"  # noqa: E501, ERA001
@@ -197,6 +197,6 @@ class Welcome(Cog):
         await self.bot.pool.execute(query, roles_to_insert, after.id)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Welcome(bot))

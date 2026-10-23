@@ -9,7 +9,7 @@ from discord.ext import commands
 from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot, Interaction
+    from core import Bot, Interaction
 
 
 class ButtonRolesView(discord.ui.View):  # ruff: ignore[undocumented-public-class]
@@ -104,6 +104,6 @@ class ImageTools(Cog):
         await interaction.channel.send(view=ButtonRolesView(roles))  # ty: ignore[unresolved-attribute]
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ImageTools(bot))

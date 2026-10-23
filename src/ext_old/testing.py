@@ -10,7 +10,7 @@ from utils import const, mimics
 from ._base import BaseDevCog
 
 if TYPE_CHECKING:
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 class Testing(BaseDevCog):
@@ -31,13 +31,17 @@ class Testing(BaseDevCog):
     @test_group.command(name="webhook-emote")
     async def webhook_emote(self, interaction: AluInteraction) -> None:
         """🔦Test if webhooks can send emotes from bots' dashboards."""
-        content = "AluBot dashboard emote - <:hu:1409577106601676862>\nYenBot dashboard emote - <:hu:1409577790700912690>"
+        content = (
+            "AluBot dashboard emote - <:hu:1409577106601676862>\nYenBot dashboard emote - <:hu:1409577790700912690>"
+        )
         await interaction.response.send_message(f"## 1. The Interaction.\n{content}")
         await self.bot.spam_webhook.send(f"## 2. Aluerie's Owned Webhook.\n{content}")
 
         channel = interaction.channel
         assert channel
-        assert not isinstance(channel, discord.CategoryChannel | discord.Thread | discord.DMChannel | discord.GroupChannel)
+        assert not isinstance(
+            channel, discord.CategoryChannel | discord.Thread | discord.DMChannel | discord.GroupChannel
+        )
 
         if channel and (webhooks := await channel.webhooks()):
             await webhooks[0].send(f"## 3. The Bot's Owned Webhook.\n{content}")
@@ -46,6 +50,6 @@ class Testing(BaseDevCog):
         await mirror.send(member=interaction.user, content=f"## 4. Mirror-Mimic.\n{content}")
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(Testing(bot))

@@ -19,7 +19,7 @@ from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot
+    from core import Bot
 
 __all__ = ("ManageRoles",)
 
@@ -90,6 +90,6 @@ class ManageRoles(Cog):
                 await self._sync_streamer_role(member, role)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ManageRoles(bot))

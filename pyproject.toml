@@ -162,6 +162,7 @@ flake8-quotes.inline-quotes = "double"
     "D", 
     "missing-copyright-notice",
     "print",
+    "raw-string-in-exception",
     "unused-method-argument",
     "unused-noqa",
 ]

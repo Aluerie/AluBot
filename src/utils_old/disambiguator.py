@@ -10,7 +10,7 @@ from utils import const
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from core import AluBot, AluInteraction
+    from core import AluInteraction
 
 
 __all__ = ("Disambiguator",)

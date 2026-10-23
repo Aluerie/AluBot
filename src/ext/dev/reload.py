@@ -22,7 +22,7 @@ from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
-    from core import AluBot, Context, Interaction
+    from core import Bot, Context, Interaction
 
 
 __all__ = ("ReloadCog",)
@@ -216,6 +216,6 @@ class ReloadCog(DevCog):
         await ctx.reply(content)
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load the extension (discord.py entry point)."""
     await bot.add_cog(ReloadCog(bot))

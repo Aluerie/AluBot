@@ -34,7 +34,7 @@ from utils import const, errors
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
 
 class TranslatedSentence(TypedDict):
@@ -122,7 +122,7 @@ async def translate(
 class Translations(Cog):
     """Translate to English commands."""
 
-    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: Bot, *args: Any, **kwargs: Any) -> None:
         super().__init__(bot, *args, **kwargs)
         self.context_menu_translate = app_commands.ContextMenu(
             name="Translate to English",

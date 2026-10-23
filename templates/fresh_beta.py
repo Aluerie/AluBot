@@ -19,13 +19,13 @@ class BetaTest(BetaCog):
         pass
 
     @commands.command(name="test", aliases=["beta"])
-    async def test(self, ctx: AluContext) -> None:
+    async def test(self, ctx: Context) -> None:
         await ctx.send("test")
 
     @app_commands.command()
-    async def slash(self, interaction: AluInteraction) -> None:
+    async def slash(self, interaction: Interaction) -> None:
         await interaction.response.send_message("slash")
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     await bot.add_cog(BetaTest(bot))

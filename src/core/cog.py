@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, override
 from discord.ext import commands
 
 if TYPE_CHECKING:
-    from . import AluBot, Context, Interaction
+    from . import Bot, Context, Interaction
 
 
 __all__ = (
@@ -32,9 +32,9 @@ class CogBase(commands.Cog):
 
     """
 
-    def __init__(self, bot: AluBot, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, bot: Bot, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.bot: AluBot = bot
+        self.bot: Bot = bot
 
 
 class Cog(CogBase):

@@ -16,7 +16,7 @@ from discord import app_commands, ui
 from core import Cog
 
 if TYPE_CHECKING:
-    from core import AluBot, Interaction
+    from core import Bot, Interaction
 
 
 class EmbedRolesModal(ui.Modal, title="Button Roles with an Embed"):
@@ -61,6 +61,6 @@ class ButtonRoles(Cog):
     )
 
 
-async def setup(bot: AluBot) -> None:
+async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
     await bot.add_cog(ButtonRoles(bot))

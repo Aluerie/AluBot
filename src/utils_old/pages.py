@@ -30,7 +30,7 @@ from . import MISSING, const
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from core import AluBot, AluInteraction
+    from core import AluInteraction, Bot
 
     class SendKwargs(TypedDict):
         content: NotRequired[str]
@@ -119,7 +119,7 @@ class Paginator(AluView, name="Pagination Menu"):
     ) -> None:
         super().__init__(author_id=author_id or interaction.user.id, timeout=timeout)
         self.interaction: AluInteraction = interaction
-        self.bot: AluBot = interaction.client  # just a shortcut
+        self.bot: Bot = interaction.client  # just a shortcut
         self.entries: Sequence[Any] = entries
         self.per_page: int = per_page
         self.max_pages: int = -(len(entries) // -per_page)  # https://stackoverflow.com/a/54585138/19217368

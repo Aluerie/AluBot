@@ -174,7 +174,7 @@ class ReloadCog(DevCog):
             app_commands.Choice(name="🌐 Global Sync", value="global"),
             app_commands.Choice(name="🏠 Current Guild", value="current"),
             app_commands.Choice(name="🥷 Copy Global commands to Current Guild", value="copy"),
-            app_commands.Choice(name="🗑️ Clear Current Guild", value="clear"),
+            app_commands.Choice(name="🧹 Clear Current Guild", value="clear"),
         ],
     )
     async def slash_sync_dev(self, interaction: Interaction, spec: SlashSyncSpecLiteral = "global") -> None:
@@ -241,7 +241,7 @@ class ReloadCog(DevCog):
 
     @ext_group.command()
     async def load(self, interaction: Interaction, extension: str) -> None:
-        """📥 Load an extension.
+        """🚀 Load an extension.
 
         Parameters
         ----------
@@ -263,7 +263,7 @@ class ReloadCog(DevCog):
 
     @ext_group.command()
     async def unload(self, interaction: Interaction, extension: str) -> None:
-        """📤 Unload a loaded extension.
+        """🛬 Unload a loaded extension.
 
         Parameters
         ----------
@@ -292,7 +292,7 @@ class ReloadCog(DevCog):
 
     @ext_group.command(name="reload-all")
     async def reload_all(self, interaction: Interaction) -> None:
-        """♻️ Reload every loaded extension."""
+        """🧩 Reload every loaded extension."""
         await interaction.response.defer(ephemeral=True)
         failed: list[str] = []
         for ext in list(self.bot.extensions):

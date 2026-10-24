@@ -62,7 +62,7 @@ class Meta(Cog):
         self.process.cpu_percent()
 
     ####################################################################################################################
-    # 🌐 /bot COMMAND
+    # /bot COMMAND
     ####################################################################################################################
 
     botinfo_group = app_commands.Group(  # apparently, `bot_group` is not allowed
@@ -74,7 +74,7 @@ class Meta(Cog):
 
     @botinfo_group.command()
     async def ping(self, interaction: Interaction) -> None:
-        """🌐 Check the bot's ping to Discord and some other services."""
+        """🏓 Check the bot's ping to Discord and some other services."""
         interaction_ping = await _timed_ping(interaction.response.defer())
         content = "🏓 Pong!"
         (
@@ -123,7 +123,7 @@ class Meta(Cog):
 
     @botinfo_group.command()
     async def source(self, interaction: Interaction) -> None:
-        """🌐 Show GitHub repository link, latest updates and some code stats."""
+        """📜 Show GitHub repository link, latest updates and some code stats."""
         await interaction.response.defer()
         bot_app_info = self.bot.bot_app_info
         commits, stats = await asyncio.gather(self._latest_commits_markdown(), self._code_stats_field_value())
@@ -183,7 +183,7 @@ class Meta(Cog):
 
     @botinfo_group.command()
     async def machine(self, interaction: Interaction) -> None:
-        """🌐 Show bot's machine information."""
+        """🖥️ Show bot's machine information."""
         await interaction.response.defer()
         info = await asyncio.to_thread(self._collect_machine_info)
         embed = discord.Embed(title="👩🏻‍⚕️ Bot Machine", color=0x9400D3)
@@ -193,7 +193,7 @@ class Meta(Cog):
 
     @botinfo_group.command(name="discord-stats")
     async def discord_stats(self, interaction: Interaction) -> None:
-        """🌐 Show bot's discord stats: in how many servers in, etc."""
+        """📊 Show bot's discord stats: in how many servers in, etc."""
         available = [g for g in self.bot.guilds if not g.unavailable]
 
         total_servers = len(self.bot.guilds)
@@ -218,7 +218,7 @@ class Meta(Cog):
     @commands.command(hidden=True)
     @commands.is_owner()
     async def location(self, ctx: Context) -> None:
-        """🌐 Show bot's hosted location, based on IP."""
+        """📍 Show bot's hosted location, based on IP."""
         try:
             async with self.bot.session.get("https://ipinfo.io/json", timeout=aiohttp.ClientTimeout(total=10)) as resp:
                 if resp.ok:
@@ -229,10 +229,10 @@ class Meta(Cog):
             log.exception("Failed to fetch host location")
             await ctx.reply("Sorry! Couldn't reach the geolocation service.")
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, aliases=["database-health"])
     @commands.is_owner()
     async def db_health(self, ctx: Context) -> None:
-        """🌐 Database health."""
+        """🩺 Database health."""
         pool = self.bot.pool
         lines = [
             f"<Holder i={i} gen={holder._generation} in_use={holder._in_use is not None} "  # ruff: ignore[private-member-access]
@@ -256,5 +256,5 @@ class Meta(Cog):
 
 
 async def setup(bot: Bot) -> None:
-    """Load AluBot extension. Framework of discord.py."""
+    """Load the extension (discord.py entry point)."""
     await bot.add_cog(Meta(bot))

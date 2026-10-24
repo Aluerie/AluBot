@@ -123,9 +123,8 @@ class Bot(BotBase, commands.Bot):
 
         self.pool: PoolTypedWithAny = pool
         self.session: ClientSession = session
-        self.extensions_to_load: tuple[str, ...] = self.get_extensions(
-            is_subset_mode=is_subset_mode, package=EXT_PACKAGE, disabled_extensions=DISABLED_EXTENSIONS
-        )
+        self.extensions_to_load: tuple[str, ...] = self.get_extensions(is_subset_mode=is_subset_mode)
+        log.info("The list of modules (%s total) to load: %s", len(self.extensions_to_load), self.extensions_to_load)
 
         # Stats / Info
         self.repository_url: str = "https://github.com/Aluerie/AluBot"
@@ -264,6 +263,13 @@ class Bot(BotBase, commands.Bot):
     #########################################################################################################################
     # STARTING THE BOT
     #########################################################################################################################
+
+    @override
+    def get_extensions(self, *, is_subset_mode: bool) -> tuple[str, ...]:  # ty: ignore[invalid-method-override]
+        """Get list of bot extensions to load."""
+        return super().get_extensions(
+            is_subset_mode=is_subset_mode, package=EXT_PACKAGE, disabled_extensions=DISABLED_EXTENSIONS
+        )
 
     @override
     async def setup_hook(self) -> None:

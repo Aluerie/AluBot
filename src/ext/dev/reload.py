@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Literal, override
+from typing import TYPE_CHECKING, Literal, assert_never, override
 
 import discord
 from discord import app_commands
@@ -22,6 +22,8 @@ from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     from core import Bot, Context, Interaction
 
 
@@ -29,6 +31,8 @@ __all__ = ("ReloadCog",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+EXT_PACKAGE = "exts"
 
 type SyncSpecLiteral = Literal["global", "current", "copy", "clear", "~", "*", "^"]
 type SlashSyncSpecLiteral = Literal["global", "current", "copy", "clear"]
@@ -159,8 +163,7 @@ class ReloadCog(DevCog):
                 await self.bot.tree.sync(guild=current_guild)
                 return "Cleared all commands from the current guild."
             case _:  # Unreachable via commands.
-                msg = f"Unknown sync spec: {spec!r}"
-                raise errors.SomethingWentWrongError(msg, data={"spec": spec})
+                assert_never(spec)
         return f"Synced {len(synced)} commands to the current guild."
 
     @app_commands.guilds(const.Guild.hideout)
@@ -175,7 +178,7 @@ class ReloadCog(DevCog):
         ],
     )
     async def slash_sync_dev(self, interaction: Interaction, spec: SlashSyncSpecLiteral = "global") -> None:
-        """🩶 Sync bot's app tree.
+        """🔄 Sync bot's app tree.
 
         Parameters
         ----------
@@ -193,7 +196,7 @@ class ReloadCog(DevCog):
         guilds: commands.Greedy[discord.Object],
         spec: SyncSpecLiteral | None = None,
     ) -> None:
-        """🩶 Sync bot's app tree.
+        """🔄 Sync bot's app tree.
 
         Parameters
         ----------
@@ -214,6 +217,93 @@ class ReloadCog(DevCog):
         """
         content = await self.sync_command_worker(spec, current_guild=ctx.guild, guilds=guilds)
         await ctx.reply(content)
+
+    ####################################################################################################################
+    # LOAD / RELOAD / UNLOAD EXTENSION COMMANDS
+    ####################################################################################################################
+
+    ext_group = app_commands.Group(
+        name="ext-dev",
+        description="🧩 Load/reload/unload bot's extensions.",
+        guild_ids=[const.Guild.hideout],
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
+
+    @staticmethod
+    async def _run(interaction: Interaction, action: Callable[[str], Awaitable[None]], extension: str) -> None:
+        await interaction.response.defer(ephemeral=True)
+        try:
+            await action(extension)
+        except commands.ExtensionError as e:
+            await interaction.followup.send(f"❌ `{extension}`: {e}")
+        else:
+            await interaction.followup.send(f"✅ `{extension}`")
+
+    @ext_group.command()
+    async def load(self, interaction: Interaction, extension: str) -> None:
+        """🧩 Load an extension.
+
+        Parameters
+        ----------
+        extension
+            Extension to load.
+        """
+        await self._run(interaction, self.bot.load_extension, extension)
+
+    @ext_group.command()
+    async def reload(self, interaction: Interaction, extension: str) -> None:
+        """🧩 Reload a loaded extension.
+
+        Parameters
+        ----------
+        extension
+            Extension to reload.
+        """
+        await self._run(interaction, self.bot.reload_extension, extension)
+
+    @ext_group.command()
+    async def unload(self, interaction: Interaction, extension: str) -> None:
+        """🧩 Unload a loaded extension.
+
+        Parameters
+        ----------
+        extension
+            Extension to unload.
+        """
+        await self._run(interaction, self.bot.unload_extension, extension)
+
+    @reload.autocomplete("extension")
+    @unload.autocomplete("extension")
+    async def loaded_autocomplete(self, _: Interaction, current: str) -> list[app_commands.Choice[str]]:
+        """Suggest currently loaded extensions."""
+        return [
+            app_commands.Choice(name=ext, value=ext) for ext in self.bot.extensions if current.lower() in ext.lower()
+        ][:25]
+
+    @load.autocomplete("extension")
+    async def unloaded_autocomplete(self, _: Interaction, current: str) -> list[app_commands.Choice[str]]:
+        """Suggest available but not yet loaded extensions."""
+        available = self.bot.get_extensions(is_subset_mode=False)
+        return [
+            app_commands.Choice(name=name, value=name)
+            for name in available
+            if name not in self.bot.extensions and current.lower() in name.lower()
+        ][:25]
+
+    @ext_group.command(name="reload-all")
+    async def reload_all(self, interaction: Interaction) -> None:
+        """🧩 Reload every loaded extension."""
+        await interaction.response.defer(ephemeral=True)
+        failed: list[str] = []
+        for ext in list(self.bot.extensions):
+            if ext == __name__:
+                continue
+            try:
+                await self.bot.reload_extension(ext)
+            except commands.ExtensionError as e:
+                failed.append(f"`{ext}`: {e}")
+        message = "❌ Failed to reload:\n" + "\n".join(failed) if failed else "✅ Reloaded all extensions"
+        await interaction.followup.send(message[:2000])
 
 
 async def setup(bot: Bot) -> None:

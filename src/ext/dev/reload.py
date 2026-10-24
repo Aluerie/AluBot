@@ -32,8 +32,6 @@ __all__ = ("ReloadCog",)
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-EXT_PACKAGE = "exts"
-
 type SyncSpecLiteral = Literal["global", "current", "copy", "clear", "~", "*", "^"]
 type SlashSyncSpecLiteral = Literal["global", "current", "copy", "clear"]
 
@@ -289,21 +287,6 @@ class ReloadCog(DevCog):
             for name in available
             if name not in self.bot.extensions and current.lower() in name.lower()
         ][:25]
-
-    @ext_group.command(name="reload-all")
-    async def reload_all(self, interaction: Interaction) -> None:
-        """🧩 Reload every loaded extension."""
-        await interaction.response.defer(ephemeral=True)
-        failed: list[str] = []
-        for ext in list(self.bot.extensions):
-            if ext == __name__:
-                continue
-            try:
-                await self.bot.reload_extension(ext)
-            except commands.ExtensionError as e:
-                failed.append(f"`{ext}`: {e}")
-        message = "❌ Failed to reload:\n" + "\n".join(failed) if failed else "✅ Reloaded all extensions"
-        await interaction.followup.send(message[:2000])
 
 
 async def setup(bot: Bot) -> None:

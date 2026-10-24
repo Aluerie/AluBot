@@ -152,33 +152,39 @@ class Meta(Cog):
 
         cores_logical = psutil.cpu_count() or 1
         cpu_lines = [
-            f"* Usage: {psutil.cpu_percent(interval=0.5):.1f}%",
-            f"* Cores: {psutil.cpu_count(logical=False) or cores_logical} physical / {cores_logical} logical",
+            f"Usage: {psutil.cpu_percent(interval=0.5):.1f}%",
+            f"Cores: {psutil.cpu_count(logical=False) or cores_logical} physical / {cores_logical} logical",
         ]
         if cpu_freq := psutil.cpu_freq():  # ty: ignore[possibly-missing-attribute]
-            cpu_lines.append(f"* Frequency: {cpu_freq.current / 1000:.2f} GHz")
+            cpu_lines.append(f"Frequency: {cpu_freq.current / 1000:.2f} GHz")
         if model := platform.processor():
-            cpu_lines.append(f"* Model: {model}")
+            cpu_lines.append(f"Model: {model}")
         if hasattr(os, "getloadavg"):
             l1, l5, l15 = os.getloadavg()
-            cpu_lines.append(f"* Load avg: {l1:.2f} / {l5:.2f} / {l15:.2f}")
+            cpu_lines.append(f"Load avg: {l1:.2f} / {l5:.2f} / {l15:.2f}")
 
         def _clean(s: str) -> str:
             return s.replace("-oracle", "")
 
+        def _usage(used: int, total: int, percent: float) -> str:
+            return fmt.bullet_list([
+                f"Usage: {percent:.1f}%",
+                f"Used: {used / 1024**3:.1f} / {total / 1024**3:.1f} GB",
+            ])
+
         return {
-            "System": "\n".join([
-                f"* Hostname: `{socket.gethostname()}`",
-                f"* OS: `{platform.system()} {_clean(platform.release())}`",
-                f"* Platform: `{_clean(platform.platform())}`",
-                f"* Architecture: `{platform.machine()}`",
-                f"* Python: `{platform.python_version()}`",
-                f"* Machine booted: <t:{int(psutil.boot_time())}:R>",
-                f"* Bot started: {clock.discord(self.bot.launch_time, 'R')}",
+            "System": fmt.bullet_list([
+                f"Hostname: `{socket.gethostname()}`",
+                f"OS: `{platform.system()} {_clean(platform.release())}`",
+                f"Platform: `{_clean(platform.platform())}`",
+                f"Architecture: `{platform.machine()}`",
+                f"Python: `{platform.python_version()}`",
+                f"Machine booted: <t:{int(psutil.boot_time())}:R>",
+                f"Bot started: {clock.discord(self.bot.launch_time, 'R')}",
             ]),
-            "CPU": "\n".join(cpu_lines),
-            "RAM": f"* Usage: {vm.percent:.1f}%\n* Used: {vm.used / 1024**3:.1f} / {vm.total / 1024**3:.1f} GB",
-            "Disk": f"* Usage: {du.percent:.1f}%\n* Used: {du.used / 1024**3:.1f} / {du.total / 1024**3:.1f} GB",
+            "CPU": fmt.bullet_list(cpu_lines),
+            "RAM": _usage(vm.used, vm.total, vm.percent),
+            "Disk": _usage(du.used, du.total, du.percent),
         }
 
     @botinfo_group.command()

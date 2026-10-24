@@ -68,7 +68,7 @@ def _build_interaction_error_embed(interaction: Interaction, *, title: str, colo
         mapping={
             "response_done": interaction.response.is_done(),
             "age_seconds": round((clock.utcnow() - interaction.created_at).total_seconds(), 2),
-            "locale": interaction.locale.value,
+            # "locale": interaction.locale.value,
         },
     )
     return embed

@@ -246,21 +246,21 @@ class Palette(IntEnum):
         }
         return shades[shade]
 
+    green_900 = 0x1B5E20
+    green_800 = 0x2E7D32
+    green_700 = 0x388E3C
+    green_600 = 0x43A047
+    green_500 = 0x4CAF50
+    green_400 = 0x66BB6A
+    green_300 = 0x81C784
+    green_200 = 0xA5D6A7
+    green_100 = 0xC8E6C9
+    green_50 = 0xE8F5E9
+
     @staticmethod
     def green(shade: Literal[900, 800, 700, 600, 500, 400, 300, 200, 100, 50] = 500) -> int:
         """Get shade of green color from Google Material Design."""
-        shades = {
-            900: 0x1B5E20,
-            800: 0x2E7D32,
-            700: 0x388E3C,
-            600: 0x43A047,
-            500: 0x4CAF50,
-            400: 0x66BB6A,
-            300: 0x81C784,
-            200: 0xA5D6A7,
-            100: 0xC8E6C9,
-            50: 0xE8F5E9,
-        }
+        shades = {}
         return shades[shade]
 
     @staticmethod

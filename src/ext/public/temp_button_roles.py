@@ -3,8 +3,6 @@ from __future__ import annotations  # ruff: ignore[missing-copyright-notice, und
 from typing import TYPE_CHECKING, override
 
 import discord
-from discord import app_commands
-from discord.ext import commands
 
 from core import Cog
 
@@ -46,62 +44,62 @@ class ImageTools(Cog):
     Maybe one day it's going to be helpful for somebody.
     """
 
-    @commands.Cog.listener(name="on_ready")
-    async def activate_color_roles(self) -> None:
-        """Register/activate persistent view for Color Roles dropdown."""
-        query = """SELECT guild_id, role_id FROM button_roles"""
-        rows = await self.bot.pool.fetch(query)
-        roles = [self.bot.get_guild(row["guild_id"]).get_role(row["role_id"]) for row in rows]  # ty: ignore[unresolved-attribute]
-        self.bot.add_view(ButtonRolesView(roles))  # ty: ignore[invalid-argument-type]
+    # @commands.Cog.listener(name="on_ready")
+    # async def activate_color_roles(self) -> None:
+    #     """Register/activate persistent view for Color Roles dropdown."""
+    #     query = """SELECT guild_id, role_id FROM button_roles"""
+    #     rows = await self.bot.pool.fetch(query)
+    #     roles = [self.bot.get_guild(row["guild_id"]).get_role(row["role_id"]) for row in rows]
+    #     self.bot.add_view(ButtonRolesView(roles))
 
-    @app_commands.command()
-    @app_commands.guild_only()
-    @app_commands.guild_install()
-    @app_commands.default_permissions(manage_roles=True)
-    async def create_button_roles(  # ruff: ignore[undocumented-public-method]
-        self,
-        interaction: Interaction,
-        role_1: discord.Role | None = None,
-        role_2: discord.Role | None = None,
-        role_3: discord.Role | None = None,
-        role_4: discord.Role | None = None,
-        role_5: discord.Role | None = None,
-        role_6: discord.Role | None = None,
-        role_7: discord.Role | None = None,
-        role_8: discord.Role | None = None,
-        role_9: discord.Role | None = None,
-        role_10: discord.Role | None = None,
-        role_11: discord.Role | None = None,
-        role_12: discord.Role | None = None,
-        role_13: discord.Role | None = None,
-        role_14: discord.Role | None = None,
-    ) -> None:
-        await interaction.response.send_message("Sending", ephemeral=True)
-        roles = [
-            role_1,
-            role_2,
-            role_3,
-            role_4,
-            role_5,
-            role_6,
-            role_7,
-            role_8,
-            role_9,
-            role_10,
-            role_11,
-            role_12,
-            role_13,
-            role_14,
-        ]
-        roles = [r for r in roles if r is not None]
-        query = """
-            INSERT INTO button_roles
-            (guild_id, role_id)
-            VALUES ($1, $2)
-            ON CONFLICT DO NOTHING
-        """
-        await self.bot.pool.executemany(query, [(interaction.guild.id, role.id) for role in roles])  # ty: ignore[unresolved-attribute]
-        await interaction.channel.send(view=ButtonRolesView(roles))  # ty: ignore[unresolved-attribute]
+    # @app_commands.command()
+    # @app_commands.guild_only()
+    # @app_commands.guild_install()
+    # @app_commands.default_permissions(manage_roles=True)
+    # async def create_button_roles(
+    #     self,
+    #     interaction: Interaction,
+    #     role_1: discord.Role | None = None,
+    #     role_2: discord.Role | None = None,
+    #     role_3: discord.Role | None = None,
+    #     role_4: discord.Role | None = None,
+    #     role_5: discord.Role | None = None,
+    #     role_6: discord.Role | None = None,
+    #     role_7: discord.Role | None = None,
+    #     role_8: discord.Role | None = None,
+    #     role_9: discord.Role | None = None,
+    #     role_10: discord.Role | None = None,
+    #     role_11: discord.Role | None = None,
+    #     role_12: discord.Role | None = None,
+    #     role_13: discord.Role | None = None,
+    #     role_14: discord.Role | None = None,
+    # ) -> None:
+    #     await interaction.response.send_message("Sending", ephemeral=True)
+    #     roles = [
+    #         role_1,
+    #         role_2,
+    #         role_3,
+    #         role_4,
+    #         role_5,
+    #         role_6,
+    #         role_7,
+    #         role_8,
+    #         role_9,
+    #         role_10,
+    #         role_11,
+    #         role_12,
+    #         role_13,
+    #         role_14,
+    #     ]
+    #     roles = [r for r in roles if r is not None]
+    #     query = """
+    #         INSERT INTO button_roles
+    #         (guild_id, role_id)
+    #         VALUES ($1, $2)
+    #         ON CONFLICT DO NOTHING
+    #     """
+    #     await self.bot.pool.executemany(query, [(interaction.guild.id, role.id) for role in roles])
+    #     await interaction.channel.send(view=ButtonRolesView(roles))
 
 
 async def setup(bot: Bot) -> None:

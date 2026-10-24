@@ -183,7 +183,7 @@ class Meta(Cog):
 
     @botinfo_group.command()
     async def machine(self, interaction: Interaction) -> None:
-        """🖥️ Show bot's machine information."""
+        """💻 Show bot's machine information."""
         await interaction.response.defer()
         info = await asyncio.to_thread(self._collect_machine_info)
         embed = discord.Embed(title="👩🏻‍⚕️ Bot Machine", color=0x9400D3)

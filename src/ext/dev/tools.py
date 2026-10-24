@@ -81,7 +81,7 @@ class ToolsCog(DevCog):
 
     @tools_group.command()
     async def charinfo(self, interaction: Interaction, characters: app_commands.Range[str, 1, 10]) -> None:
-        """🔤 Show information about character(-s).
+        """🔤 Show Unicode information about character(-s).
 
         Only up to 10 characters (Unicode code points) at a time though.
 

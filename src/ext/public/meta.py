@@ -67,7 +67,7 @@ class Meta(Cog):
 
     botinfo_group = app_commands.Group(  # apparently, `bot_group` is not allowed
         name="bot",
-        description="🌐 Information about the bot.",
+        description="Information about the bot.",
         allowed_contexts=app_commands.AppCommandContext(guild=True, dm_channel=True, private_channel=True),
         allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
     )

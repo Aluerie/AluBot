@@ -178,7 +178,7 @@ class ReloadCog(DevCog):
         ],
     )
     async def slash_sync_dev(self, interaction: Interaction, spec: SlashSyncSpecLiteral = "global") -> None:
-        """🔄 Sync bot's app tree.
+        """📡 Sync bot's app tree.
 
         Parameters
         ----------
@@ -196,7 +196,7 @@ class ReloadCog(DevCog):
         guilds: commands.Greedy[discord.Object],
         spec: SyncSpecLiteral | None = None,
     ) -> None:
-        """🔄 Sync bot's app tree.
+        """📡 Sync bot's app tree.
 
         Parameters
         ----------
@@ -224,7 +224,7 @@ class ReloadCog(DevCog):
 
     ext_group = app_commands.Group(
         name="ext-dev",
-        description="🧩 Load/reload/unload bot's extensions.",
+        description="Load/reload/unload bot's extensions.",
         guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),
     )
@@ -241,7 +241,7 @@ class ReloadCog(DevCog):
 
     @ext_group.command()
     async def load(self, interaction: Interaction, extension: str) -> None:
-        """🧩 Load an extension.
+        """📥 Load an extension.
 
         Parameters
         ----------
@@ -252,7 +252,7 @@ class ReloadCog(DevCog):
 
     @ext_group.command()
     async def reload(self, interaction: Interaction, extension: str) -> None:
-        """🧩 Reload a loaded extension.
+        """🔄 Reload a loaded extension.
 
         Parameters
         ----------
@@ -263,7 +263,7 @@ class ReloadCog(DevCog):
 
     @ext_group.command()
     async def unload(self, interaction: Interaction, extension: str) -> None:
-        """🧩 Unload a loaded extension.
+        """📤 Unload a loaded extension.
 
         Parameters
         ----------
@@ -292,7 +292,7 @@ class ReloadCog(DevCog):
 
     @ext_group.command(name="reload-all")
     async def reload_all(self, interaction: Interaction) -> None:
-        """🧩 Reload every loaded extension."""
+        """♻️ Reload every loaded extension."""
         await interaction.response.defer(ephemeral=True)
         failed: list[str] = []
         for ext in list(self.bot.extensions):

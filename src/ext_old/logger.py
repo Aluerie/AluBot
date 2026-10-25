@@ -2,19 +2,18 @@ from __future__ import annotations
 
 import datetime
 import inspect
-import re
 from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord.ext import commands
 
 from core import Cog, aluloop
-from utils import const, fmt
+from utils import const
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from core import AluContext, Bot
+    from core import Bot
 
 
 class Logger(Cog):
@@ -260,141 +259,10 @@ class Logger(Cog):
         else:
             await update_heartbeat(discord.utils.utcnow())
 
-    # MESSAGE LOGGING
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
-        if after.guild is None or after.guild.id != const.Guild.community:
-            return
-        if before.author.bot:
-            return
-        if before.content == after.content:  # most likely some link embed link action
-            return
-
-        channel: discord.abc.GuildChannel = after.channel  # type: ignore[reportAssignmentType] # it's secured to be .community channel
-        e = discord.Embed(color=0x00BFFF)
-        msg = f"{after.author.display_name} edit in #{channel.name}"
-        e.set_author(name=msg, icon_url=after.author.display_avatar.url, url=after.jump_url)
-        # TODO: if discord ever makes author field jumpable from mobile then remove [Jump Link] from below
-        # TODO: inline word by word doesn't really work well on emote changes too
-        # for example if before is peepoComfy and after is dankComfy then it wont be obvious in the embed result
-        # since discord formats emotes first.
-        e.description = (
-            f"[**Jump link**]({after.jump_url}) {fmt.inline_word_by_word_diff(before.content, after.content)}"
-        )
-        await self.community.logs.send(embed=e)
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message: discord.Message) -> None:
-        if message.author.bot or (message.guild and message.guild.id != const.Guild.community):
-            return
-        if re.search(const.Regex.IS_DELETED_BY_NQN, message.content):  # -bug_check
-            # TODO: this leads to any messages with emotes being ignored.
-            return
-        if message.content.startswith("$"):
-            return
-
-        channel: discord.abc.GuildChannel = message.channel  # type: ignore[reportAssignmentType] # it's secured to be .community channel
-        embed = discord.Embed(
-            color=0xB22222,
-            description=message.content,
-        ).set_author(
-            name=f"{message.author.display_name}'s del in #{channel}",
-            icon_url=message.author.display_avatar.url,
-        )
-        files = [await item.to_file() for item in message.attachments]
-        await self.bot.community.logs.send(embed=embed, files=files)
-
     # COMMAND LOGGING
 
     ignored_users = (const.User.aluerie,)
     included_guilds = (const.Guild.community,)
-
-    @commands.Cog.listener()
-    async def on_command(self, ctx: AluContext) -> None:
-        assert ctx.command
-
-        if not ctx.guild or ctx.guild.id not in self.included_guilds or ctx.author.id in self.ignored_users:
-            return
-
-        cmd_kwargs = " ".join([f"{k}: {v}" for k, v in ctx.kwargs.items()])
-        if ctx.interaction:
-            try:
-                jump_url = (await ctx.interaction.original_response()).jump_url
-            except discord.NotFound:
-                jump_url = None
-            cmd_text = f"/{ctx.command.qualified_name}"
-        else:
-            jump_url = ctx.message.jump_url
-            cmd_text = ctx.message.content
-
-        channel_name = (
-            "DMs" if isinstance(ctx.channel, discord.DMChannel) else getattr(ctx.channel, "name", "somewhere 🤔")
-        )
-        embed = discord.Embed(
-            color=ctx.author.color,
-            description=f"{cmd_text}\n{cmd_kwargs}",
-        ).set_author(
-            icon_url=ctx.author.display_avatar.url,
-            name=f"{ctx.author.display_name} used command in {channel_name}",
-            url=jump_url,
-        )
-        await self.bot.community.logs.send(embed=embed)
-
-    # VOICE CHAT LOGGING
-
-    @commands.Cog.listener("on_voice_state_update")
-    async def community_voice_chat_logging(
-        self,
-        member: discord.Member,
-        before: discord.VoiceState,
-        after: discord.VoiceState,
-    ) -> None:
-        if member.guild.id != self.community.id:
-            return
-
-        voice_role = self.bot.community.voice_role
-        if before.channel is None and after.channel is not None:
-            # joined the voice channel
-            await member.add_roles(voice_role)
-            e = discord.Embed(color=0x00FF7F).set_author(
-                name=f"{member.display_name} entered {after.channel.name}.",
-                icon_url=member.display_avatar.url,
-            )
-            await after.channel.send(embed=e)
-            return
-        if before.channel is not None and after.channel is None:
-            # quit the voice channel
-            await member.remove_roles(voice_role)
-            e = discord.Embed(color=0x800000).set_author(
-                name=f"{member.display_name} left {before.channel.name}.",
-                icon_url=member.display_avatar.url,
-            )
-            await before.channel.send(embed=e)
-            return
-        if before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
-            # changed voice channels
-            e = discord.Embed(color=0x6495ED).set_author(
-                name=f"{member.display_name} went from {before.channel.name} to {after.channel.name}.",
-                icon_url=member.display_avatar.url,
-            )
-            await before.channel.send(embed=e)
-            await after.channel.send(embed=e)
-            return
-
-    @aluloop(count=1)
-    async def check_voice_members(self) -> None:
-        voice_role = self.community.voice_role
-
-        # check if voice role has members who left the voice chat
-        for member in voice_role.members:
-            if member.voice is None:
-                await member.remove_roles(voice_role)
-
-        # vice versa: check if there are people in voice chat who don't have a role
-        for voice_channel in self.community.guild.voice_channels:
-            for member in voice_channel.members:
-                await member.add_roles(voice_role)
 
     # EMOTE LOGS
 
@@ -439,7 +307,7 @@ class Logger(Cog):
         if diff_after == [] and diff_before != []:
             for emote in diff_before:
                 embed = discord.Embed(
-                    color=0xB22222,
+                    color=,
                     title=f"`:{emote.name}:` emote removed",
                     description=f"[Image link]({emote.url})",
                 ).set_thumbnail(url=emote.url)

@@ -8,7 +8,9 @@ Notices
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
+import datetime as dt
 import logging
 import random
 from typing import TYPE_CHECKING, ClassVar, Final, override
@@ -18,10 +20,13 @@ from discord.ext import commands
 
 from config import env
 from core import Cog
+from shared import clock, globs
 from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from core import Bot
 
 
@@ -32,7 +37,9 @@ log.setLevel(logging.INFO)
 class Community(Cog):
     """Community Features."""
 
-    DOTA_STEAM_DB_UPDATES_CHANNEL_ID: Final = 873430376033452053
+    HIDEOUT_STEAM_DB_CHANNEL_ID: Final = 873430376033452053
+    BOT_SPAM_CHANNEL_ID: Final = 724986090632642653
+    HIDEOUT_SPAM_CHANNEL_ID: Final = 970823670702411810
 
     MENTION_REACTIONS: ClassVar[tuple[str, ...]] = ("❔", "❕", "🤔")
     JOKE_CHANCE: ClassVar[float] = 1 / 300
@@ -103,7 +110,7 @@ class Community(Cog):
         Reposting from steamDB resources is rude and copyright-tier bad.
         Please, think of other ways to implement this (e.g. ISteamNews/GetNewsForApp or RSS feed)
         """
-        if message.channel.id != self.DOTA_STEAM_DB_UPDATES_CHANNEL_ID:
+        if message.channel.id != self.HIDEOUT_STEAM_DB_CHANNEL_ID:
             return
         if "https://steamcommunity.com" not in message.content:
             return
@@ -157,6 +164,92 @@ class Community(Cog):
         for member in role.guild.members:
             if not member.bot:
                 await self._sync_streamer_role(member, role)
+
+    ####################################################################################################################
+    # LOGGER
+    ####################################################################################################################
+
+    @discord.utils.cached_property
+    def bot_spam_channel(self) -> discord.TextChannel:
+        """Webhook to send Dota 2 News to."""
+        channel_id = self.BOT_SPAM_CHANNEL_ID if not self.bot.test else self.HIDEOUT_SPAM_CHANNEL_ID
+        return self.bot.get_text_channel(channel_id)
+
+    @staticmethod
+    def _emoji_embed(
+        title: str,
+        color: int,
+        emoji: discord.Emoji,
+        description: str,
+        actor: discord.Member | discord.User | None,
+    ) -> discord.Embed:
+        embed = discord.Embed(color=color, title=title, description=description).set_thumbnail(url=emoji.url)
+        if actor is not None:
+            embed.set_author(name=actor.display_name, icon_url=actor.display_avatar.url)
+        elif emoji.managed:
+            embed.set_author(name="Managed by an integration", icon_url=globs.Logo.Twitch)
+        return embed
+
+    async def _find_emoji_actor(
+        self, guild: discord.Guild, action: discord.AuditLogAction, emoji: discord.Emoji
+    ) -> discord.Member | discord.User | None:
+        if emoji.managed:
+            return None  # synced by an integration, so there's no audit log entry
+
+        cutoff = clock.utcnow() - dt.timedelta(seconds=15)
+        for _ in range(3):
+            try:
+                async for entry in guild.audit_logs(limit=10, action=action):
+                    if entry.created_at < cutoff:
+                        break
+                    if entry.target is not None and entry.target.id == emoji.id:
+                        return entry.user
+            except discord.Forbidden:
+                log.warning("Missing View Audit Log permission in %s", guild)
+                return None
+            await asyncio.sleep(1)
+        return None
+
+    @commands.Cog.listener()
+    async def on_guild_emojis_update(
+        self,
+        guild: discord.Guild,
+        before: Sequence[discord.Emoji],
+        after: Sequence[discord.Emoji],
+    ) -> None:
+        """Log emoji additions, removals, and edits to the bot spam channel."""
+        expected_guild = const.Guild.hideout if self.bot.test else const.Guild.community
+        if guild.id != expected_guild:
+            return
+
+        old = {e.id: e for e in before}
+        new = {e.id: e for e in after}
+
+        for emoji_id in new.keys() - old.keys():
+            emoji = new[emoji_id]
+            actor = await self._find_emoji_actor(guild, discord.AuditLogAction.emoji_create, emoji)
+            embed = self._emoji_embed("Emote added", 0x00FF7F, emoji, f"`:{emoji.name}:`", actor)
+            await self.bot_spam_channel.send(embed=embed)
+
+        for emoji_id in old.keys() - new.keys():
+            emoji = old[emoji_id]
+            actor = await self._find_emoji_actor(guild, discord.AuditLogAction.emoji_delete, emoji)
+            embed = self._emoji_embed("Emote removed", 0xFF4500, emoji, f"`:{emoji.name}:`", actor)
+            await self.bot_spam_channel.send(embed=embed)
+
+        for emoji_id in old.keys() & new.keys():
+            b, a = old[emoji_id], new[emoji_id]
+            changes = []
+            if b.name != a.name:
+                changes.append(f"**Name:** `{b.name}` -> `{a.name}`")
+            if {r.id for r in b.roles} != {r.id for r in a.roles}:
+                before_roles = ", ".join(r.mention for r in b.roles) or "everyone"
+                after_roles = ", ".join(r.mention for r in a.roles) or "everyone"
+                changes.append(f"**Roles:** {before_roles} -> {after_roles}")
+            if changes:
+                actor = await self._find_emoji_actor(guild, discord.AuditLogAction.emoji_update, a)
+                embed = self._emoji_embed("Emote updated", 0xFFD700, a, "\n".join(changes), actor)
+                await self.bot_spam_channel.send(embed=embed)
 
 
 async def setup(bot: Bot) -> None:

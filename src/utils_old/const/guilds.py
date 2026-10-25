@@ -139,7 +139,6 @@ class Role(RoleEnum):
 
     # COMMUNITY
     role_me = 1468682988039569499
-    bots = 724981475099017276
     nsfw_bots = 959955573405777981
     discord_mods = 855839522620047420
     level_zero = 852663921085251585

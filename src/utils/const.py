@@ -5,9 +5,12 @@ Notices
 * MPL-2.0 License, see LICENSE file for more details.
 * Copyright (C) 2020-present @Aluerie.
 """
+# ruff: file-ignore[mixed-case-variable-in-class-scope]
 
 from enum import UNIQUE, Enum, IntEnum, auto, verify
 from typing import TYPE_CHECKING, override
+
+import discord
 
 if TYPE_CHECKING:
     from core import Bot
@@ -34,8 +37,25 @@ class Emoji(Enum):
     Names must match the names in both bots' (production and test version) Developer Portals.
     """
 
+    # Logos
     Discord = auto()
     GitHub = auto()
+
+    # Non-animated Dank Emojis
+    bubuGun = auto()
+    DankApprove = auto()
+    DankHey = auto()
+    DankLove = auto()
+    hu = auto()
+    peepoComfy = auto()
+    peepoNiceDay = auto()
+    peepoPolice = auto()
+    peepoRoseDank = auto()
+    PepoDetective = auto()
+    PepoG = auto()
+
+    # Animated
+    SmogeInTheRain = auto()
 
     @override
     def __str__(self) -> str:
@@ -66,6 +86,47 @@ async def load_emojis(bot: Bot) -> None:
     if missing := {e.name for e in Emoji} - _RESOLVED_EMOTES.keys():
         msg = f"Application emojis missing on this bot: {sorted(missing)}"
         raise RuntimeError(msg)
+
+
+########################################################################################################################
+# MENTIONABLE IDS
+########################################################################################################################
+
+
+class ChannelId(int):
+    __slots__ = ()
+
+    @property
+    def mention(self) -> str:
+        return f"<#{self}>"
+
+    @property
+    def object(self) -> discord.Object:
+        return discord.Object(self, type=discord.abc.GuildChannel)  # ty: ignore[invalid-argument-type]
+
+
+class RoleId(int):
+    __slots__ = ()
+
+    @property
+    def mention(self) -> str:
+        return f"<@&{self}>"
+
+    @property
+    def object(self) -> discord.Object:
+        return discord.Object(self, type=discord.Role)
+
+
+class UserId(int):
+    __slots__ = ()
+
+    @property
+    def mention(self) -> str:
+        return f"<@{self}>"
+
+    @property
+    def object(self) -> discord.Object:
+        return discord.Object(self, type=discord.abc.User)
 
 
 ########################################################################################################################

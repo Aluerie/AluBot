@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
     import asyncpg
     from aiohttp import ClientSession
+    from PIL import Image
 
     from shared.concepts.db import PoolTypedWithAny
 
@@ -394,7 +395,7 @@ class Bot(BotBase, commands.Bot):
         return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
     #########################################################################################################################
-    # TYPE SAFE LOOKUPS (Kinda unnecessary but hey)
+    # TYPE FRIENDLY LOOKUPS (Kinda unnecessary but hey)
     #########################################################################################################################
 
     def get_text_channel(self, channel_id: int) -> discord.TextChannel:
@@ -407,7 +408,8 @@ class Bot(BotBase, commands.Bot):
 
         Returns
         -------
-        The matching text channel.
+        discord.TextChannel
+            The matching text channel.
 
         Raises
         ------
@@ -437,7 +439,8 @@ class Bot(BotBase, commands.Bot):
 
         Returns
         -------
-        The matching role.
+        discord.Role
+            The matching role.
 
         Raises
         ------
@@ -487,3 +490,11 @@ class Bot(BotBase, commands.Bot):
         fp = io.BytesIO(io.StringIO(string).read().encode("utf8"))
         fp.seek(0)
         return discord.File(fp, filename=filename)
+
+    @staticmethod
+    def image_to_file(image: Image.Image, filename: str = "fromAluBot.png", fmt: str = "PNG") -> discord.File:
+        """Convert ``PIL.Image.Image`` to ``discord.File``."""
+        image_binary = io.BytesIO()
+        image.save(image_binary, fmt)
+        image_binary.seek(0)
+        return discord.File(fp=image_binary, filename=filename)

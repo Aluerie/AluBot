@@ -17,6 +17,7 @@
         "gethostname",
         "getloadavg",
         "Messageable",
+        "peepo",
         "pixiv",
         "truststore",
         "yenbot"

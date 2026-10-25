@@ -23,6 +23,15 @@ run:  # Run the bot in the subset-mode, with test account
 ride:  # Run the bot fully, with test account
 	uv run src/main.py --test-account
 
+
+.PHONY: update
+.SILENT: update
+update:  # Update dependencies
+	uv lock --upgrade
+	make sync
+	prek autoupdate
+
+
 .PHONY: ruff
 .SILENT: ruff
 ruff:  # Run the Ruff's linter 

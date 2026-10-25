@@ -28,7 +28,6 @@ dependencies = [
     "emoji",
     "ffmpeg",
     "githubkit",
-    "gtts",
     "jishaku",
     "lru-dict",
     "lxml",
@@ -39,10 +38,9 @@ dependencies = [
     "pillow",
     "psutil",
     "pulsefire",
-    "pydantic-settings>=2.16.0",
+    "pydantic-settings",
     "pygit2",
     "python-dateutil",
-    "role-identification",
     "steamio",
     "tabulate",
     "thefuzz",
@@ -56,7 +54,6 @@ dependencies = [
 [tool.uv.sources]
 steamio = { git = "https://github.com/Aluerie/steam.py", rev = "introduce-ext.dota2" }
 jishaku = { git = "https://github.com/Gorialis/jishaku.git" }
-role-identification = { git = "https://github.com/meraki-analytics/role-identification.git" }
 
 [dependency-groups]
 dev = [
@@ -64,7 +61,7 @@ dev = [
     "ruff",
     "asyncpg-stubs",
     "ipykernel",
-    "ty>=0.0.89",
+    "ty",
 ]
 
 [[tool.uv.index]]

@@ -39,6 +39,9 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+# this might backfire but why the hell `githubkit` put `GET REST` logs from `httpx` as `log.INFO`, jesus christ.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 ASSETS = Path(__file__).resolve().parents[2] / "assets"
 
 # Welcome image constants

@@ -21,11 +21,9 @@ desktop.ini
 ipynb/
 
 # Playground files
-src/ext/beta.py
 src/ext/zeta.py
 subset.py
-draft.py
-alpha.py
+xi.py
 
 # config secrets
 /config.toml

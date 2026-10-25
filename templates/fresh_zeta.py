@@ -1,4 +1,4 @@
-"""Template for `ext.beta` extension.
+"""Template for `ext.zeta` extension.
 
 Just copy-paste it there without this docstring.
 Then you can beta-test some random code snippets with ease.

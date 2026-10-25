@@ -1,0 +1,19 @@
+# Prek Config
+# -----------
+# * https://prek.j178.dev
+
+files = '.*\.py$'
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.17.2"
+
+[[repos.hooks]]
+# Run the linter (solely for --fix part).
+# When we need linting - it's handled by `.github/workflows/type_lint_test.yml`
+id = "ruff-check"
+args = ["--fix", "--exit-non-zero-on-fix"]
+
+[[repos.hooks]]
+# Run the formatter.
+id = "ruff-format"

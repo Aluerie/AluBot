@@ -24,6 +24,12 @@ ride:  # Run the bot fully, with test account
 	uv run src/main.py --test-account
 
 
+.PHONY: sync
+.SILENT: sync
+sync:  # Install dependencies
+	uv sync --all-extras
+
+
 .PHONY: update
 .SILENT: update
 update:  # Update dependencies

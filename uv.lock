@@ -181,7 +181,7 @@ dev = [
     { name = "ipykernel" },
     { name = "pyright" },
     { name = "ruff" },
-    { name = "ty", specifier = ">=0.0.89" },
+    { name = "ty" },
 ]
 
 [[package]]

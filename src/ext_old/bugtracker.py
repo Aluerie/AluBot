@@ -15,7 +15,8 @@ from discord.ext import commands
 from githubkit.exception import RequestError, RequestFailed
 from PIL import Image
 
-from core import Cog, aluloop
+from core import Cog
+from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
@@ -423,7 +424,7 @@ class BugTracker(Cog):
         )
         await ctx.reply(embed=embed)
 
-    @aluloop(minutes=10)
+    @loop(minutes=10)
     async def bugtracker_news_worker(self) -> None:
         """Bugtracker News Task.
 

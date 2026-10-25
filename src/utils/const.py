@@ -41,6 +41,13 @@ class Emoji(Enum):
     Discord = auto()
     GitHub = auto()
 
+    # Bugtracker
+    reopened = auto()
+    opened = auto()
+    commented = auto()
+    closed = auto()
+    assigned = auto()
+
     # Non-animated Dank Emojis
     bubuGun = auto()
     DankApprove = auto()

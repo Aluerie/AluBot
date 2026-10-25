@@ -8,12 +8,21 @@ Notices
 # ruff: file-ignore[mixed-case-variable-in-class-scope]
 
 from enum import UNIQUE, Enum, IntEnum, auto, verify
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, ClassVar, override
 
 import discord
 
 if TYPE_CHECKING:
     from core import Bot
+
+__all__ = (
+    "ChannelId",
+    "Emoji",
+    "Guild",
+    "RoleId",
+    "UserId",
+    "load_emojis",
+)
 
 
 class Guild(IntEnum):
@@ -100,52 +109,71 @@ async def load_emojis(bot: Bot) -> None:
 ########################################################################################################################
 
 
-class ChannelId(int):
+class DiscordId(int):
+    """Base class for Discord snowflake IDs that behave like plain integers.
+
+    Subclasses must set `_mention_template` and `_object_type`. Instances can be
+    used anywhere an `int` is accepted, for example as dict keys or in comparisons.
+    """
+
     __slots__ = ()
+
+    _mention_template: ClassVar[str]
+    _object_type: ClassVar[type[discord.abc.Snowflake]]
 
     @property
     def mention(self) -> str:
-        return f"<#{self}>"
+        """Mention string that Discord renders as a clickable reference."""
+        return self._mention_template.format(self)
 
     @property
     def object(self) -> discord.Object:
-        return discord.Object(self, type=discord.abc.GuildChannel)  # ty: ignore[invalid-argument-type]
+        """Lightweight `discord.Object` for this ID, usable in API calls that accept a snowflake.
+
+        A new object is created on every access.
+        """
+        return discord.Object(self, type=self._object_type)
 
 
-class RoleId(int):
+class ChannelId(DiscordId):
+    """ID of a Discord channel.
+
+    The `mention` property renders as ``<#id>`` and `object` is typed as a guild channel.
+    """
+
     __slots__ = ()
 
-    @property
-    def mention(self) -> str:
-        return f"<@&{self}>"
-
-    @property
-    def object(self) -> discord.Object:
-        return discord.Object(self, type=discord.Role)
+    _mention_template = "<#{}>"
+    _object_type = discord.abc.GuildChannel  # ty: ignore[invalid-assignment]
 
 
-class UserId(int):
+class RoleId(DiscordId):
+    """ID of a Discord role.
+
+    The `mention` property renders as ``<@&id>`` and `object` is typed as a role.
+    """
+
     __slots__ = ()
 
-    @property
-    def mention(self) -> str:
-        return f"<@{self}>"
+    _mention_template = "<@&{}>"
+    _object_type = discord.Role
 
-    @property
-    def object(self) -> discord.Object:
-        return discord.Object(self, type=discord.abc.User)
+
+class UserId(DiscordId):
+    """ID of a Discord user or guild member.
+
+    The `mention` property renders as ``<@id>`` and `object` is typed as a user.
+    """
+
+    __slots__ = ()
+
+    _mention_template = "<@{}>"
+    _object_type = discord.abc.User
 
 
 ########################################################################################################################
 # COLORS
 ########################################################################################################################
-
-
-__all__ = (
-    "Accent",
-    "Color",
-    "Palette",
-)
 
 
 # class Color:

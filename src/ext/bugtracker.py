@@ -88,7 +88,7 @@ class ActionKind:
 
     def file(self, number: int) -> discord.File:
         """Get discord.File linked to the action image."""
-        # without a `number` we had a "bug" where the image would go outside embeds
+        # without a `number` we will have a bug where the images go outside embeds
         return discord.File(self.file_path, filename=f"{self.name}_{number}.png")
 
 
@@ -225,7 +225,7 @@ class TimeLine:
 
     def _fill_combined(self, embed: discord.Embed, bot: Bot) -> discord.File:
         """Fill the embed with every action listed chronologically."""
-        embed.color = 0x4078C0  # git color, first in google :D
+        embed.color = 0x4078C0  # git color
         actions = self.sorted_actions()
 
         for action in actions:
@@ -362,7 +362,7 @@ class BugTracker(Cog):
         and there is no "since" parameter, so we `break` once we reach already checked events.
         """
         async for event in self.github.paginate(
-            self.github.rest.issues.async_list_events_for_repo,
+            request=self.github.rest.issues.async_list_events_for_repo,
             owner=GITHUB_OWNER,
             repo=GITHUB_REPO,
         ):

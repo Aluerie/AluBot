@@ -412,22 +412,22 @@ class Community(Cog):
                 inline=False,
             )
 
-        before_roles = set(before.roles)
-        after_roles = set(after.roles)
-        if added := after_roles - before_roles:
-            changed = True
-            embed.add_field(
-                name="Roles added",
-                value=", ".join(role.mention for role in sorted(added, reverse=True)),
-                inline=False,
-            )
-        if removed := before_roles - after_roles:
-            changed = True
-            embed.add_field(
-                name="Roles removed",
-                value=", ".join(role.mention for role in sorted(removed, reverse=True)),
-                inline=False,
-            )
+        # before_roles = set(before.roles)
+        # after_roles = set(after.roles)
+        # if added := after_roles - before_roles:
+        #     changed = True
+        #     embed.add_field(
+        #         name="Roles added",
+        #         value=", ".join(role.mention for role in sorted(added, reverse=True)),
+        #         inline=False,
+        #     )
+        # if removed := before_roles - after_roles:
+        #     changed = True
+        #     embed.add_field(
+        #         name="Roles removed",
+        #         value=", ".join(role.mention for role in sorted(removed, reverse=True)),
+        #         inline=False,
+        #     )
 
         if before.timed_out_until != after.timed_out_until:
             changed = True

@@ -61,14 +61,6 @@ class TransposeOLDClient:
         return discord.File(fp=image_binary, filename=filename)
 
     @staticmethod
-    def image_to_file(image: Image.Image, filename: str = "fromAluBot.png", extension: str = "PNG") -> discord.File:
-        """Convert PIL.Image.Image to discord.File."""
-        image_binary = BytesIO()
-        image.save(image_binary, extension)
-        image_binary.seek(0)
-        return discord.File(fp=image_binary, filename=filename)
-
-    @staticmethod
     async def attachment_to_image(attachment: discord.Attachment) -> Image.Image:
         """Convert discord.Attachment to Image.Image."""
         return Image.open(BytesIO(await attachment.read()))

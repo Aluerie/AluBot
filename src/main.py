@@ -23,6 +23,8 @@ else:
     truststore.inject_into_ssl()
 
 
+import os
+
 import aiohttp
 import click
 
@@ -41,6 +43,11 @@ ASCII_STARTING_UP_ART = r"""
                                                                     |___/
             [ ALUBOT IS STARTING NOW ]
 """
+
+# Must be set before jishaku is imported; some flags are read at import time.
+os.environ.setdefault("JISHAKU_NO_DM_TRACEBACK", "True")
+os.environ.setdefault("JISHAKU_NO_UNDERSCORE", "True")
+os.environ.setdefault("JISHAKU_HIDE", "True")
 
 
 async def start_the_bot(

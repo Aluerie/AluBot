@@ -20,11 +20,10 @@ if TYPE_CHECKING:
     from core import Bot
 
     class GuildConfig(TypedDict):
+        """GuildConfig."""
+
         enabled: bool
         ignored_channels: list[int]
-
-
-__all__ = ("Mimics",)
 
 
 class Mimics(Cog):

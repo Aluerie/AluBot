@@ -11,14 +11,13 @@ from __future__ import annotations
 import io
 import logging
 import sys
-import textwrap
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
 from discord.ext import commands
 
+import ext
 from config import env
-from ext import DISABLED_EXTENSIONS, EXT_PACKAGE
 from shared import clock, errors, fmt
 from shared.concepts import BotBase
 from utils import const
@@ -112,7 +111,7 @@ class Bot(BotBase, commands.Bot):
             tree_cls=AppCommandTree,
             strip_after_prefix=True,
             case_insensitive=True,
-            help_command=None,
+            # help_command=None,
         )
         super().__init__(
             session,
@@ -124,6 +123,8 @@ class Bot(BotBase, commands.Bot):
         self.pool: PoolTypedWithAny = pool
         self.session: ClientSession = session
         self.extensions_to_load: tuple[str, ...] = self.get_extensions(is_subset_mode=is_subset_mode)
+        if not self.test:
+            self.extensions_to_load += ("jishaku",)
         log.info("The list of modules (%s total) to load: %s", len(self.extensions_to_load), self.extensions_to_load)
 
         # Stats / Info
@@ -232,7 +233,7 @@ class Bot(BotBase, commands.Bot):
                         color=0x890620,
                         title=f"Ctx Command Error: `{ctx.clean_prefix}{ctx.command}`",
                         url=ctx.message.jump_url,
-                        description=textwrap.shorten(ctx.message.content, width=1024),
+                        description=fmt.shorten(ctx.message.content, limit=1024),
                         timestamp=ctx.message.created_at,
                     )
                     .set_author(
@@ -267,9 +268,7 @@ class Bot(BotBase, commands.Bot):
     @override
     def get_extensions(self, *, is_subset_mode: bool) -> tuple[str, ...]:  # ty: ignore[invalid-method-override]
         """Get list of bot extensions to load."""
-        return super().get_extensions(
-            is_subset_mode=is_subset_mode, package=EXT_PACKAGE, disabled_extensions=DISABLED_EXTENSIONS
-        )
+        return super().get_extensions(is_subset_mode=is_subset_mode, package=ext)
 
     @override
     async def setup_hook(self) -> None:
@@ -277,15 +276,15 @@ class Bot(BotBase, commands.Bot):
         await const.load_emojis(self)
 
         failed_to_load_extensions = False
-        for ext in self.extensions_to_load:
+        for extension in self.extensions_to_load:
             try:
-                await self.load_extension(ext)
+                await self.load_extension(extension)
             except commands.ExtensionError as error:
                 failed_to_load_extensions = True
                 embed = discord.Embed(
                     color=0xDA9F93,
-                    description=f"Failed to load extension `{ext}`.",
-                ).set_footer(text=f'setup_hook: loading extension "{ext}"')
+                    description=f"Failed to load extension `{extension}`.",
+                ).set_footer(text=f'setup_hook: loading extension "{extension}"')
                 await self.error_notification_manager.register(error, embed)
 
         self.timers = Scheduler(bot=self)

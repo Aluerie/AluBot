@@ -20,8 +20,9 @@ desktop.ini
 *.ipynb
 ipynb/
 
-# beta test
+# Playground files
 src/ext/beta.py
+src/ext/zeta.py
 subset.py
 draft.py
 alpha.py

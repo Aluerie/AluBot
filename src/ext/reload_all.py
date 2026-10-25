@@ -20,9 +20,6 @@ if TYPE_CHECKING:
     from core import Bot, Interaction
 
 
-__all__ = ("ReloadAllCog",)
-
-
 class ReloadAllCog(DevCog):
     """Reload All Cog.
 

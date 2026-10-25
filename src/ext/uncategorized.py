@@ -1,4 +1,4 @@
-"""Fun.
+"""Uncategorized.
 
 Notices
 -------
@@ -20,8 +20,8 @@ if TYPE_CHECKING:
     from core import Bot, Interaction
 
 
-class FunCog(Cog):
-    """Fun Cog."""
+class Uncategorized(Cog):
+    """Uncategorized."""
 
     @app_commands.command(name="coin-flip")
     async def coin_flip(self, interaction: Interaction) -> None:
@@ -32,4 +32,4 @@ class FunCog(Cog):
 
 async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(FunCog(bot))
+    await bot.add_cog(Uncategorized(bot))

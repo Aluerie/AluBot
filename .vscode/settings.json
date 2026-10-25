@@ -16,6 +16,7 @@
         "fileformat",
         "gethostname",
         "getloadavg",
+        "Messageable",
         "pixiv",
         "truststore",
         "yenbot"

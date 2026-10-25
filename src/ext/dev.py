@@ -1,4 +1,4 @@
-"""Reload and sync related features.
+"""Developer.
 
 Notices
 -------
@@ -9,15 +9,19 @@ Notices
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Literal, assert_never, override
+import unicodedata
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, assert_never, cast, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
+from jishaku.codeblocks import codeblock_converter
 
 from core import DevCog
-from shared import errors
+from shared import errors, fmt
 from shared.concepts import loop
 from utils import const
 
@@ -27,16 +31,15 @@ if TYPE_CHECKING:
     from core import Bot, Context, Interaction
 
 
-__all__ = ("ReloadCog",)
-
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
 
 type SyncSpecLiteral = Literal["global", "current", "copy", "clear", "~", "*", "^"]
 type SlashSyncSpecLiteral = Literal["global", "current", "copy", "clear"]
 
 
-class ReloadCog(DevCog):
+class Dev(DevCog):
     """Developer tools for keeping Discord's command registry in sync with the bot.
 
     Features
@@ -45,20 +48,32 @@ class ReloadCog(DevCog):
     * `autosync` task that syncs global and Hideout commands shortly once the bot is ready (skipped on the test bot).
     """
 
-    ####################################################################################################################
-    # AUTOSYNC
-    ####################################################################################################################
+    DATABASE_CHANNEL_ID: Final[int] = 1541985585810378823
 
     @override
     async def cog_load(self) -> None:
         if not self.bot.test:
             self.autosync.start()
+        self.database_backup.start()
         await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
+        self.database_backup.stop()
         self.autosync.cancel()
         await super().cog_unload()
+
+    @override
+    async def cog_check(self, ctx: Context) -> bool:
+        return await self.bot.is_owner(ctx.author)  # ty: ignore[invalid-argument-type]
+
+    @override
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        return await self.bot.is_owner(interaction.user)  # ty: ignore[invalid-argument-type]
+
+    ####################################################################################################################
+    # AUTOSYNC
+    ####################################################################################################################
 
     @loop(count=1, wait_for_ready=True)
     async def autosync(self) -> None:
@@ -288,7 +303,219 @@ class ReloadCog(DevCog):
             if name not in self.bot.extensions and current.lower() in name.lower()
         ][:25]
 
+    ####################################################################################################################
+    # DATABASE BACKUP
+    ####################################################################################################################
+
+    def get_database_channel(self) -> discord.TextChannel:
+        """Get the text channel used for database backups."""
+        return self.bot.get_text_channel(self.DATABASE_CHANNEL_ID)
+
+    @loop(time=dt.time(hour=18, minute=5, tzinfo=dt.UTC))
+    async def database_backup(self) -> None:
+        """Daily task to backup the bot's database.
+
+        Sends pg_dump to my private discord server.
+        """
+        if self.bot.test:
+            return
+
+        path = Path(".temp/alubot.sql")
+        path.parent.mkdir(exist_ok=True)
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "pg_dump",
+                "-f",
+                str(path),
+                "alubot",
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                _, stderr = await asyncio.wait_for(proc.communicate(), timeout=300)
+            except TimeoutError:
+                proc.kill()
+                await proc.wait()
+                raise
+            if proc.returncode != 0:
+                msg = f"pg_dump exited with {proc.returncode}: {stderr.decode()}"
+                raise RuntimeError(msg)
+            await self.get_database_channel().send(file=discord.File(path, filename=path.name))
+        finally:
+            path.unlink(missing_ok=True)
+
+    ####################################################################################################################
+    # PROJECT CONTROL
+    ####################################################################################################################
+
+    project_group = app_commands.Group(
+        name="project-dev",
+        description="Control Irene's projects",
+        guild_ids=[const.Guild.hideout],
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
+
+    PROJECTS: ClassVar[dict[str, str]] = {
+        "irebot": "../IrenesBot/.temp/irebot.log",
+        "alubot": ".temp/alubot.log",
+        "dota2bot": "../Dota2Bot/.temp/d2b.log",
+    }
+
+    @project_group.command(name="logs")
+    @app_commands.choices(project=[app_commands.Choice(name=p, value=log_path) for p, log_path in PROJECTS.items()])
+    async def project_logs(self, interaction: Interaction, project: str) -> None:
+        """🪵 Get project's logs."""
+        await interaction.response.defer()
+        await interaction.followup.send(file=discord.File(project))
+
+    @project_group.command(name="restart")
+    @app_commands.choices(project=[app_commands.Choice(name=p, value=p) for p in PROJECTS])
+    async def project_restart(self, interaction: Interaction, project: str) -> None:
+        """🔌 Restart project's process.
+
+        Usable to restart the bot (or other projects) without logging to VPS machine or committing something.
+        Sometimes, it's just more comfortable to do it from discord window or mobile.
+
+        Parameters
+        ----------
+        project
+            Project to restart.
+        """
+        await interaction.response.send_message("Rebooting in 3 2 1")
+        await asyncio.sleep(3)
+        proc = await asyncio.create_subprocess_exec(
+            "sudo",
+            "systemctl",
+            "restart",
+            project,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        _, stderr = await proc.communicate()
+        if proc.returncode != 0:
+            log.error("Failed to restart %s: %s", project, stderr.decode())
+            await interaction.followup.send(f"Something went wrong:\n{fmt.codeblock(stderr.decode()[:1500])}")
+
+    @project_group.command(name="journal")
+    @app_commands.choices(project=[app_commands.Choice(name=p, value=p) for p in PROJECTS])
+    async def project_journal(self, interaction: Interaction, project: str) -> None:
+        """📓 Get project's journal.
+
+        Parameters
+        ----------
+        project
+            Project to get journal for.
+        """
+        await interaction.response.defer()
+        proc = await asyncio.create_subprocess_exec(
+            "sudo",
+            "journalctl",
+            f"--unit={project}",
+            "-n",
+            "5000",
+            "--no-pager",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _stderr = await proc.communicate()
+        await interaction.followup.send(file=self.bot.str_to_file(stdout.decode(), f"{project}-journal.log"))
+
+    ####################################################################################################################
+    # DEV COMMANDS
+    # -------------
+    # These commands aren't public only because I don't think people would find them useful.
+    # It's just some helping commands that I use myself when coding the bot.
+    ####################################################################################################################
+
+    @commands.command(name="invite-link")
+    async def invite_link(self, ctx: Context) -> None:
+        """Get invite link for the bot.
+
+        Somewhat pointless since 'Add App' button exists.
+        But it's useful to have for @YenBot where I removed that button.
+        """
+        await ctx.send(self.bot.invite_link)
+
+    tools_group = app_commands.Group(
+        name="tools-dev",
+        description="Useful developer tools.",
+        guild_ids=[const.Guild.hideout],
+        default_permissions=discord.Permissions(manage_guild=True),
+    )
+
+    # fmt: off
+    KNOWN_CHAR_ABBREVIATIONS: ClassVar[dict[str, str]] = {
+        "\u0000": "NUL", "\u0009": "TAB", "\u000a": "LF", "\u000d": "CR", "\u00a0": "NBSP", "\u00ad": "SHY",
+        "\u200b": "ZWSP", "\u200c": "ZWNJ", "\u200d": "ZWJ", "\u200e": "LRM", "\u200f": "RLM", "\u202a": "LRE",
+        "\u202b": "RLE", "\u202c": "PDF", "\u202d": "LRO", "\u202e": "RLO", "\u2060": "WJ", "\u2066": "LRI",
+        "\u2067": "RLI", "\u2068": "FSI", "\u2069": "PDI", "\ufe0e": "VS15", "\ufe0f": "VS16", "\ufeff": "BOM",
+    }
+    # fmt: on
+
+    def char_info_worker(self, char: str) -> tuple[str, str]:
+        r"""Return the Python escape for a character and some info.
+
+        Example
+        -------
+        "🦢" -> ("\N{SWAN}", "[`\U0001f9a2`](<fileformat link>): SWAN — 🦢")
+        """
+        codepoint = ord(char)
+        alias = self.KNOWN_CHAR_ABBREVIATIONS.get(char)
+        name = unicodedata.name(char, "")
+        if alias is not None:
+            full_name = f"{name} ({alias})" if name else alias
+            escape = f"\\N{{{alias}}}"
+        elif name:
+            full_name = name
+            escape = f"\\N{{{name}}}"
+        else:
+            full_name = "(No name found)"
+            escape = f"\\U{codepoint:08x}"
+
+        markdown_link = f"[`\\U{codepoint:08x}`](https://www.fileformat.info/info/unicode/char/{codepoint:x})"
+        text_view = discord.utils.escape_markdown(char)
+        return escape, f"{markdown_link}: {full_name} \N{EM DASH} {text_view}"
+
+    @tools_group.command()
+    async def charinfo(self, interaction: Interaction, characters: app_commands.Range[str, 1, 10]) -> None:
+        """🔤 Show Unicode information about character(-s).
+
+        Only up to 10 characters (Unicode code points) at a time though.
+
+        Parameters
+        ----------
+        characters
+            Input up to 10 characters to get format info about.
+        """
+        escapes, lines = zip(*(self.char_info_worker(c) for c in characters), strict=True)
+        echo = discord.utils.escape_markdown(characters)
+        codeblock = fmt.codeblock("\n".join(f"'{e}'" for e in escapes))
+        bullet_list = "\n".join(f"* {line}" for line in lines)
+        await interaction.response.send_message(
+            content=f"{echo}\n{codeblock}\n{bullet_list}",
+            allowed_mentions=discord.AllowedMentions.none(),
+            suppress_embeds=True,
+        )
+
+    @commands.command(name="py")
+    async def py(self, ctx: Context, *, code: str) -> None:
+        """Evaluate Python code via jishaku.
+
+        Alias for `jsk py`.
+
+        Parameters
+        ----------
+        code
+            The code to run. Can be wrapped in a codeblock.
+        """
+        jsk_py = cast("commands.Command[Any, ..., Any] | None", self.bot.get_command("jsk py"))
+        if jsk_py is None:
+            await ctx.reply("It seems, jishaku is not loaded")
+            return
+        await ctx.invoke(jsk_py, argument=codeblock_converter(code))
+
 
 async def setup(bot: Bot) -> None:
     """Load the extension (discord.py entry point)."""
-    await bot.add_cog(ReloadCog(bot))
+    await bot.add_cog(Dev(bot))

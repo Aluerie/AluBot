@@ -9,7 +9,7 @@ Notices
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Final, override
 
 import discord
 from discord import ui
@@ -28,22 +28,22 @@ if TYPE_CHECKING:
     from core import Bot
 
 
-class HideoutCog(DiscordWebhookLogs, DevCog):
+class Hideout(DiscordWebhookLogs, DevCog):
     """Hideout Discord Guild Related Features."""
 
     JAILED_BOTS_ROLE_ID = 1090428532162822234
 
     GLOBAL_LOGS_CHANNEL_ID = 997149550324240465
 
+    EXTRA_EXACT_AVATAR_MAPPING: Final[dict[str, str]] = {
+        "discord.gateway": "https://em-content.zobj.net/source/microsoft/476/broken-heart_1f494.png",
+        "core.bot": "https://em-content.zobj.net/source/microsoft/476/swan_1f9a2.png",
+        "ext.dev.reload": "https://em-content.zobj.net/source/microsoft/476/counterclockwise-arrows-button_1f504.png",
+    }
+
     def __init__(self, bot: Bot) -> None:
         super().__init__(env.WEBHOOK_LOGGER, bot.session)
         super(DevCog, self).__init__(bot)
-
-        self.extra_exact_avatar_mapping: dict[str, str] = {
-            "discord.gateway": "https://em-content.zobj.net/source/microsoft/476/broken-heart_1f494.png",
-            "core.bot": "https://em-content.zobj.net/source/microsoft/476/swan_1f9a2.png",
-            "ext.dev.reload": "https://em-content.zobj.net/source/microsoft/476/counterclockwise-arrows-button_1f504.png",
-        }
 
     @override
     async def cog_load(self) -> None:
@@ -220,4 +220,4 @@ class HideoutCog(DiscordWebhookLogs, DevCog):
 
 async def setup(bot: Bot) -> None:
     """Load the extension (discord.py entry point)."""
-    await bot.add_cog(HideoutCog(bot))
+    await bot.add_cog(Hideout(bot))

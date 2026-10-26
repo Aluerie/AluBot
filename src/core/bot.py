@@ -126,7 +126,7 @@ class Bot(BotBase, commands.Bot):
         self.extensions_to_load: tuple[str, ...] = self.get_extensions(is_subset_mode=is_subset_mode)
         if not self.test:
             self.extensions_to_load += ("jishaku",)
-        log.info("The list of modules (%s total) to load: %s", len(self.extensions_to_load), self.extensions_to_load)
+        log.info("The list of extensions (%s total) to load: %s", len(self.extensions_to_load), self.extensions_to_load)
 
         # Stats / Info
         self.repository_url: str = "https://github.com/Aluerie/AluBot"
@@ -394,6 +394,11 @@ class Bot(BotBase, commands.Bot):
         """
         return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
+    def webhook_from_url_or_test(self, url: str) -> discord.Webhook:
+        """webhook_from_url_or_test."""
+        url = url if not self.test else env.WEBHOOK_SPAM
+        return self.webhook_from_url(url)
+
     #########################################################################################################################
     # TYPE FRIENDLY LOOKUPS (Kinda unnecessary but hey)
     #########################################################################################################################
@@ -426,6 +431,11 @@ class Bot(BotBase, commands.Bot):
             msg = f"Channel {channel_id} is {type(channel).__name__}, expected TextChannel"
             raise TypeError(msg)
         return channel
+
+    def get_text_channel_or_test(self, channel_id: int) -> discord.TextChannel:
+        """get_text_channel_or_test."""
+        channel_id = channel_id if not self.test else 970823670702411810
+        return self.get_text_channel(channel_id)
 
     def get_role(self, guild_id: int, role_id: int) -> discord.Role:
         """Return the cached role with the given ID.

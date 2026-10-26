@@ -18,6 +18,7 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, Final, override
 
 import discord
+from discord.ext import commands
 from githubkit import GitHub
 from githubkit.exception import RequestError, RequestFailed
 from PIL import Image
@@ -220,7 +221,7 @@ class TimeLine:
         url = comment.comment_url if comment else None
         embed.set_author(name=lead.author_str, icon_url=lead.actor.avatar_url, url=url)
         if comment:
-            embed.description = comment.markdown_body
+            embed.description = fmt.shorten(comment.markdown_body, limit=fmt.EMBED_DESCRIPTION_LIMIT)
         return lead.kind.file(self.issue.number)
 
     def _fill_combined(self, embed: discord.Embed, bot: Bot) -> discord.File:
@@ -292,6 +293,7 @@ class BugTracker(Cog):
 
     BUGTRACKER_CHANNEL_ID: Final = const.ChannelId(1119041743002800138)
     HIDEOUT_SPAM_CHANNEL_ID: Final = const.ChannelId(970823670702411810)
+    HIDEOUT_STEAM_DB_CHANNEL_ID: Final = const.ChannelId(873430376033452053)
 
     @override
     async def cog_load(self) -> None:
@@ -308,8 +310,7 @@ class BugTracker(Cog):
     @discord.utils.cached_property
     def bugtracker_channel(self) -> discord.TextChannel:
         """Dota 2 Bug tracker news channel."""
-        channel_id = self.HIDEOUT_SPAM_CHANNEL_ID if self.bot.test else self.BUGTRACKER_CHANNEL_ID
-        return self.bot.get_text_channel(channel_id)
+        return self.bot.get_text_channel_or_test(self.BUGTRACKER_CHANNEL_ID)
 
     async def get_valve_devs(self) -> set[str]:
         """Get the set of known Valve developers."""
@@ -465,7 +466,36 @@ class BugTracker(Cog):
                 embeds=[embed for embed, _ in batch],
                 files=[file for _, file in batch],
             )
-            await message.publish()
+            if self.bugtracker_channel.is_news():
+                await message.publish()
+
+    ####################################################################################################################
+    # STEAM DB REPOSTING
+    ####################################################################################################################
+
+    @discord.utils.cached_property
+    def news_webhook(self) -> discord.Webhook:
+        """Webhook to send Dota 2 News to."""
+        return self.bot.webhook_from_url_or_test(env.WEBHOOK_DOTANEWS)
+
+    @commands.Cog.listener("on_message")
+    async def filter_steam_db_messages(self, message: discord.Message) -> None:
+        """Filter SteamDB messages from uninteresting ones.
+
+        That channel contains all kind of updates, but we are only interested in blogpost ones.
+
+        Warning
+        -------
+        Reposting from steamDB resources is rude and copyright-tier bad.
+        Please, think of other ways to implement this (e.g. ISteamNews/GetNewsForApp or RSS feed)
+        """
+        if message.channel.id != self.HIDEOUT_STEAM_DB_CHANNEL_ID:
+            return
+        if "https://steamcommunity.com" not in message.content:
+            return
+
+        msg = await self.news_webhook.send(content=f"# {message.content}", wait=True)
+        await msg.publish()
 
 
 async def setup(bot: Bot) -> None:

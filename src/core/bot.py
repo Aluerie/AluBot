@@ -85,12 +85,10 @@ class Bot(BotBase, commands.Bot):
         """
         if is_test_account:
             # test account
-            self.test = True
             self.prefix = "~"
             ping_role_mention = env.PING_TEST_MENTION
         else:
             # production account
-            self.test = False
             self.prefix = "$"
             ping_role_mention = env.PING_PROD_MENTION
 
@@ -116,6 +114,7 @@ class Bot(BotBase, commands.Bot):
         )
         super().__init__(
             session,
+            test=is_test_account,
             dev_ping=ping_role_mention,
             error_webhook_url=env.WEBHOOK_ERROR,
             spam_webhook_url=env.WEBHOOK_SPAM,
@@ -393,11 +392,6 @@ class Bot(BotBase, commands.Bot):
         The override adds some specific to discord bots arguments.
         """
         return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
-
-    def webhook_from_url_or_test(self, url: str) -> discord.Webhook:
-        """webhook_from_url_or_test."""
-        url = url if not self.test else env.WEBHOOK_SPAM
-        return self.webhook_from_url(url)
 
     #########################################################################################################################
     # TYPE FRIENDLY LOOKUPS (Kinda unnecessary but hey)

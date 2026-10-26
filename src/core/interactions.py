@@ -8,10 +8,10 @@ Notices
 
 import contextlib
 import functools
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import discord
-from discord import app_commands, ui
+from discord import app_commands
 
 from shared import clock, fmt
 
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 __all__ = (
     "AppCommandTree",
     "Interaction",
-    "UiMixin",
 )
 
 type Interaction = discord.Interaction[Bot]
@@ -121,50 +120,3 @@ class AppCommandTree(app_commands.CommandTree["Bot"]):
                 )
                 fmt.add_mapping_field(embed, name="Namespace `__dict__`", mapping=interaction.namespace.__dict__)
                 await interaction.client.error_notification_manager.register(original, embed)
-
-
-_DISABLEABLE = (ui.Button, ui.Select, ui.UserSelect, ui.RoleSelect, ui.ChannelSelect, ui.MentionableSelect)
-
-
-class UiMixin(ui.view.BaseView):
-    """Some boilerplate features for views.
-
-    List it before `ui.View` or `ui.Modal` in the bases.
-    """
-
-    message: discord.Message | discord.WebhookMessage | None = None
-
-    @override
-    async def on_timeout(self) -> None:
-        """Disable the items on timeout. Requires `message` to be assigned so the view can edit it."""
-        if self.message is None:
-            return
-
-        for child in self.walk_children():
-            if isinstance(child, _DISABLEABLE):
-                child.disabled = True
-        with contextlib.suppress(discord.HTTPException):
-            await self.message.edit(view=self)
-
-    @override
-    async def on_error(
-        self,
-        interaction: Interaction,
-        error: Exception,
-        item: discord.ui.Item[Any] | None = None,  # `None` for modals: `Modal.on_error` has no item
-        /,
-    ) -> None:
-        """Event: called when a view item's callback or a modal's submit raises an exception."""
-        if not await interaction.client.respond_per_policy(error, respond=functools.partial(_respond, interaction)):
-            return
-
-        kind = "Modal" if isinstance(self, ui.Modal) else "View"
-        embed = _build_interaction_error_embed(
-            interaction,
-            title=f"{kind} Error: `{type(self).__name__}`",
-            color=0x2A0553,
-        )
-        fmt.add_mapping_field(embed, name="Interaction Data", mapping=dict(interaction.data or {}))
-        if item is not None:
-            fmt.add_mapping_field(embed, name="View Item", mapping={"item": item})
-        await interaction.client.error_notification_manager.register(error, embed)

@@ -285,6 +285,8 @@ class Community(Cog):
 
         title, verb, color = MODERATION_ACTIONS[entry.action]
         user = target if isinstance(target, discord.User | discord.Member) else await self._resolve_user(target.id)
+        if user is not None and user.bot:
+            return
         name = f"`{user}`" if user else "*unknown user*"
 
         embed = discord.Embed(

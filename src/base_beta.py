@@ -82,6 +82,8 @@ class BetaCog(Cog):
     @commands.Cog.listener("on_message")
     async def beta_event(self, message: discord.Message) -> None:
         """Event made for quick testing."""
+        if message.guild is None:
+            return
         if message.guild.id != const.Guild.hideout:
             return
         if message.author.bot or message.webhook_id:

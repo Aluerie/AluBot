@@ -39,10 +39,7 @@ class ColorRolesView(discord.ui.View):
     async def dropdown(self, interaction: Interaction, select: discord.ui.RoleSelect[Self]) -> None:
         """Dropdown Roles Select for color roles."""
         if not select.values:
-            embed = discord.Embed(
-                description="You've selected zero roles and thus I did nothing",
-            )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_message("You've selected zero roles and thus I did nothing", ephemeral=True)
             return
 
         guild = interaction.guild
@@ -80,7 +77,7 @@ class ColorRolesView(discord.ui.View):
                 if old_colors:
                     await member.remove_roles(*old_colors)
                 await member.add_roles(role)
-                message = f"Added {role.mention} colour role!"
+                message = f"Added {role.mention} colour role; removed {', '.join(r.mention for r in old_colors)}!"
         except discord.HTTPException:
             await interaction.followup.send("I couldn't change your roles, please tell the admins.", ephemeral=True)
             return

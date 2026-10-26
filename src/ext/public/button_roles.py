@@ -20,8 +20,9 @@ from core import Cog, Modal, View
 if TYPE_CHECKING:
     from core import Bot, Interaction
 
-# `button-role:123` toggles a role, `button-role:123:x` does the same but is part of an "exclusive" message.
-# Messages sent before exclusive mode existed use the first form, so they keep working.
+# * `button-role:123` toggles a role
+# * `button-role:123:x` does the same but is part of an "exclusive" message
+#   (where selecting one role would remove others).
 ROLE_BUTTON_RE = re.compile(r"button-role:(?P<role_id>[0-9]+)(?P<exclusive>:x)?")
 HEX_COLOR_RE = re.compile(r"[0-9a-fA-F]{6}")
 
@@ -42,7 +43,7 @@ def role_ids_from_message(message: discord.Message) -> set[int]:
             if (
                 isinstance(component, discord.Button)
                 and component.custom_id
-                and (match := ROLE_BUTTON_RE.fullmatch(component.custom_id))
+                and (match := ROLE_BUTTON_RE.fullmatch(string=component.custom_id))
             ):
                 role_ids.add(int(match["role_id"]))
     return role_ids
@@ -50,6 +51,8 @@ def role_ids_from_message(message: discord.Message) -> set[int]:
 
 def text_value(label: ui.Label[Any]) -> str:
     """Get the text typed into a `Label` that wraps a `TextInput`.
+
+    Type-hint crutch, pretty much.
 
     Parameters
     ----------
@@ -64,6 +67,8 @@ def text_value(label: ui.Label[Any]) -> str:
 def selected_roles(label: ui.Label[Any]) -> list[discord.Role]:
     """Get the roles picked in a `Label` that wraps a `RoleSelect`.
 
+    Type-hint crutch, pretty much.
+
     Parameters
     ----------
     label
@@ -77,6 +82,8 @@ def selected_roles(label: ui.Label[Any]) -> list[discord.Role]:
 def uploaded_files(label: ui.Label[Any]) -> list[discord.Attachment]:
     """Get the files uploaded in a `Label` that wraps a `FileUpload`.
 
+    Type-hint crutch, pretty much.
+
     Parameters
     ----------
     label
@@ -89,6 +96,8 @@ def uploaded_files(label: ui.Label[Any]) -> list[discord.Attachment]:
 
 def is_checked(label: ui.Label[Any]) -> bool:
     """Get whether the checkbox in a `Label` that wraps a `Checkbox` was ticked.
+
+    Type-hint crutch, pretty much.
 
     Parameters
     ----------
@@ -118,7 +127,7 @@ class RoleButton(ui.DynamicItem[ui.Button[Any]], template=ROLE_BUTTON_RE):
 
     def __init__(self, role_id: int, label: str | None = None, *, exclusive: bool = False) -> None:
         super().__init__(
-            ui.Button(
+            item=ui.Button(
                 label=label,
                 style=discord.ButtonStyle.secondary,
                 custom_id=f"button-role:{role_id}{':x' if exclusive else ''}",
@@ -130,7 +139,7 @@ class RoleButton(ui.DynamicItem[ui.Button[Any]], template=ROLE_BUTTON_RE):
     @classmethod
     @override
     async def from_custom_id(cls, interaction: Interaction, item: ui.Item[Any], match: re.Match[str], /) -> Self:
-        return cls(int(match["role_id"]), exclusive=match["exclusive"] is not None)
+        return cls(role_id=int(match["role_id"]), exclusive=match["exclusive"] is not None)
 
     @override
     async def callback(self, interaction: Interaction) -> None:

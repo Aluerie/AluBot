@@ -58,6 +58,7 @@ class Emoji(Enum):
     assigned = auto()
 
     # Non-animated Dank Emojis
+    bubuChrist = auto()
     bubuGun = auto()
     DankApprove = auto()
     DankHey = auto()
@@ -67,6 +68,7 @@ class Emoji(Enum):
     peepoNiceDay = auto()
     peepoPolice = auto()
     peepoRoseDank = auto()
+    PepoBeliever = auto()
     PepoDetective = auto()
     PepoG = auto()
 

@@ -14,7 +14,7 @@ Notices
 * Copyright (C) 2020-present @Aluerie.
 """
 
-# ruff: file-ignore[unused-import]
+# ruff: file-ignore[unused-import, typing-only-third-party-import]
 
 from __future__ import annotations
 
@@ -52,6 +52,7 @@ from discord.ext import commands
 from config import env
 from core import Bot, Cog
 from shared.concepts import loop
+from utils import const
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Sequence
@@ -67,13 +68,29 @@ class BetaCog(Cog):
 
     @override
     async def cog_load(self) -> None:
-        self.beta_test.start()
+        self.beta_task.start()
 
     @loop(count=1)
-    async def beta_test(self) -> None:
+    async def beta_task(self) -> None:
         """Task that is supposed to run just once to test stuff out."""
-        await self.beta_test_task_count_1()
+        await self.task_test()
 
-    async def beta_test_task_count_1(self) -> None:
+    async def task_test(self) -> None:
         """Worker function for `self.beta_test` task."""
+        raise NotImplementedError
+
+    @commands.Cog.listener("on_message")
+    async def beta_event(self, message: discord.Message) -> None:
+        """Event made for quick testing."""
+        if message.guild.id != const.Guild.hideout:
+            return
+        if message.author.bot or message.webhook_id:
+            return
+        if not message.content.lower().startswith("test"):
+            return
+
+        await self.event_test(message)
+
+    async def event_test(self, message: discord.Message) -> None:
+        """Worker function for `self.beta_event` event."""
         raise NotImplementedError

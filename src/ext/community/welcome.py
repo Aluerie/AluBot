@@ -192,8 +192,8 @@ class Community(Cog):
         try:
             if member.bot:
                 await member.add_roles(self.BOTS_ROLE_ID.object, reason="Bot joined the server")
-            else:
-                await member.add_roles(*self.CATEGORY_ROLES, reason="Category roles for a new member")
+                return
+            await member.add_roles(*self.CATEGORY_ROLES, reason="Category roles for a new member")
         except discord.HTTPException:
             log.exception("Failed to add join roles to %s", member)
 
@@ -240,6 +240,8 @@ class Community(Cog):
         arrived for the member.
         """
         if member.guild.id != const.Guild.community:
+            return
+        if member.bot:
             return
 
         await asyncio.sleep(REMOVE_GRACE_SECONDS)

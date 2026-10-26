@@ -154,7 +154,7 @@ class Logger(Cog):
             changed = True
             embed.add_field(
                 name="Avatar",
-                value="Before (thumbnail to the right) → (After) (image below)",
+                value="Before (thumbnail to the right) → After (image below)",
                 inline=False,
             )
             embed.set_thumbnail(url=before.display_avatar.url)

@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Any, Self, override
 
 import discord
 from discord.ext import commands
+from discord import ui
 
-from core import AluModal, AluView, Cog
+from core import UiMixin, Cog
 from utils import const, fmt
 
 if TYPE_CHECKING:
@@ -34,6 +35,8 @@ class ConfessionModal(AluModal):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+    anonymous = ui.
 
     conf = discord.ui.TextInput(
         label="Make confession to the server",

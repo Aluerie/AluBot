@@ -33,11 +33,18 @@ class ColorRolesView(discord.ui.View):
         cls=discord.ui.RoleSelect,
         custom_id="colour_roles_dropdown",
         placeholder="Type \N{KEYBOARD} name of a colour and select it.",
-        min_values=1,
+        min_values=0,
         max_values=1,
     )
     async def dropdown(self, interaction: Interaction, select: discord.ui.RoleSelect[Self]) -> None:
         """Dropdown Roles Select for color roles."""
+        if not select.values:
+            embed = discord.Embed(
+                description="You've selected zero roles and thus I did nothing",
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
         guild = interaction.guild
         member = interaction.user
         assert guild is not None

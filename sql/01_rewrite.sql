@@ -1,8 +1,16 @@
-CREATE TABLE IF NOT EXISTS button_role_links (
-    message_id BIGINT NOT NULL,
-    role_id BIGINT NOT NULL,
-    guild_id BIGINT NOT NULL,
-    link_id UUID NOT NULL,
-    PRIMARY KEY (message_id, role_id)
-);
-CREATE INDEX IF NOT EXISTS button_role_links_link_id_idx ON button_role_links (link_id);
+/* ---------------------------------------------------------------------------------------------------------------------
+Timers 
+--------------------------------------------------------------------------------------------------------------------- */
+
+CREATE TABLE 
+    IF NOT EXISTS timers (
+        
+        id SERIAL PRIMARY KEY,
+        event TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        timezone TEXT NOT NULL DEFAULT 'UTC',
+        data JSONB NOT NULL DEFAULT '{}'::jsonb
+    );
+
+CREATE INDEX IF NOT EXISTS timers_expires_at_idx ON timers (expires_at);

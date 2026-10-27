@@ -19,15 +19,7 @@ CREATE TABLE
         CONSTRAINT only_one_row CHECK (id)
     );
 
-CREATE TABLE
-    IF NOT EXISTS timers (
-        id SERIAL PRIMARY KEY,
-        event TEXT,
-        expires_at TIMESTAMP DEFAULT (NOW () AT TIME zone 'utc'),
-        created_at TIMESTAMP DEFAULT (NOW () AT TIME zone 'utc'),
-        timezone TEXT NOT NULL DEFAULT 'UTC',
-        data JSONB DEFAULT ('{}'::jsonb)
-    );
+
 
 CREATE TABLE
     IF NOT EXISTS user_settings (

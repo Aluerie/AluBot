@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import zoneinfo
 from typing import TYPE_CHECKING, NamedTuple, override
 
 from discord import app_commands
 from lxml import etree
 
-from core import AluContext
-
-from . import cache, errors, fuzzy
+from core import Context
+from shared import cache, errors, fuzzy
 
 if TYPE_CHECKING:
-    from core import AluInteraction, Bot
+    from core import Bot, Interaction
 
 
 class TimeZone(NamedTuple):
@@ -39,7 +38,7 @@ class TimeZone(NamedTuple):
         return zoneinfo.ZoneInfo(self.key)
 
     @classmethod
-    async def convert(cls, ctx: AluContext, argument: str) -> TimeZone:  # Self won't proc cause of try
+    async def convert(cls, ctx: Context, argument: str) -> TimeZone:  # Self won't proc cause of try
         """Convert."""
         tz_manager = ctx.bot.tz_manager
 
@@ -77,12 +76,12 @@ class TimeZoneTransformer(app_commands.Transformer):
     """Transformer to use in app_commands."""
 
     @override
-    async def transform(self, interaction: AluInteraction, value: str) -> TimeZone:
-        ctx = await AluContext.from_interaction(interaction)
+    async def transform(self, interaction: Interaction, value: str) -> TimeZone:
+        ctx = await Context.from_interaction(interaction)
         return await TimeZone.convert(ctx, value)
 
     @override
-    async def autocomplete(self, interaction: AluInteraction, arg: str) -> list[app_commands.Choice[str]]:
+    async def autocomplete(self, interaction: Interaction, arg: str) -> list[app_commands.Choice[str]]:
         tz_manager = interaction.client.tz_manager
 
         if not arg:
@@ -271,11 +270,11 @@ class TimezoneManager:
         record = await self.bot.pool.fetchrow(query, user_id)
         return record["timezone"] if record else None
 
-    async def get_tzinfo(self, user_id: int, /) -> datetime.tzinfo:
+    async def get_tzinfo(self, user_id: int, /) -> dt.tzinfo:
         tz = await self.get_timezone(user_id)
         if tz is None:
-            return datetime.UTC
-        return zoneinfo.ZoneInfo(tz) or datetime.UTC
+            return dt.UTC
+        return zoneinfo.ZoneInfo(tz) or dt.UTC
 
     async def set_timezone(self, user_id: int, timezone: TimeZone) -> None:
         query = """

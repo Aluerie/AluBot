@@ -9,13 +9,14 @@ Notices
 import asyncio
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 import discord
 from discord.ext import commands
 
 from core import Cog
 from shared import clock, globs
+from shared.concepts import loop
 from utils import const
 
 if TYPE_CHECKING:
@@ -32,15 +33,26 @@ class Logger(Cog):
     """Logger."""
 
     BOT_SPAM_CHANNEL_ID: Final = const.ChannelId(724986090632642653)
+    VOICE_CHAT_ROLE_ID = const.RoleId(1564454008905670797)
 
-    ####################################################################################################################
-    # LOGGER
-    ####################################################################################################################
+    @override
+    async def cog_load(self) -> None:
+        self.restart_clean_up.start()
+        await super().cog_load()
+
+    @override
+    async def cog_unload(self) -> None:
+        self.restart_clean_up.stop()
+        await super().cog_unload()
 
     @discord.utils.cached_property
     def bot_spam_channel(self) -> discord.TextChannel:
         """Bot spam channel."""
         return self.bot.get_text_channel_or_test(self.BOT_SPAM_CHANNEL_ID)
+
+    ####################################################################################################################
+    # LOGGER
+    ####################################################################################################################
 
     @staticmethod
     def _emoji_embed(
@@ -264,6 +276,63 @@ class Logger(Cog):
             return
 
         await self.bot_spam_channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+
+    # --- VOICE CHAT LOGGING -------------------------------------------------------------------------------------------
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ) -> None:
+        """Log voice state changes to the voice channel."""
+        if member.guild.id != const.Guild.community:
+            return
+
+        role = self.VOICE_CHAT_ROLE_ID.object
+        if before.channel is None and after.channel is not None:
+            # joined the voice channel
+            await member.add_roles(role)
+            e = discord.Embed(color=0x00FF7F).set_author(
+                name=f"{member.display_name} entered {after.channel.name}.",
+                icon_url=member.display_avatar.url,
+            )
+            await after.channel.send(embed=e)
+            return
+        if before.channel is not None and after.channel is None:
+            # quit the voice channel
+            await member.remove_roles(role)
+            e = discord.Embed(color=0x800000).set_author(
+                name=f"{member.display_name} left {before.channel.name}.",
+                icon_url=member.display_avatar.url,
+            )
+            await before.channel.send(embed=e)
+            return
+        if before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
+            # changed voice channels
+            e = discord.Embed(color=0x6495ED).set_author(
+                name=f"{member.display_name} went from {before.channel.name} to {after.channel.name}.",
+                icon_url=member.display_avatar.url,
+            )
+            await before.channel.send(embed=e)
+            await after.channel.send(embed=e)
+            return
+
+    @loop(count=1, wait_for_ready=True)
+    async def restart_clean_up(self) -> None:
+        """Resync @Voice Chat Member role after a restart."""
+        role = self.bot.get_role(const.Guild.community, self.VOICE_CHAT_ROLE_ID)
+
+        # check if voice role has members who left the voice chat
+        for member in role.members:
+            if member.voice is None:
+                await member.remove_roles(role)
+
+        # vice versa: check if there are people in voice chat who don't have a role
+        for voice_channel in role.guild.voice_channels:
+            for member in voice_channel.members:
+                await member.add_roles(role)
 
 
 async def setup(bot: Bot) -> None:

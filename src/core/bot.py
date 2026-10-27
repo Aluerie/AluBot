@@ -393,9 +393,27 @@ class Bot(BotBase, commands.Bot):
         """
         return discord.Webhook.from_url(url=url, session=self.session, client=self, bot_token=self.http.token)
 
+    @property
+    def community(self) -> discord.Guild:
+        """Shortcut to community guild."""
+        return self.get_known_guild(const.Guild.community)
+
+    @property
+    def hideout(self) -> discord.Guild:
+        """Shortcut to hideout guild."""
+        return self.get_known_guild(const.Guild.hideout)
+
     #########################################################################################################################
     # TYPE FRIENDLY LOOKUPS (Kinda unnecessary but hey)
     #########################################################################################################################
+
+    def get_known_guild(self, guild_id: int) -> discord.Guild:
+        """Get known guild."""
+        guild = self.get_guild(guild_id)
+        if guild is None:
+            msg = "xd"
+            raise LookupError(msg)
+        return guild
 
     def get_text_channel(self, channel_id: int) -> discord.TextChannel:
         """Return the cached text channel with the given ID.

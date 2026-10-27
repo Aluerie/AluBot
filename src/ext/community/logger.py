@@ -281,7 +281,34 @@ class Logger(Cog):
 
         await self.bot_spam_channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
-    # --- VOICE STATE UPDATE -------------------------------------------------------------------------------------------
+    ####################################################################################################################
+    # VOICE STATE UPDATE
+    ####################################################################################################################
+
+    async def _sync_role(
+        self,
+        member: discord.Member,
+        role: discord.abc.Snowflake,
+        *,
+        reason: str,
+    ) -> None:
+        """Make the member's role match their current voice state.
+
+        Parameters
+        ----------
+        member
+            The member to sync.
+        role
+            The voice chat role.
+        reason
+            The audit log reason.
+        """
+        has_role = member.get_role(role.id) is not None
+        in_voice = member.voice is not None
+        if in_voice and not has_role:
+            await member.add_roles(role, reason=reason)
+        elif not in_voice and has_role:
+            await member.remove_roles(role, reason=reason)
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -290,54 +317,39 @@ class Logger(Cog):
         before: discord.VoiceState,
         after: discord.VoiceState,
     ) -> None:
-        """Log voice state changes to the voice channel."""
-        if member.guild.id != const.Guild.community:
+        """Sync the voice chat role and announce voice channel changes.
+
+        Parameters
+        ----------
+        member
+            The member whose voice state changed.
+        before
+            The voice state before the change.
+        after
+            The voice state after the change.
+        """
+        if member.guild.id != const.Guild.community or before.channel == after.channel:
             return
 
-        role = self.VOICE_CHAT_ROLE_ID.object
-        if before.channel is None and after.channel is not None:
-            # joined the voice channel
-            await member.add_roles(role)
-            await after.channel.send(
-                content=f"-# {member.mention}🟢\n{after.channel.mention}",
-                allowed_mentions=discord.AllowedMentions(users=False),
-            )
-            return
-        if before.channel is not None and after.channel is None:
-            # quit the voice channel
-            await member.remove_roles(role)
-            await before.channel.send(
-                content=f"-# {member.mention}🔴\n{before.channel.mention}",
-                allowed_mentions=discord.AllowedMentions(users=False),
-            )
-            return
-        if before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
-            # changed voice channels
-            content = f"-# {member.mention}🟡\n{before.channel.mention} ➡️ {after.channel.mention}"
-            await before.channel.send(
-                content=content,
-                allowed_mentions=discord.AllowedMentions(users=False),
-            )
-            await after.channel.send(
-                content=content,
-                allowed_mentions=discord.AllowedMentions(users=False),
-            )
-            return
+        await self._sync_role(member, self.VOICE_CHAT_ROLE_ID.object, reason="Voice state changed")
+
+        old, new = before.channel, after.channel
+        if old is None and new is not None:
+            await new.send(f"-# {member.mention}🟢\n-# {new.mention}", allowed_mentions=const.NO_PINGS)
+        elif old is not None and new is None:
+            await old.send(f"-# {member.mention}🔴\n-# {old.mention}", allowed_mentions=const.NO_PINGS)
+        elif old is not None and new is not None:
+            content = f"-# {member.mention}🟡\n-# {old.mention} ➡️ {new.mention}"
+            for channel in (old, new):
+                await channel.send(content, allowed_mentions=const.NO_PINGS)
 
     @loop(count=1, wait_for_ready=True)
     async def restart_clean_up(self) -> None:
         """Resync @Voice Chat Member role after a restart."""
         role = self.bot.get_role(const.Guild.community, self.VOICE_CHAT_ROLE_ID)
 
-        # check if voice role has members who left the voice chat
-        for member in role.members:
-            if member.voice is None:
-                await member.remove_roles(role)
-
-        # vice versa: check if there are people in voice chat who don't have a role
-        for voice_channel in role.guild.voice_channels:
-            for member in voice_channel.members:
-                await member.add_roles(role)
+        for member in role.guild.members:
+            await self._sync_role(member, role, reason="Resync after restart")
 
 
 async def setup(bot: Bot) -> None:

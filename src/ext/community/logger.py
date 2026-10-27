@@ -299,7 +299,7 @@ class Logger(Cog):
             # joined the voice channel
             await member.add_roles(role)
             await after.channel.send(
-                content=f"{member.mention}🟢➡️{after.channel.mention}",
+                content=f"-# {member.mention}🟢\n{after.channel.mention}",
                 allowed_mentions=discord.AllowedMentions(users=False),
             )
             return
@@ -307,13 +307,13 @@ class Logger(Cog):
             # quit the voice channel
             await member.remove_roles(role)
             await before.channel.send(
-                content=f"{member.mention}🔴⬅️{before.channel.mention}",
+                content=f"-# {member.mention}🔴\n{before.channel.mention}",
                 allowed_mentions=discord.AllowedMentions(users=False),
             )
             return
         if before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
             # changed voice channels
-            content = f"{member.mention}:🟡 {before.channel.mention} ➡️ {after.channel.mention}"
+            content = f"-# {member.mention}🟡\n{before.channel.mention} ➡️ {after.channel.mention}"
             await before.channel.send(
                 content=content,
                 allowed_mentions=discord.AllowedMentions(users=False),

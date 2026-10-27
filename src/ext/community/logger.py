@@ -50,9 +50,7 @@ class Logger(Cog):
         """Bot spam channel."""
         return self.bot.get_text_channel_or_test(self.BOT_SPAM_CHANNEL_ID)
 
-    ####################################################################################################################
-    # LOGGER
-    ####################################################################################################################
+    # --- GUILD EMOJI UPDATE -------------------------------------------------------------------------------------------
 
     @staticmethod
     def _emoji_embed(
@@ -131,6 +129,8 @@ class Logger(Cog):
                 embed = self._emoji_embed("Emote updated", 0xFFD700, a, "\n".join(changes), actor)
                 await self.bot_spam_channel.send(embed=embed)
 
+    # --- USER UPDATE --------------------------------------------------------------------------------------------------
+
     @commands.Cog.listener()
     async def on_user_update(self, before: discord.User, after: discord.User) -> None:
         """Log changes to a user's global profile to the bot spam channel (if they are a community member)."""
@@ -176,6 +176,8 @@ class Logger(Cog):
             return
 
         await self.bot_spam_channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+
+    # --- MEMBER UPDATE ------------------------------------------------------------------------------------------------
 
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member) -> None:
@@ -246,6 +248,8 @@ class Logger(Cog):
 
         await self.bot_spam_channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
+    # --- GUILD UPDATE -------------------------------------------------------------------------------------------------
+
     @commands.Cog.listener()
     async def on_guild_update(self, before: discord.Guild, after: discord.Guild) -> None:
         """Log community server changes to the bot spam channel."""
@@ -277,7 +281,7 @@ class Logger(Cog):
 
         await self.bot_spam_channel.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
-    # --- VOICE CHAT LOGGING -------------------------------------------------------------------------------------------
+    # --- VOICE STATE UPDATE -------------------------------------------------------------------------------------------
 
     @commands.Cog.listener()
     async def on_voice_state_update(
@@ -294,29 +298,30 @@ class Logger(Cog):
         if before.channel is None and after.channel is not None:
             # joined the voice channel
             await member.add_roles(role)
-            e = discord.Embed(color=0x00FF7F).set_author(
-                name=f"{member.display_name} entered {after.channel.name}.",
-                icon_url=member.display_avatar.url,
+            await after.channel.send(
+                content=f"{member.mention}🟢➡️{after.channel.mention}",
+                allowed_mentions=discord.AllowedMentions(users=False),
             )
-            await after.channel.send(embed=e)
             return
         if before.channel is not None and after.channel is None:
             # quit the voice channel
             await member.remove_roles(role)
-            e = discord.Embed(color=0x800000).set_author(
-                name=f"{member.display_name} left {before.channel.name}.",
-                icon_url=member.display_avatar.url,
+            await before.channel.send(
+                content=f"{member.mention}🔴⬅️{before.channel.mention}",
+                allowed_mentions=discord.AllowedMentions(users=False),
             )
-            await before.channel.send(embed=e)
             return
         if before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
             # changed voice channels
-            e = discord.Embed(color=0x6495ED).set_author(
-                name=f"{member.display_name} went from {before.channel.name} to {after.channel.name}.",
-                icon_url=member.display_avatar.url,
+            content = f"{member.mention}:🟡 {before.channel.mention} ➡️ {after.channel.mention}"
+            await before.channel.send(
+                content=content,
+                allowed_mentions=discord.AllowedMentions(users=False),
             )
-            await before.channel.send(embed=e)
-            await after.channel.send(embed=e)
+            await after.channel.send(
+                content=content,
+                allowed_mentions=discord.AllowedMentions(users=False),
+            )
             return
 
     @loop(count=1, wait_for_ready=True)

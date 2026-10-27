@@ -20,7 +20,6 @@ class TimezoneSettings(Cog):
 
     @override
     async def cog_load(self) -> None:
-        self.bot.instantiate_tz_manager()
         await super().cog_load()
 
     timezone_group = app_commands.Group(

@@ -97,18 +97,14 @@ class CLDRDataEntry(NamedTuple):
     preferred: str | None
 
 
+# MAYBE MERGE THIS WHOLE FILE WITH SCHEDULER ???
+
 class TimezoneManager:
     """Timezone Manager Client.
 
     Due to client-like need to fill the cache of timezones, I decided to move the
     whole thing into separate entity that will be in bot attribute and available
     for the whole bot so different cogs like reminders/birthdays can use it.
-
-    Note that we need to
-    >>> async def cog_load(self) -> None:
-    >>>    self.bot.initiate_tz_manager()
-
-    in cogs with timezone functionality.
     """
 
     def __init__(self, bot: Bot) -> None:

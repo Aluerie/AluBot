@@ -21,7 +21,7 @@ from discord.ext import commands
 from .errors import AluBotError
 
 if TYPE_CHECKING:
-    from core import AluContext, AluInteraction
+    from core import Context, Interaction
 
 
 class ShortTime:

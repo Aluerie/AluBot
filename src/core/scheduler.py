@@ -534,3 +534,5 @@ class Scheduler:
         if self.current_timer and self.current_timer.id == id_:
             # cancel the task and re-run it
             self.reschedule()
+
+# SHOULD WE COMBINE TIMEZONES AND SCHEDULER ???

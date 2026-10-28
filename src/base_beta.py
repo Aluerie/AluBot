@@ -1,3 +1,5 @@
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
 """Contains base class for BetaCog for `ext.beta.py`.
 
 In `ext.beta.py` I quickly beta-test some things.
@@ -7,11 +9,6 @@ for anything we're going to do in `ext.beta.py`. The performance cost of extra i
 negligible compared to annoyance of typing them manually out every time we need them.
 
 For an example of how starting template for `ext.beta.py` looks - you can look in the `templates` folder.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
 """
 
 # ruff: file-ignore[unused-import, typing-only-third-party-import]
@@ -20,7 +17,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
-import datetime
+import datetime as dt
 import enum
 import logging
 import os

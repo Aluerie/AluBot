@@ -1,13 +1,10 @@
-"""Python file to launch the bot with, so called "main".
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Main.py - the python file to launch the bot with.
 
-Generally, it's preferred to use `make run` to run this bot, however you can use
-`uv run src/main.py`, `python src/main.py`, etc. if you like.
-CLI supported flags can be viewed with `--help` flag.
-
-License
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
+* Generally, it's preferred to use `make run` to run this bot, however you can use `uv run src/main.py`,
+  `python src/main.py`, etc. if you like.
+* CLI supported flags can be viewed with the `--help` flag.
 """
 
 from __future__ import annotations

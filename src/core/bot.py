@@ -291,7 +291,6 @@ class Bot(BotBase, commands.Bot):
             if failed_to_load_extensions:
                 log.info("Autosync: cancelled ❌ One or more cogs failed to load.")
             else:
-                # keep a reference, otherwise the task can be garbage collected mid-run (unlikely but hey)
                 self._autosync_task = asyncio.create_task(self.try_autosync_hideout())
 
     async def try_autosync_hideout(self) -> None:

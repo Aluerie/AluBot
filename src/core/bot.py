@@ -22,7 +22,6 @@ from shared import clock, errors, fmt
 from shared.concepts import BotBase
 from utils import const
 
-from .interactions import AppCommandTree
 from .scheduler import Scheduler
 from .tree import AppCommandTree
 
@@ -167,13 +166,10 @@ class Bot(BotBase, commands.Bot):
             ),
         )
 
-    #########################################################################################################################
-    # ERROR HANDLERS
-    # --------------
-    # Bot subclass contains error handlers for exceptions raised in event listeners and in ctx commands.
-    # Note, that the files `core.tree.py`, `core.bases.views.py`, `shared.concepts.tasks` also contain error handlers:
-    # app command tree errors, UI elements and tasks respectively.
-    #########################################################################################################################
+    # --- ERROR HANDLERS -----------------------------------------------------------------------------------------------
+    # Handle errors raised in event listeners and ctx commands.
+    # Remember that App command tree, UI elements and tasks have their own error handlers which are located in their
+    # respective modules.
 
     @override
     async def on_error(self, event: str, /, *args: Any, **kwargs: Any) -> None:

@@ -28,6 +28,16 @@ class UiMixin(ui.view.BaseView):
     """
 
     message: discord.Message | discord.WebhookMessage | None = None
+    author_id: int | None = None
+    """If set, only the user with this ID is allowed to interact with the view."""
+
+    @override
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        """Only let the author (if there is one) use the view's items."""
+        if self.author_id is None or interaction.user.id == self.author_id:
+            return True
+        await _respond(interaction, "This menu is not for you, sorry!")
+        return False
 
     @override
     async def on_timeout(self) -> None:
@@ -72,8 +82,32 @@ class Modal(UiMixin, ui.Modal):
 
 
 class View(UiMixin, ui.View):
-    """View."""
+    """View.
+
+    Parameters
+    ----------
+    author_id
+        If given, only the user with this ID is allowed to interact with the view.
+    timeout
+        Seconds of inactivity after which the view stops listening. `None` for no timeout.
+    """
+
+    def __init__(self, *, author_id: int | None = None, timeout: float | None = 180.0) -> None:
+        super().__init__(timeout=timeout)
+        self.author_id = author_id
 
 
 class LayoutView(UiMixin, ui.LayoutView):
-    """LayoutView."""
+    """LayoutView.
+
+    Parameters
+    ----------
+    author_id
+        If given, only the user with this ID is allowed to interact with the view.
+    timeout
+        Seconds of inactivity after which the view stops listening. `None` for no timeout.
+    """
+
+    def __init__(self, *, author_id: int | None = None, timeout: float | None = 180.0) -> None:
+        super().__init__(timeout=timeout)
+        self.author_id = author_id

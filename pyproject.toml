@@ -123,6 +123,7 @@ ignore = [
     "too-many-public-methods",
     "too-many-return-statements",
     "too-many-statements-in-try-clause",
+    "too-many-statements",
     # Todo
     "line-contains-todo", # I use TODO Tree VSCode extension for this
     "missing-todo-author",

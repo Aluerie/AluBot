@@ -207,9 +207,6 @@ class Bot(BotBase, commands.Bot):
         error: commands.CommandError,
     ) -> None:
         """Command error: called when an error is raised while invoking a ctx command."""
-        # if ctx.is_error_handled is True:W
-        #     return
-
         if isinstance(error, commands.CommandInvokeError | commands.HybridCommandError):
             # we aren't interested in the chain traceback.
             error: Exception = error.original

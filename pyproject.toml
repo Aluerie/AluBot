@@ -132,9 +132,10 @@ ignore = [
     "ambiguous-unicode-character-string",
     "any-type",
     "assert", # assert is fine for "casting" type checks and in tests
+    "async-function-with-timeout", # timeouts are not just ``asyncio.timeout()`` in this codebase
     "blocking-path-method-in-async-function", # I don't like neither ``aiofiles``, ``anyio``, ``trio``
     "commented-out-code",
-    "implicit-namespace-package", # Annoying rule, it doesn't know what **I** want to be an implicit namespace-package
+    "implicit-namespace-package", # Annoying rule, it doesn't know what we want to be an implicit namespace-package
     "magic-value-comparison", # I hate this rule (quoting @AbstractUmbra)
     "no-self-use",
     "non-empty-init-module", # we do some stuff here

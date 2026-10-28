@@ -409,7 +409,6 @@ class Bot(BotBase, commands.Bot):
         """Get known guild."""
         guild = self.get_guild(guild_id)
         if guild is None:
-            msg = "xd"
             msg = f"Guild {guild_id} not found in cache"
             raise LookupError(msg)
         return guild

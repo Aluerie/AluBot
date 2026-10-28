@@ -15,7 +15,7 @@ from core import Cog, aluloop
 from utils import const, errors, fmt, pages
 
 if TYPE_CHECKING:
-    from core import AluInteraction, Bot
+    from core import Bot, Interaction
 
     class RemoveLongGoneRow(TypedDict):
         id: int
@@ -81,7 +81,7 @@ class Levels(Cog):
     @app_commands.guilds(*const.MY_GUILDS)
     @app_commands.command(name="rank")
     @app_commands.rename(member_="member")
-    async def rank(self, interaction: AluInteraction, member_: discord.Member | None = None) -> None:
+    async def rank(self, interaction: Interaction, member_: discord.Member | None = None) -> None:
         """View member's rank and experience level in this server.
 
         Parameters
@@ -324,4 +324,5 @@ class Levels(Cog):
 
 async def setup(bot: Bot) -> None:
     """Load AluBot extension. Framework of discord.py."""
-    await bot.add_cog(Levels(bot))
+    # TODO: Uncomment, WIP
+    # await bot.add_cog(Levels(bot))

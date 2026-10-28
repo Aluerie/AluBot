@@ -24,6 +24,7 @@ from utils import const
 
 from .interactions import AppCommandTree
 from .scheduler import Scheduler
+from .tree import AppCommandTree
 
 if TYPE_CHECKING:
     import datetime as dt

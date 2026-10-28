@@ -5,6 +5,9 @@ Notices
 * MPL-2.0 License, see LICENSE file for more details.
 * Copyright (C) 2020-present @Aluerie.
 """
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Views."""
 
 import contextlib
 import functools
@@ -16,6 +19,7 @@ from discord import ui
 from shared import fmt
 
 from .interactions import Interaction, _build_interaction_error_embed, _respond
+from .tree import Interaction, _build_interaction_error_embed, _respond
 
 __all__ = (
     "LayoutView",

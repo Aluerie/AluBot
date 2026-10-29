@@ -92,17 +92,6 @@ CREATE TABLE
         dota2bugtracker_devs TEXT[] NOT NULL DEFAULT '{}'
     );
 
--- I was thinking of using this table structure for bot_variables:
--- But I guess I prefer the one above: it's simpler to use and has some data types/validation.
--- Unfortunately, every new variable will need a migration, but it's okay.
---
--- CREATE TABLE IF NOT EXISTS bot_variables (
---     key TEXT PRIMARY KEY,
---     value JSONB NOT NULL,
---     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
--- );
-
-
 CREATE TABLE
     IF NOT EXISTS auto_sync (
         payload JSONB

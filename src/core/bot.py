@@ -342,9 +342,7 @@ class Bot(BotBase, commands.Bot):
         token = env.DISCORD_TOKEN_YENBOT if self.test else env.DISCORD_TOKEN_ALUBOT
         await super().start(token, reconnect=True)
 
-    #########################################################################################################################
-    # MANAGEMENT
-    #########################################################################################################################
+    # --- MANAGEMENT ---------------------------------------------------------------------------------------------------
 
     @override
     async def close(self) -> None:

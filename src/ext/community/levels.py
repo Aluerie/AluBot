@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import bisect
-import datetime
+import datetime as dt
 import functools
 import itertools
 import logging
@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 from tabulate import tabulate
 
 from core import Cog
-from shared import errors, fmt
+from shared import errors, fmt, globs
 from shared.concepts import loop
 from utils import const, pages
 
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     class RemoveLongGoneRow(TypedDict):
         id: int
         name: str
-        last_seen: datetime.datetime
+        last_seen: dt.datetime
 
     class LeaderboardQueryRow(TypedDict):
         id: int
@@ -54,7 +54,7 @@ ASSETS = Path(__file__).resolve().parents[2] / "assets"
 
 LAST_SEEN_TIMEOUT = 60
 """Seconds between messages that give experience: spamming doesn't level you up faster."""
-LONG_GONE_AFTER = datetime.timedelta(days=365)
+LONG_GONE_AFTER = dt.timedelta(days=365)
 """Members who left the server and didn't come back for this long are removed from the database."""
 THANKS_REGEX = re.compile(r"\b(?:thanks?|ty)\b", re.IGNORECASE)
 """Whole words only: a plain substring check would see "ty" in "pretty" or "party"."""
@@ -115,8 +115,7 @@ def _build_rank_image(
     color: tuple[int, int, int],
     place: int,
     level: int,
-    rep: int,
-    exp: int,
+    experience: int,
 ) -> Image.Image:
     """Blocking part of the rank image. Run it in a thread."""
     with Image.open(ASSETS / "images" / "profile" / "welcome.png") as template:
@@ -135,11 +134,11 @@ def _build_rank_image(
     # the progress bar to the next level; at the max level it's simply full
     prev_exp = exp_to_reach(level)
     if level >= MAX_LEVEL:
-        progress, exp_text = 1.0, f"{exp} EXP (max level)"
+        progress, exp_text = 1.0, f"{experience} EXP (max level)"
     else:
         next_exp = exp_to_reach(level + 1)
-        progress = min(max((exp - prev_exp) / (next_exp - prev_exp), 0.0), 1.0)
-        exp_text = f"{exp}/{next_exp} EXP"
+        progress = min(max((experience - prev_exp) / (next_exp - prev_exp), 0.0), 1.0)
+        exp_text = f"{experience}/{next_exp} EXP"
     bar_top = canvas_h * 6 / 7
     draw.rectangle((0, bar_top, canvas_w, canvas_h), fill=(98, 98, 98))
     draw.rectangle((0, bar_top, progress * canvas_w, canvas_h), fill=color)
@@ -147,7 +146,6 @@ def _build_rank_image(
     draw.text((canvas_w / 4, 0), name, fill=white, font=font)
     draw.text((canvas_w / 4, canvas_h * 2 / 6), f"{fmt.ordinal(place)} rank", fill=white, font=font)
     draw.text((canvas_w / 4, canvas_h * 3 / 6), f"{fmt.ordinal(level)} level", fill=white, font=font)
-    draw.text((canvas_w / 4, canvas_h * 4 / 6), f"{rep} rep", fill=white, font=font)
     draw.text((canvas_w, canvas_h * 5 / 6), exp_text, fill=white, font=font, anchor="ra")
     return canvas
 
@@ -197,20 +195,17 @@ class Levels(Cog):
             msg = "Sorry! our system does not count experience for bots."
             raise errors.BadUserInputError(msg)
 
-        query = "SELECT in_lvl, exp, rep FROM community_members WHERE id = $1"
-        row: RankQueryRow | None = await self.bot.pool.fetchrow(query, member.id)
-        if row is None:
+        query = "SELECT experience FROM community_members WHERE id = $1"
+        experience: int | None = await self.bot.pool.fetchval(query, member.id)
+        if experience is None:
             msg = f"I don't have any experience data about {member.display_name} yet."
-            raise errors.BadUserInputError(msg)
-        if not row["in_lvl"]:
-            msg = "You decided to opt out of the exp system before"
             raise errors.BadUserInputError(msg)
 
         # building the image takes a while (the avatar download + the drawing), longer than 3 seconds on a bad day
         await interaction.response.defer()
 
-        query = "SELECT COUNT(*) FROM community_members WHERE exp > $1"
-        place: int = 1 + await self.bot.pool.fetchval(query, row["exp"])
+        query = "SELECT COUNT(*) FROM community_members WHERE experience > $1"
+        place: int = 1 + await self.bot.pool.fetchval(query, experience)
         avatar_bytes = await member.display_avatar.with_static_format("png").with_size(512).read()
         image = await asyncio.to_thread(
             _build_rank_image,
@@ -218,9 +213,8 @@ class Levels(Cog):
             name=member.display_name,
             color=member.color.to_rgb(),
             place=place,
-            level=get_level(row["exp"]),
-            rep=row["rep"],
-            exp=row["exp"],
+            level=get_level(experience),
+            experience=experience,
         )
         await interaction.followup.send(file=self.bot.image_to_file(image, filename="rank.png"))
 
@@ -336,11 +330,11 @@ class Levels(Cog):
             WHERE id = $1
             RETURNING (SELECT last_seen FROM m)
         """
-        last_seen: datetime.datetime | None = await self.bot.pool.fetchval(query, message.author.id)
+        last_seen: dt.datetime | None = await self.bot.pool.fetchval(query, message.author.id)
         if last_seen is None:
             return
 
-        if discord.utils.utcnow() - last_seen <= datetime.timedelta(seconds=LAST_SEEN_TIMEOUT):
+        if discord.utils.utcnow() - last_seen <= dt.timedelta(seconds=LAST_SEEN_TIMEOUT):
             return
 
         # members who opted out (`in_lvl = FALSE`) do not get experience, hence no row to return for them
@@ -360,7 +354,7 @@ class Levels(Cog):
         previous_level_role = discord.utils.get(message.guild.roles, name=f"Level #{level - 1}")
 
         text = f"{message.author.mention} just advanced to {level_up_role.mention} ! {const.Emoji.PepoG}"
-        embed = discord.Embed(color=const.Palette.purple_500, description=text)
+        embed = discord.Embed(color=globs.Color.PUCE, description=text)
         await message.channel.send(embed=embed)
 
         author = message.author
@@ -388,7 +382,7 @@ class Levels(Cog):
     # TASKS
     ####################################################################################################################
 
-    @loop(time=datetime.time(hour=13, minute=13, tzinfo=datetime.UTC), wait_for_ready=True)
+    @loop(time=dt.time(hour=13, minute=13, tzinfo=dt.UTC), wait_for_ready=True)
     async def remove_long_gone_members(self) -> None:
         """Remove long ago gone members.
 

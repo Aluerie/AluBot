@@ -1,3 +1,5 @@
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
 """Pagination Menus View Classes.
 
 Unlike popular implementations for paginators, these classes do not use `discord.ext.menus`
@@ -26,8 +28,6 @@ from discord.utils import MISSING
 
 from core import Modal, View
 
-from . import const
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -55,21 +55,45 @@ class IndexModal(Modal, title="Go to page"):
     @override
     async def on_submit(self, interaction: Interaction) -> None:
         if self.paginator.is_finished():
-            embed = discord.Embed(color=const.Palette.red_500, description="Took too long")
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_message("Took too long", ephemeral=True)
             return
 
         value = str(self.goto.value)
         if not value.isdigit():
-            embed = discord.Embed(
-                color=const.Palette.red_500,
-                description=f"Expected a page number between 1 and {self.paginator.max_pages}, not `{value!r}`",
+            await interaction.response.send_message(
+                f"Expected a page number between 1 and {self.paginator.max_pages}, not `{value!r}`", ephemeral=True
             )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         new_page_number = int(self.goto.value) - 1
         await self.paginator.show_page(interaction, new_page_number)
+
+
+def label_indent(label: str | int, number: int, split_size: int = 10) -> str:
+    """Pad a table label to the width of the widest row number on its page.
+
+    Leaderboards are split into pages of `split_size` rows, so labels (row numbers and the "N" header)
+    only have to be as wide as the biggest number of their page: ``9`` and ``10`` live on different pages
+    but ``1`` and ``10`` don't, i.e. the first page is padded to 2 characters and the 11-20 page to 2 as well,
+    while a 91-100 page is padded to 3.
+
+    Parameters
+    ----------
+    label
+        The label to pad.
+    number
+        Any row number (0-based) that belongs to the page. Use ``counter - 1`` for the row with number `counter`
+        and ``offset + 1`` for the header of a page that starts after `offset` rows.
+    split_size
+        How many rows there are in one page.
+
+    Returns
+    -------
+    str
+        The label padded with spaces on the right.
+    """
+    last_number_on_page = (number // split_size + 1) * split_size
+    return str(label).ljust(len(str(last_number_on_page)))
 
 
 class Paginator(View):
@@ -79,6 +103,12 @@ class Paginator(View):
     -----------
     Paginator by default does not handle any sort of formatting.
     For that reason, subclasses must implement the `format_page` method.
+
+    Parameters
+    ----------
+    author_id: int | None = None
+        Author ID for the purposes of interaction checks in View.
+        If `None`, which is default, `interaction.user.id` will be passed to View constructor.
 
     Attributes
     ----------
@@ -92,12 +122,6 @@ class Paginator(View):
         Total amount of pages in the paginator.
     current_page_number: int = 0
         Number of current page that we are in. Zero-indexed between [0, `self.max_pages`).
-
-    Parameters
-    ----------
-    author_id: int | None = None
-        Author ID for the purposes of interaction checks in View.
-        If `None`, which is default, `interaction.user.id` will be passed to View constructor.
 
     Notes
     -----
@@ -147,28 +171,61 @@ class Paginator(View):
 
         Parameters
         ----------
-        ephemeral: bool = False
+        ephemeral
             Whether the message should be ephemeral.
-        edit_response: bool = False
+        edit_response
             Whether to use `.response.edit_message` instead of `.response.send_message` for interaction-based contexts.
-        page_number: int = 0
+        page_number
             Page number to start with.
         """
         page_entries = await self.get_page_entries(page_number)
         send_kwargs = await self._get_page_send_kwargs(page_entries)
         self._update_navigation_labels(page_number)
 
+        # The arguments are spelled out instead of `**send_kwargs` on purpose: `Webhook.send` and
+        # `InteractionResponse.send_message` are overloaded and type checkers can't choose an overload when
+        # the keywords come from an unpacked `TypedDict`. The `.edit` methods don't even accept `file`.
         if self.interaction.response.is_done():
-            message = await self.interaction.followup.send(**send_kwargs, view=self, ephemeral=ephemeral, wait=True)
+            message = await self.interaction.followup.send(
+                content=send_kwargs.get("content", MISSING),
+                embed=send_kwargs.get("embed", MISSING),
+                file=send_kwargs.get("file", MISSING),
+                allowed_mentions=send_kwargs.get("allowed_mentions", MISSING),
+                view=self,
+                ephemeral=ephemeral,
+                wait=True,
+            )
         elif edit_response:
-            await self.interaction.response.edit_message(**send_kwargs, view=self)
+            await self._edit_via_response(self.interaction, send_kwargs)
             message = await self.interaction.original_response()
         else:
-            await self.interaction.response.send_message(**send_kwargs, view=self, ephemeral=ephemeral)
+            await self.interaction.response.send_message(
+                content=send_kwargs.get("content", MISSING),
+                embed=send_kwargs.get("embed", MISSING),
+                file=send_kwargs.get("file", MISSING),
+                allowed_mentions=send_kwargs.get("allowed_mentions", MISSING),
+                view=self,
+                ephemeral=ephemeral,
+            )
             message = await self.interaction.original_response()
 
         self.message = message
         return message
+
+    async def _edit_via_response(self, interaction: Interaction, send_kwargs: SendKwargs) -> None:
+        """Edit the message of the component/command interaction with the page.
+
+        Unlike the sending methods, the editing ones have no `file` parameter: new files are `attachments`
+        (which replace the old ones; no `file` means the attachments stay as they are).
+        """
+        file = send_kwargs.get("file")
+        await interaction.response.edit_message(
+            content=send_kwargs.get("content", MISSING),
+            embed=send_kwargs.get("embed", MISSING),
+            attachments=[file] if file else MISSING,
+            allowed_mentions=send_kwargs.get("allowed_mentions", MISSING),
+            view=self,
+        )
 
     async def get_page_entries(self, page_number: int) -> Any | Sequence[Any]:
         """Return either a single element of the sequence or a slice of the sequence.
@@ -194,16 +251,23 @@ class Paginator(View):
     async def _get_page_send_kwargs(self, page_entries: Any | Sequence[Any]) -> SendKwargs:
         """Get send page kwargs.
 
-        This is passed later to discord.py `.send` methods.
+        This is passed later to discord.py `.send` and `.edit` methods. The paginator's own view is always
+        included, so the callers must not pass `view` separately (a duplicated keyword is an error).
+        Returns an empty dictionary if `format_page` returned something unsupported.
         """
-        send_kwargs = await discord.utils.maybe_coroutine(self.format_page, page_entries)
-        if isinstance(send_kwargs, dict):
-            return send_kwargs
-        if isinstance(send_kwargs, str):
-            return {"content": send_kwargs, "embed": MISSING}
-        if isinstance(send_kwargs, discord.Embed):
-            return {"embed": send_kwargs, "content": MISSING}
-        return {}
+        formatted = await discord.utils.maybe_coroutine(self.format_page, page_entries)
+        send_kwargs: SendKwargs
+        if isinstance(formatted, dict):
+            send_kwargs = formatted.copy()  # `format_page` may return a dictionary that it reuses
+        elif isinstance(formatted, str):
+            send_kwargs = {"content": formatted, "embed": MISSING}
+        elif isinstance(formatted, discord.Embed):
+            send_kwargs = {"embed": formatted, "content": MISSING}
+        else:
+            return {}
+
+        send_kwargs["view"] = self
+        return send_kwargs
 
     def format_page(self, entries: Any | Sequence[Any]) -> str | discord.Embed | SendKwargs:
         """Abstract method to format the page.
@@ -219,6 +283,7 @@ class Paginator(View):
                 returning `embed` for discord.py's `.send` and `.edit` methods.
             * If this method returns `dict` (more specifically `SendKwargs` typed dictionary) then it is interpreted as
                 returning keyword arguments that are used in discord.py's `.send` and `.edit` methods.
+                The `view` key is not needed: the paginator always uses itself as the view.
         """
         raise NotImplementedError
 
@@ -279,6 +344,8 @@ class Paginator(View):
 
         Parameters
         ----------
+        interaction:
+            Interaction
         page_number: int
             Page number to show.
         """
@@ -292,9 +359,16 @@ class Paginator(View):
         if send_kwargs:
             if interaction.response.is_done():
                 if self.message is not None:
-                    await self.message.edit(**send_kwargs, view=self)
+                    file = send_kwargs.get("file")
+                    await self.message.edit(
+                        content=send_kwargs.get("content", MISSING),
+                        embed=send_kwargs.get("embed", MISSING),
+                        attachments=[file] if file else MISSING,
+                        allowed_mentions=send_kwargs.get("allowed_mentions", MISSING),
+                        view=self,
+                    )
             else:
-                await interaction.response.edit_message(**send_kwargs, view=self)
+                await self._edit_via_response(interaction, send_kwargs)
 
     # EXTRA STOCK BUTTONS
 
@@ -351,21 +425,21 @@ class EmbedDescriptionPaginator(Paginator):
 
     Entries are joined via line break.
 
-    Attributes
-    ----------
-    template: Mapping[str, Any]
-        Embed template. This will be passed to `Embed.from_dict` classmethod to create said base embed.
-        Note that description will still be built from `self.entries` and `self.description_prefix`.
-    description_prefix: str = ""
-        Text string to be put before `entries` in each page.
-    enumeration: bool = False
-        Whether entries should also be enumerated by `format_page`.
-        Note, that if `per_page == 1` then there won't be any enumeration since that's just a singular description.
-
     Parameters
     ----------
-    empty_description: str = "Nothing to show."
+    empty_description
         Description to show if there are no entries at all (a paginator can't have zero pages).
+
+    Attributes
+    ----------
+    template
+        Embed template. This will be passed to `Embed.from_dict` classmethod to create said base embed.
+        Note that description will still be built from `self.entries` and `self.description_prefix`.
+    description_prefix
+        Text string to be put before `entries` in each page.
+    enumeration
+        Whether entries should also be enumerated by `format_page`.
+        Note, that if `per_page == 1` then there won't be any enumeration since that's just a singular description.
     """
 
     def __init__(
@@ -383,7 +457,7 @@ class EmbedDescriptionPaginator(Paginator):
     ) -> None:
         super().__init__(
             interaction,
-            entries or [empty_description],
+            entries=entries or [empty_description],
             per_page=per_page,
             author_id=author_id,
             timeout=timeout,
@@ -393,7 +467,7 @@ class EmbedDescriptionPaginator(Paginator):
         self.enumeration: bool = enumeration
 
     @override
-    async def format_page(self, entries: str | list[str]) -> discord.Embed:
+    async def format_page(self, entries: str | list[str]) -> discord.Embed:  # ty: ignore[invalid-method-override]
         embed = discord.Embed.from_dict(self.template)
         if isinstance(entries, str):
             # this happens when `per_page == 1`

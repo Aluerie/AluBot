@@ -88,12 +88,24 @@ async def confirm(
     (either by the prompt or by the earlier `defer`), so use `interaction.followup` to send the results.
     """
     view = ConfirmView(author_id=interaction.user.id, timeout=timeout)
-    kwargs = {"content": content or MISSING, "embed": embed or MISSING, "view": view}
 
+    # The arguments are spelled out (no `**kwargs`): `Webhook.send` is overloaded and type checkers
+    # can't choose an overload when the keywords come from an unpacked dictionary.
     if interaction.response.is_done():
-        message = await interaction.followup.send(**kwargs, ephemeral=ephemeral, wait=True)
+        message = await interaction.followup.send(
+            content=content or MISSING,
+            embed=embed or MISSING,
+            view=view,
+            ephemeral=ephemeral,
+            wait=True,
+        )
     else:
-        await interaction.response.send_message(**kwargs, ephemeral=ephemeral)
+        await interaction.response.send_message(
+            content=content or MISSING,
+            embed=embed or MISSING,
+            view=view,
+            ephemeral=ephemeral,
+        )
         message = await interaction.original_response()
 
     await view.wait()

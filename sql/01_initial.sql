@@ -41,12 +41,9 @@ CREATE TABLE
     IF NOT EXISTS alubot.community_members (
         id BIGINT PRIMARY KEY,
         name TEXT,
-        last_seen TIMESTAMPTZ DEFAULT (NOW () AT TIME ZONE 'utc'),
-        exp INTEGER DEFAULT (0),
-        rep INTEGER DEFAULT (0),
-        msg_count BIGINT DEFAULT (0),
-        in_lvl BOOLEAN DEFAULT TRUE,
-        roles BIGINT ARRAY
+        last_seen TIMESTAMPTZ DEFAULT NOW(),
+        experience INTEGER DEFAULT (0),
+        message_count BIGINT DEFAULT (0),
     );
 
 CREATE TABLE
@@ -64,21 +61,21 @@ CREATE INDEX IF NOT EXISTS emote_stats_total_emote_id_idx ON alubot.emote_stats_
 CREATE UNIQUE INDEX IF NOT EXISTS emote_stats_total_uniq_idx ON alubot.emote_stats_total (guild_id, emote_id);
 
 CREATE TABLE
-    IF NOT EXISTS alubot.emote_stats_logger (
+    IF NOT EXISTS alubot.emote_usage_logger(
         id BIGSERIAL PRIMARY KEY,
         emote_id BIGINT,
         guild_id BIGINT,
         author_id BIGINT,
-        used TIMESTAMPTZ DEFAULT (NOW () AT TIME ZONE 'utc')
+        used TIMESTAMPTZ DEFAULT NOW ()
     );
 
-CREATE INDEX IF NOT EXISTS emote_stats_logger_emote_id_idx ON alubot.emote_stats_logger (emote_id);
+CREATE INDEX IF NOT EXISTS emote_usage_logger_emote_id_idx ON alubot.emote_usage_logger (emote_id);
 
-CREATE INDEX IF NOT EXISTS emote_stats_logger_guild_id_idx ON alubot.emote_stats_logger (guild_id);
+CREATE INDEX IF NOT EXISTS emote_usage_logger_guild_id_idx ON alubot.emote_usage_logger (guild_id);
 
-CREATE INDEX IF NOT EXISTS emote_stats_logger_author_id_idx ON alubot.emote_stats_logger (author_id);
+CREATE INDEX IF NOT EXISTS emote_usage_logger_author_id_idx ON alubot.emote_usage_logger (author_id);
 
-CREATE INDEX IF NOT EXISTS emote_stats_logger_used_idx ON alubot.emote_stats_logger (used);
+CREATE INDEX IF NOT EXISTS emote_usage_logger_used_idx ON alubot.emote_usage_logger (used);
 
 /* ---------------------------------------------------------------------------------------------------------------------
 Bot Variables and internals

@@ -1,3 +1,5 @@
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
 """times.py.
 
 Sources
@@ -11,7 +13,7 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, Self, override
+from typing import Any, Self, override
 
 import parsedatetime as pdt
 from dateutil.relativedelta import relativedelta
@@ -19,9 +21,6 @@ from discord import app_commands
 from discord.ext import commands
 
 from .errors import AluBotError
-
-if TYPE_CHECKING:
-    from core import Context, Interaction
 
 
 class ShortTime:
@@ -92,7 +91,7 @@ class Time(HumanTime):
     def __init__(self, argument: str, *, now: datetime.datetime | None = None) -> None:
         try:
             o = ShortTime(argument, now=now)
-        except Exception:  # noqa: BLE001
+        except Exception:  # ruff: ignore[blind-except]
             super().__init__(argument)
         else:
             self.dt = o.dt
@@ -108,7 +107,7 @@ class FutureTime(Time):
             raise commands.BadArgument(msg)
 
 
-class BadTimeTransform(app_commands.AppCommandError, AluBotError):  # noqa: N818
+class BadTimeTransform(app_commands.AppCommandError, AluBotError):  # ruff: ignore[error-suffix-on-exception-name]
     pass
 
 
@@ -226,7 +225,7 @@ class UserFriendlyTime(commands.Converter[FriendlyTimeResult]):
         if argument.endswith("from now"):
             argument = argument[:-8].strip()
 
-        if argument[0:2] == "me":  # noqa: SIM102
+        if argument[0:2] == "me":  # ruff: ignore[collapsible-if]
             # starts with "me to", "me in", or "me at "
             if argument[0:6] in {"me to ", "me in ", "me at "}:
                 argument = argument[6:]

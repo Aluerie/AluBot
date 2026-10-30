@@ -336,8 +336,8 @@ class BugTracker(Cog):
         """
         log.debug("^^^ BugTracker task started ^^^")
 
-        query = "SELECT dota2bugtracker_last_checked FROM bot_variables WHERE id=$1"
-        last_checked: dt.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
+        query = "SELECT dota2bugtracker_last_checked FROM bot_variables"
+        last_checked: dt.datetime = await self.bot.pool.fetchval(query)
         now = clock.utcnow()
 
         if self.bot.test:

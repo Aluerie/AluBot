@@ -449,5 +449,5 @@ class EmoteStats(Cog):
 
 
 async def setup(bot: Bot) -> None:
-    """Load AluBot extension. Framework of discord.py."""
+    """Load the extension (discord.py entry point)."""
     await bot.add_cog(EmoteStats(bot))

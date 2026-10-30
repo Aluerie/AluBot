@@ -58,6 +58,7 @@ async def start_the_bot(
         await db.try_create_pool(
             env.POSTGRES_PROD,
             env.POSTGRES_TEST,
+            search_path="alubot,shared",
             is_test=is_test_account,
         ) as pool,
         Bot(

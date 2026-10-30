@@ -1,17 +1,14 @@
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
 """Times.
 
 Parsing of the time that users type in: "10m", "2 days 3h", "tomorrow at 3pm", Discord timestamps like ``<t:123456:R>``.
 
 Sources
 -------
-* Most of the code below is a shameless copypaste from @Rapptz's RoboDanny utils (it's so good though)
+* Most of the code below is a shameless copypaste from @Rapptz's RoboDanny utils
     licensed MPL v2 from Rapptz/RoboDanny
     https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/utils/time.py
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
 """
 
 from __future__ import annotations

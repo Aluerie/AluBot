@@ -1,10 +1,6 @@
-"""Const.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
-"""
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Const."""
 # ruff: file-ignore[mixed-case-variable-in-class-scope]
 
 from enum import UNIQUE, Enum, IntEnum, auto, verify
@@ -86,6 +82,7 @@ class Emoji(Enum):
     PepoBeliever = auto()
     PepoDetective = auto()
     PepoG = auto()
+    WeirdChamp = auto()
 
     # Animated
     SmogeInTheRain = auto()
@@ -727,13 +724,3 @@ class Accent:
         return shades[shade]
 
     # PS. brown, gray, blue_gray, black, white - these colors do not have Accent versions
-
-
-if __name__ == "__main__":
-    from PIL import Image
-
-    x = Palette.purple()
-    x = 0xDB7093
-
-    rectangle = Image.new("RGB", (600, 300), f"#{x:0>6x}")
-    rectangle.show()

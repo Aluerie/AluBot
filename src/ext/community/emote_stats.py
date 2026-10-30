@@ -1,7 +1,11 @@
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Emote stats."""
+
 from __future__ import annotations
 
 import asyncio
-import datetime
+import datetime as dt
 import itertools
 import logging
 import re
@@ -37,7 +41,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 EMOJI_REGEX = re.compile(r"<a?:.+?:([0-9]{15,21})>")
-EMOTE_STATS_TRACKING_START = datetime.datetime(2024, 2, 6, tzinfo=datetime.UTC)
+EMOTE_STATS_TRACKING_START = dt.datetime(2024, 2, 6, tzinfo=dt.UTC)
 
 
 def percent(count: int, total: int) -> str:
@@ -73,13 +77,13 @@ class EmoteStats(Cog):
         try:
             # whatever was collected in the last minute would be lost otherwise
             await self.flush_batches()
-        except Exception:  # ruff: ignore[blind-except]
+        except Exception:
             log.exception("Could not save the last emote usage batch on unload.")
         await super().cog_unload()
 
     @commands.Cog.listener("on_message")
     async def create_emote_usage_batches(self, message: discord.Message) -> None:
-        """Collects emote usage data in batches from discord messages to be ready for database INSERT.
+        """Collect emote usage data in batches from discord messages to be ready for database INSERT.
 
         Parameters
         ----------
@@ -233,7 +237,7 @@ class EmoteStats(Cog):
             if timeframe == "month":
                 # `used` is a `TIMESTAMP` (without a timezone) that is always kept in UTC, so is this parameter
                 clause = "AND used > $3"
-                args = [(clock.utcnow() - datetime.timedelta(days=30)).replace(tzinfo=None)]
+                args = [(clock.utcnow() - dt.timedelta(days=30)).replace(tzinfo=None)]
 
             query = f"""
                 SELECT emote_id, COUNT(*) as "total"
@@ -241,7 +245,7 @@ class EmoteStats(Cog):
                 WHERE guild_id = $1 AND emote_id = ANY($2::bigint[]) {clause}
                 GROUP BY emote_id
                 ORDER BY total DESC;
-            """
+            """  # ruff: ignore[hardcoded-sql-expression]
             records = await self.bot.pool.fetch(query, interaction.guild.id, emote_ids, *args)
 
         rows: list[tuple[int, int]] = [(record[0], record[1]) for record in records]
@@ -325,13 +329,13 @@ class EmoteStats(Cog):
         return full_name, f"`:{colon_name}:", str(count), percent(count, total), f"{per_day}`"
 
     @staticmethod
-    def usage_per_day(dt: datetime.datetime, usages: int) -> str:
+    def usage_per_day(dt: dt.datetime, usages: int) -> str:
         """Usage per day formatting."""
         base = max(dt, EMOTE_STATS_TRACKING_START)
-        days = (datetime.datetime.now(datetime.UTC) - base).total_seconds() / 86400  # 86400 seconds in a day
+        days = (clock.utcnow() - base).total_seconds() / 86400  # 86400 seconds in a day
         return f"{usages / (int(days) or 1):.1f}"  # or 1 takes care of days = 1 DivisionError
 
-    @loop(time=datetime.time(hour=12, minute=11, second=45))
+    @loop(time=dt.time(hour=12, minute=11, second=45))
     async def clean_up_old_records(self) -> None:
         """Clean up "way too old" records from the Last Year emote usage database.
 
@@ -342,7 +346,7 @@ class EmoteStats(Cog):
         Note that this doesn't affect `emote_stats_total` in any way. Everything is correct there.
         """
         async with self._batch_lock:
-            clean_up_dt = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)
+            clean_up_dt = clock.utcnow() - dt.timedelta(days=365)
 
             query = """
                     DELETE FROM emote_stats_last_year
@@ -425,7 +429,7 @@ class EmoteStats(Cog):
                 emote_usage_last_year,
                 percent(emote_usage_last_year, all_emotes_last_year),
                 self.usage_per_day(
-                    max(emoji.created_at, datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)),
+                    max(emoji.created_at, clock.utcnow() - dt.timedelta(days=365)),
                     emote_usage_last_year,
                 ),
             ]

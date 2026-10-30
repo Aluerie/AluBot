@@ -1,12 +1,9 @@
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
 """Timezones.
 
 User-friendly timezone handling: picking a timezone with autocomplete, remembering the choice of each user
 and converting between UTC and the user's timezone.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
 """
 
 from __future__ import annotations

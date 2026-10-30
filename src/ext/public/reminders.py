@@ -1,14 +1,10 @@
-"""Reminders.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
-"""
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Reminders."""
 
 from __future__ import annotations
 
-import datetime  # ruff: ignore[typing-only-standard-library-import]
+import datetime as dt  # ruff: ignore[typing-only-standard-library-import]
 import logging
 import textwrap
 from typing import TYPE_CHECKING, NotRequired, Self, TypedDict, override
@@ -111,7 +107,7 @@ class Reminders(Cog):
     async def reminder_set(
         self,
         interaction: Interaction,
-        when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
+        when: app_commands.Transform[dt.datetime, times.TimeTransformer],
         text: str = "...",
     ) -> None:
         """Set a reminder to remind you of something at a specific time.

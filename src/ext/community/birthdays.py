@@ -1,20 +1,16 @@
-"""Birthdays.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
-"""
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Birthdays."""
 
 from __future__ import annotations
 
 import calendar
-import datetime
+import datetime as dt
 import enum
 import operator
 import random
 import zoneinfo
-from typing import TYPE_CHECKING, Final, NotRequired, TypedDict, override
+from typing import TYPE_CHECKING, Final, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -29,9 +25,9 @@ if TYPE_CHECKING:
 
     class BirthdayTimerData(TypedDict):
         user_id: int
-        year: int  # 1900 if the user didn't tell the year
-        month: NotRequired[int]  # timers created by earlier versions don't have `month` and `day`
-        day: NotRequired[int]
+        year: int | None
+        month: int
+        day: int
 
     class RemoveRoleTimerData(TypedDict):
         user_id: int
@@ -39,11 +35,9 @@ if TYPE_CHECKING:
 
 __all__ = ("Birthdays",)
 
-UNKNOWN_YEAR = 1900
-"""Year that is stored when the user doesn't want to tell the year of their birth."""
-MIN_YEAR = UNKNOWN_YEAR + 1
+MIN_YEAR = 1950
 """The earliest year of birth that can be entered."""
-STALE_AFTER = datetime.timedelta(days=1)
+STALE_AFTER = dt.timedelta(days=1)
 """If the bot was down for longer than this since the birthday, congratulating "today" is pointless."""
 
 
@@ -85,17 +79,26 @@ CONGRATULATION_TEXT_BANK = (
     "Let yourself do everything that you like most in life, may your Big Day be cheerful and happy!",
     "Wishing you the abundance of fun and glory, Happy Birthday!",
     "May this day be so happy that smile never fades away from your face.",
-    "On your birthday friends wish you many things, but I will wish you only two: always and never. "
-    "Never feel blue and always be happy!",
+    (
+        "On your birthday friends wish you many things, but I will wish you only two: always and never. "
+        "Never feel blue and always be happy!"
+    ),
     "May the dream that means most to you, start coming true this year. Happy Bday!",
     "May you enjoy your special day to the fullest extent, buddy!",
-    "With you, it is always about bringing in fun, in more ways than one, come rain come sun, just fun. Happy Birthday!",
+    (
+        "With you, it is always about bringing in fun, in more ways than one, come rain come sun, just fun. "
+        "Happy Birthday!"
+    ),
     "May your birthday mark the beginning of a wonderful period of time in your life!",
     "My dear friend, may your special day be full of beautiful, magical and unforgettable moments!",
-    "Happy birthday, gorgeous! You are another year older and I just can't see it. Have a blast! "
-    "Wishing you the best of the best!",
-    "Wishing you greatest birthday ever, full of love and joy from the moment you open your eyes in the morning "
-    "until you sleep for the night.",
+    (
+        "Happy birthday, gorgeous! You are another year older and I just can't see it. Have a blast! "
+        "Wishing you the best of the best!"
+    ),
+    (
+        "Wishing you greatest birthday ever, full of love and joy from the moment you open your eyes in the morning "
+        "until you sleep for the night."
+    ),
 )
 
 GIF_URLS_BANK = (
@@ -128,7 +131,7 @@ class Month(enum.IntEnum):
     December = 12
 
 
-def birthday_fmt(month: int, day: int, year: int) -> str:
+def birthday_fmt(month: int, day: int, year: int | None) -> str:
     """Format a date to show in the bot's embeds.
 
     Parameters
@@ -146,20 +149,20 @@ def birthday_fmt(month: int, day: int, year: int) -> str:
         Date like "28/August/2025" (or "28/August" if the year is unknown).
     """
     text = f"{day:02d}/{Month(month).name}"
-    return text if year == UNKNOWN_YEAR else f"{text}/{year}"
+    return text if year is not None else f"{text}/{year}"
 
 
-def birthday_in_year(month: int, day: int, year: int) -> datetime.date:
+def birthday_in_year(month: int, day: int, year: int) -> dt.date:
     """Get the date of a birthday in the given year.
 
     People born on the 29th of February celebrate on the 28th of February in non-leap years.
     """
-    if month == 2 and day == 29 and not calendar.isleap(year):  # noqa: PLR2004
+    if month == 2 and day == 29 and not calendar.isleap(year):
         day = 28
-    return datetime.date(year, month, day)
+    return dt.date(year, month, day)
 
 
-def next_birthday_date(month: int, day: int, *, on_or_after: datetime.date) -> datetime.date:
+def next_birthday_date(month: int, day: int, *, on_or_after: dt.date) -> dt.date:
     """Get the first date of the birthday that is not earlier than `on_or_after`."""
     date = birthday_in_year(month, day, on_or_after.year)
     if date < on_or_after:
@@ -167,9 +170,9 @@ def next_birthday_date(month: int, day: int, *, on_or_after: datetime.date) -> d
     return date
 
 
-def start_of_day(date: datetime.date, tzinfo: datetime.tzinfo) -> datetime.datetime:
+def start_of_day(date: dt.date, tzinfo: dt.tzinfo) -> dt.datetime:
     """Get the very beginning of the date in the given timezone (aware)."""
-    return datetime.datetime.combine(date, datetime.time(), tzinfo=tzinfo)
+    return dt.datetime.combine(date, dt.time(), tzinfo=tzinfo)
 
 
 def month_and_day(timer: Timer[BirthdayTimerData]) -> tuple[int, int]:
@@ -179,10 +182,7 @@ def month_and_day(timer: Timer[BirthdayTimerData]) -> tuple[int, int]:
     but they can be restored from the moment of the timer in the timer's timezone.
     """
     data = timer.data
-    if "month" in data and "day" in data:
-        return data["month"], data["day"]
-    local = timer.expires_at.astimezone(zoneinfo.ZoneInfo(timer.timezone))
-    return local.month, local.day
+    return data["month"], data["day"]
 
 
 class Birthdays(Cog):
@@ -193,7 +193,6 @@ class Birthdays(Cog):
     congratulate you.
     """
 
-    # TODO: fill these in. They were part of the old `bot.community` helper object which does not exist anymore.
     BIRTHDAY_CHANNEL_ID: Final = const.ChannelId(748604236190842881)
     """Channel where the birthday congratulations are sent."""
     BIRTHDAY_ROLE_ID: Final = const.RoleId(748586533627363469)
@@ -262,14 +261,13 @@ class Birthdays(Cog):
 
         try:
             # the year only matters for the validity of the date, so for an unknown year pick a leap one (29 Feb)
-            datetime.date(year or 2000, month, day)
+            dt.date(year or 2000, month, day)
         except ValueError:
             msg = "Invalid date given, please recheck the date."
             raise errors.BadUserInputError(msg) from None
         if year is not None and not MIN_YEAR <= year <= now.astimezone(tzinfo).year:
             msg = f"The year of your birth must be between {MIN_YEAR} and the current year, please recheck it."
             raise errors.BadUserInputError(msg)
-        year = year or UNKNOWN_YEAR
 
         confirm_embed = (
             discord
@@ -381,7 +379,7 @@ class Birthdays(Cog):
 
         timers: list[Timer[BirthdayTimerData]] = await self.bot.timers.fetch_by_kwargs("birthday")
 
-        birthdays: list[tuple[int, int, int, str, discord.Member]] = []
+        birthdays: list[tuple[int, int, int | None, str, discord.Member]] = []
         for timer in timers:
             member = guild.get_member(timer.data["user_id"])
             if member is not None:
@@ -449,7 +447,7 @@ class Birthdays(Cog):
 
         # `max`: if the bot was down for a long time, the timer is not for "today": skip to the first future birthday
         today = max(timer.expires_at.astimezone(tzinfo).date(), clock.utcnow().astimezone(tzinfo).date())
-        next_date = next_birthday_date(month, day, on_or_after=today + datetime.timedelta(days=1))
+        next_date = next_birthday_date(month, day, on_or_after=today + dt.timedelta(days=1))
 
         data: BirthdayTimerData = {
             "user_id": timer.data["user_id"],
@@ -479,7 +477,7 @@ class Birthdays(Cog):
         await member.add_roles(role)
 
         content = f"Chat, today is {member.mention}'s birthday ! {role.mention}"
-        if year != UNKNOWN_YEAR:
+        if year is not None:
             content += f"\n{member.display_name} is now {now_local.year - year} years old !"
 
         embed = (
@@ -501,7 +499,7 @@ class Birthdays(Cog):
         remove_role_data: RemoveRoleTimerData = {"user_id": member.id}
         await self.bot.timers.create(
             event="remove_birthday_role",
-            expires_at=start_of_day(now_local.date() + datetime.timedelta(days=1), tzinfo),
+            expires_at=start_of_day(now_local.date() + dt.timedelta(days=1), tzinfo),
             timezone=timer.timezone,
             data=remove_role_data,
         )

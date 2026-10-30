@@ -1,10 +1,6 @@
-"""Levels.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
-"""
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Levels."""
 
 from __future__ import annotations
 
@@ -246,7 +242,7 @@ class Levels(Cog):
             FROM community_members
             WHERE in_lvl = TRUE
             ORDER BY {sort_by} DESC;
-        """
+        """  # ruff: ignore[hardcoded-sql-expression]
         rows: list[LeaderboardQueryRow] = await self.bot.pool.fetch(query)
         # clean up the rows from inactive members
         members = [(member, row) for row in rows if (member := guild.get_member(row["id"])) is not None]
@@ -255,7 +251,7 @@ class Levels(Cog):
         split_size = 10
         tables: list[str] = []
 
-        for batch in itertools.batched(members, n=split_size):
+        for batch in itertools.batched(members, n=split_size):  # ruff: ignore[batched-without-explicit-strict]
             table = tabulate(
                 tabular_data=[
                     [

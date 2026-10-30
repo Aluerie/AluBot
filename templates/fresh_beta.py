@@ -1,12 +1,9 @@
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
 """Template for `ext.beta` extension.
 
 Just copy-paste it there without this docstring.
 Then you can beta-test some random code snippets with ease.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
 """
 
 from __future__ import annotations

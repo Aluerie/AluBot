@@ -291,7 +291,7 @@ class Paginator(View):
         self._update_navigation_labels(real_page_number)
         if send_kwargs:
             if interaction.response.is_done():
-                if self.message:
+                if self.message is not None:
                     await self.message.edit(**send_kwargs, view=self)
             else:
                 await interaction.response.edit_message(**send_kwargs, view=self)

@@ -314,8 +314,8 @@ class BugTracker(Cog):
 
     async def get_valve_devs(self) -> set[str]:
         """Get the set of known Valve developers."""
-        rows = await self.bot.pool.fetch("SELECT login FROM valve_devs")
-        return {login for (login,) in rows}
+        devs: list[str] = await self.bot.pool.fetchval("SELECT dota2bugtracker_devs FROM bot_variables")
+        return set(devs)
 
     async def get_issue(self, issue_number: int) -> Issue:
         """Shortcut to get a Dota 2 Bug Tracker issue by its number."""
@@ -336,7 +336,7 @@ class BugTracker(Cog):
         """
         log.debug("^^^ BugTracker task started ^^^")
 
-        query = "SELECT git_checked_dt FROM botinfo WHERE id=$1"
+        query = "SELECT dota2bugtracker_last_checked FROM bot_variables WHERE id=$1"
         last_checked: dt.datetime = await self.bot.pool.fetchval(query, const.Guild.community)
         now = clock.utcnow()
 
@@ -350,8 +350,8 @@ class BugTracker(Cog):
         await self._collect_comments(timelines, last_checked, now)
         await self._send_news(timelines)
 
-        query = "UPDATE botinfo SET git_checked_dt=$1 WHERE id=$2"
-        await self.bot.pool.execute(query, now, const.Guild.community)
+        query = "UPDATE bot_variables SET dota2bugtracker_last_checked = $1"
+        await self.bot.pool.execute(query, now)
         log.debug("^^^ BugTracker task is finished ^^^")
 
     async def _collect_events(
@@ -390,7 +390,7 @@ class BugTracker(Cog):
                     continue
                 # otherwise we can consider that this person is a valve dev
                 self.valve_devs.add(login)
-                query = "INSERT INTO valve_devs (login) VALUES ($1) ON CONFLICT DO NOTHING"
+                query = "UPDATE bot_variables SET dota2bugtracker_devs = dota2bugtracker_devs || $1"
                 await self.bot.pool.execute(query, login)
 
             timelines.setdefault(event.issue.number, TimeLine(issue=event.issue)).add_action(

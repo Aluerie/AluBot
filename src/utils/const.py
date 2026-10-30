@@ -1,11 +1,14 @@
-# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
-# Licensed under MPL-2.0, see the LICENSE file for details.
-"""Const."""
+"""Const.
 
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
 # ruff: file-ignore[mixed-case-variable-in-class-scope]
 
 from enum import UNIQUE, Enum, IntEnum, auto, verify
-from typing import TYPE_CHECKING, ClassVar, Literal, override
+from typing import TYPE_CHECKING, ClassVar, Final, Literal, override
 
 import discord
 
@@ -13,6 +16,7 @@ if TYPE_CHECKING:
     from core import Bot
 
 __all__ = (
+    "MY_GUILDS",
     "ChannelId",
     "Emoji",
     "Guild",
@@ -21,11 +25,15 @@ __all__ = (
     "load_emojis",
 )
 
-# --- SPECIAL CONSTANTS ------------------------------------------------------------------------------------------------
+########################################################################################################################
+# SPECIAL CONSTANTS
+########################################################################################################################
 
 NO_PINGS = discord.AllowedMentions.none()
 
-# --- GUILDS -----------------------------------------------------------------------------------------------------------
+########################################################################################################################
+# GUILDS
+########################################################################################################################
 
 
 class Guild(IntEnum):
@@ -35,7 +43,13 @@ class Guild(IntEnum):
     hideout = 759916212842659850
 
 
-# --- EMOJIS -----------------------------------------------------------------------------------------------------------
+MY_GUILDS: Final = (Guild.community, Guild.hideout)
+"""Guilds where the bot's private/community commands are registered."""
+
+
+########################################################################################################################
+# EMOJIS
+########################################################################################################################
 
 
 _RESOLVED_EMOTES: dict[str, str] = {}
@@ -107,14 +121,16 @@ async def load_emojis(bot: Bot) -> None:
         raise RuntimeError(msg)
 
 
-# --- MINIMAL SNOWFLAKE IDS --------------------------------------------------------------------------------------------
+########################################################################################################################
+# MENTIONABLE IDS
+########################################################################################################################
 
 
 class DiscordId(int):
     """Base class for Discord snowflake IDs that behave like plain integers.
 
-    Subclasses must set `_mention_template` and `_object_type`. Instances can be used anywhere an `int` is accepted,
-    for example as dict keys or in comparisons.
+    Subclasses must set `_mention_template` and `_object_type`. Instances can be
+    used anywhere an `int` is accepted, for example as dict keys or in comparisons.
     """
 
     __slots__ = ()
@@ -185,8 +201,7 @@ class UserId(DiscordId):
 #     Notes
 #     -----
 #     * "Color Highlight" VSCode extension uses colors from https://www.w3.org/TR/css-color-4/#valdef-color-indigo
-#     * It only works for lowercase though:
-# blueviolet - BlueViolet - blue_violet - blueViolet - BLUEVIOLET - BLUE_VIOLET
+#     * It only works for lowercase though: blueviolet - BlueViolet - blue_violet - blueViolet - BLUEVIOLET - BLUE_VIOLET
 #     * Either way, if we want some fancy highlighting of words: we can grab colors from there.
 #         But usually writing `Color.error` is more meaningful than `Color.marron`
 
@@ -717,7 +732,7 @@ class Accent:
 if __name__ == "__main__":
     from PIL import Image
 
-    x = Palette.purple_500
+    x = Palette.purple()
     x = 0xDB7093
 
     rectangle = Image.new("RGB", (600, 300), f"#{x:0>6x}")

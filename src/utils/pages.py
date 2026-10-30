@@ -22,19 +22,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, NotRequired, Self, TypedDict, override
 
 import discord
+from discord.utils import MISSING
 
-from core import AluView
+from core import Modal, View
 
-from . import MISSING, const
+from . import const
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from core import AluInteraction, Bot
-
-    class SendKwargs(TypedDict):
-        content: NotRequired[str]
-        embed: NotRequired[discord.Embed]
+    from core import Bot, Interaction
+    from shared.typings.dpy import SendKwargs
 
 
 __all__ = (
@@ -43,7 +41,7 @@ __all__ = (
 )
 
 
-class IndexModal(discord.ui.Modal, title="Go to page"):
+class IndexModal(Modal, title="Go to page"):
     """Modal for the default button "index" which allows to navigate to a custom page in the Paginator."""
 
     goto = discord.ui.TextInput(label="Page Number", min_length=1, required=True)
@@ -55,16 +53,16 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
         self.goto.placeholder = f"Enter a number between 1 and {paginator.max_pages}"
 
     @override
-    async def on_submit(self, interaction: AluInteraction) -> None:
+    async def on_submit(self, interaction: Interaction) -> None:
         if self.paginator.is_finished():
-            embed = discord.Embed(color=const.Color.error, description="Took too long")
+            embed = discord.Embed(color=const.Palette.red_500, description="Took too long")
             await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         value = str(self.goto.value)
         if not value.isdigit():
             embed = discord.Embed(
-                color=const.Color.error,
+                color=const.Palette.red_500,
                 description=f"Expected a page number between 1 and {self.paginator.max_pages}, not `{value!r}`",
             )
             await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -74,7 +72,7 @@ class IndexModal(discord.ui.Modal, title="Go to page"):
         await self.paginator.show_page(interaction, new_page_number)
 
 
-class Paginator(AluView, name="Pagination Menu"):
+class Paginator(View):
     """Pagination Menu.
 
     Subclassing
@@ -84,7 +82,7 @@ class Paginator(AluView, name="Pagination Menu"):
 
     Attributes
     ----------
-    interaction: AluInteraction
+    interaction: Interaction
         Interaction, with which paginator is getting invoked. It can be used in `format_page` method.
     entries: Sequence[Any]
         The sequence of items to paginate. This is used by `format_page` method as a data source.
@@ -104,13 +102,13 @@ class Paginator(AluView, name="Pagination Menu"):
     Notes
     -----
     In future, we might expand `interaction` attribute to be a general context attribute, meaning to include
-    `AluInteraction | AluContext | discord.abc.Messageable` prefix commands and sending in channels without a context,
+    `Interaction | Context | discord.abc.Messageable` prefix commands and sending in channels without a context,
     i.e. from tasks. But, at the moment, I have no plans to invoker paginators from non-interactions.
     """
 
     def __init__(
         self,
-        interaction: AluInteraction,
+        interaction: Interaction,
         entries: Sequence[Any],
         *,
         per_page: int = 1,
@@ -118,7 +116,7 @@ class Paginator(AluView, name="Pagination Menu"):
         timeout: float | None = 300.0,
     ) -> None:
         super().__init__(author_id=author_id or interaction.user.id, timeout=timeout)
-        self.interaction: AluInteraction = interaction
+        self.interaction: Interaction = interaction
         self.bot: Bot = interaction.client  # just a shortcut
         self.entries: Sequence[Any] = entries
         self.per_page: int = per_page
@@ -252,31 +250,31 @@ class Paginator(AluView, name="Pagination Menu"):
     # DEFAULT BUTTONS
 
     @discord.ui.button(label="\N{HOUSE BUILDING}", style=discord.ButtonStyle.blurple)
-    async def home_page(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    async def home_page(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
         """Show the very first page."""
         await self.show_page(interaction, 0)
 
     @discord.ui.button(label="<", style=discord.ButtonStyle.red)
-    async def previous_page(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    async def previous_page(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
         """Go to the previous page."""
         await self.show_page(interaction, self.current_page_number - 1)
 
     @discord.ui.button(label="/", style=discord.ButtonStyle.gray)
-    async def index(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    async def index(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
         """Choose page using modal. This button also has label to show current_page/maximum."""
         await interaction.response.send_modal(IndexModal(self))
 
     @discord.ui.button(label=">", style=discord.ButtonStyle.green)
-    async def next_page(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    async def next_page(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
         """Go to the next page."""
         await self.show_page(interaction, self.current_page_number + 1)
 
     @discord.ui.button(label="\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE}", style=discord.ButtonStyle.blurple)
-    async def last_page(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    async def last_page(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
         """Show the very last page."""
         await self.show_page(interaction, -1)
 
-    async def show_page(self, interaction: AluInteraction, page_number: int) -> None:
+    async def show_page(self, interaction: Interaction, page_number: int) -> None:
         """Show page. Edits the paginator's message with a new page and updates navigation labels.
 
         Parameters
@@ -304,7 +302,7 @@ class Paginator(AluView, name="Pagination Menu"):
         label="\N{ANTICLOCKWISE DOWNWARDS AND UPWARDS OPEN CIRCLE ARROWS}",
         style=discord.ButtonStyle.blurple,
     )
-    async def refresh(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    async def refresh(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
         """Refresh current page.
 
         Useful for dynamic things like SetupView where people can change
@@ -314,7 +312,7 @@ class Paginator(AluView, name="Pagination Menu"):
         await self.show_page(interaction, self.current_page_number)
 
     @discord.ui.button(label="\N{NO ENTRY SIGN}", style=discord.ButtonStyle.red)
-    async def stop_pages(self, interaction: AluInteraction, _: discord.ui.Button[Self]) -> None:
+    async def stop_pages(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
         """Stop the pagination session."""
         await interaction.response.defer()
         await interaction.delete_original_response()
@@ -363,21 +361,33 @@ class EmbedDescriptionPaginator(Paginator):
     enumeration: bool = False
         Whether entries should also be enumerated by `format_page`.
         Note, that if `per_page == 1` then there won't be any enumeration since that's just a singular description.
+
+    Parameters
+    ----------
+    empty_description: str = "Nothing to show."
+        Description to show if there are no entries at all (a paginator can't have zero pages).
     """
 
     def __init__(
         self,
-        interaction: AluInteraction,
+        interaction: Interaction,
         entries: list[str],
         *,
         template: EmbedTemplate,
         description_prefix: str = "",
         enumeration: bool = False,
+        empty_description: str = "Nothing to show.",
         per_page: int = 1,
         author_id: int | None = None,
         timeout: float = 300.0,
     ) -> None:
-        super().__init__(interaction, entries, per_page=per_page, author_id=author_id, timeout=timeout)
+        super().__init__(
+            interaction,
+            entries or [empty_description],
+            per_page=per_page,
+            author_id=author_id,
+            timeout=timeout,
+        )
         self.template: EmbedTemplate = template
         self.description_prefix: str = description_prefix
         self.enumeration: bool = enumeration

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import itertools
+import logging
 import re
 from collections import Counter, defaultdict
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
@@ -13,13 +14,15 @@ from discord import app_commands
 from discord.ext import commands
 from tabulate import tabulate
 
-from core import Cog, aluloop
-from utils import const, errors, fmt, pages
+from core import Cog
+from shared import clock, errors, fmt
+from shared.concepts import loop
+from utils import const, pages
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from core import AluInteraction, Bot
+    from core import Bot, Interaction
 
     class BatchLastYearEntry(TypedDict):
         emote_id: int
@@ -30,8 +33,16 @@ if TYPE_CHECKING:
 
 __all__ = ("EmoteStats",)
 
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+
 EMOJI_REGEX = re.compile(r"<a?:.+?:([0-9]{15,21})>")
 EMOTE_STATS_TRACKING_START = datetime.datetime(2024, 2, 6, tzinfo=datetime.UTC)
+
+
+def percent(count: int, total: int) -> str:
+    """Format `count` as a percentage of `total` (an empty total is 0%, not an error)."""
+    return f"{count / (total or 1):.1%}"
 
 
 class EmoteStats(Cog):
@@ -59,6 +70,11 @@ class EmoteStats(Cog):
     async def cog_unload(self) -> None:
         self.bulk_insert.stop()
         self.clean_up_old_records.stop()
+        try:
+            # whatever was collected in the last minute would be lost otherwise
+            await self.flush_batches()
+        except Exception:  # ruff: ignore[blind-except]
+            log.exception("Could not save the last emote usage batch on unload.")
         await super().cog_unload()
 
     @commands.Cog.listener("on_message")
@@ -67,8 +83,8 @@ class EmoteStats(Cog):
 
         Parameters
         ----------
-        message: discord.Message
-            message to filter emotes from.
+        message
+            Message to filter emotes from.
         """
         if message.guild is None or message.guild.id != const.Guild.community:
             # while we are testing this feature, let's only limit the data to the community server
@@ -103,9 +119,13 @@ class EmoteStats(Cog):
                 ],
             )
 
-    @aluloop(seconds=60.0)
+    @loop(seconds=60.0)
     async def bulk_insert(self) -> None:
         """Bulk insert gathered emoji stats in the last minute."""
+        await self.flush_batches()
+
+    async def flush_batches(self) -> None:
+        """Write the collected batches into the database (and forget them if it went well)."""
         async with self._batch_lock:
             if not self._batch_last_year:
                 # there was no data to commit to the database.
@@ -142,18 +162,10 @@ class EmoteStats(Cog):
                         used TIMESTAMP
                     )
                 """
-            async with self.bot.pool.acquire() as connection:
-                tr = connection.transaction()
-                await tr.start()
-
-                try:
-                    await connection.execute(query_total, transformed)
-                    await connection.execute(query_last_year, self._batch_last_year)
-                except Exception:
-                    await tr.rollback()
-                    raise
-                else:
-                    await tr.commit()
+            # both tables or none: otherwise a retry of the batch would count some of it twice
+            async with self.bot.pool.acquire() as connection, connection.transaction():
+                await connection.execute(query_total, transformed)
+                await connection.execute(query_last_year, self._batch_last_year)
 
             self._batch_total.clear()
             self._batch_last_year.clear()
@@ -161,7 +173,7 @@ class EmoteStats(Cog):
     emotestats_group = app_commands.Group(
         name="emote-stats",
         description="\N{ROLLING ON THE FLOOR LAUGHING} Emote Stats commands.",
-        guild_ids=const.MY_GUILDS,
+        guild_ids=[const.Guild.community],
     )
 
     @emotestats_group.command(name="server")
@@ -179,7 +191,7 @@ class EmoteStats(Cog):
     )
     async def emotestats_server(
         self,
-        interaction: AluInteraction,
+        interaction: Interaction,
         emote_type: Literal["both", "static", "animated"],
         timeframe: Literal["all-time", "year", "month"],
     ) -> None:
@@ -187,9 +199,9 @@ class EmoteStats(Cog):
 
         Parameters
         ----------
-        emote_type: `Literal["both", "static", "animated"]`
+        emote_type
             Emote type to include in stats.
-        timeframe: `Literal["all-time", "year", "month"]`
+        timeframe
             Time period to filter results with.
         """
         condition_lookup: dict[Literal["both", "static", "animated"], Callable[[discord.Emoji], bool]] = {
@@ -204,7 +216,7 @@ class EmoteStats(Cog):
 
         if not emote_ids:
             msg = "This server does not have any custom emotes."
-            raise errors.SomethingWentWrong(msg)
+            raise errors.BadUserInputError(msg)
 
         # now we need to fill `rows` variable with list[tuple[int, int]] of list[(emote_id, usage_count)] format
         if timeframe == "all-time":
@@ -214,14 +226,14 @@ class EmoteStats(Cog):
                 WHERE guild_id = $1 AND emote_id = ANY($2::bigint[])
                 ORDER BY total DESC
             """
-            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, interaction.guild.id, emote_ids))
+            records = await self.bot.pool.fetch(query, interaction.guild.id, emote_ids)
         else:
-            now = datetime.datetime.now(datetime.UTC)
+            # "year" needs no filter: records older than a year are cleaned up by `clean_up_old_records`
+            clause, args = "", []
             if timeframe == "month":
-                track_point = now - datetime.timedelta(days=30)
-                clause = f"AND used > '{track_point.isoformat()}'::date"
-            elif timeframe == "year":
-                clause = ""
+                # `used` is a `TIMESTAMP` (without a timezone) that is always kept in UTC, so is this parameter
+                clause = "AND used > $3"
+                args = [(clock.utcnow() - datetime.timedelta(days=30)).replace(tzinfo=None)]
 
             query = f"""
                 SELECT emote_id, COUNT(*) as "total"
@@ -230,9 +242,12 @@ class EmoteStats(Cog):
                 GROUP BY emote_id
                 ORDER BY total DESC;
             """
-            rows: list[tuple[int, int]] = list(await self.bot.pool.fetch(query, interaction.guild.id, emote_ids))
+            records = await self.bot.pool.fetch(query, interaction.guild.id, emote_ids, *args)
 
-        rows.extend([(emote_id, 0) for emote_id in emote_ids if emote_id not in [row[0] for row in rows]])
+        rows: list[tuple[int, int]] = [(record[0], record[1]) for record in records]
+        # emotes that were never used do not have any records at all, but they still belong to the leaderboard
+        used_emote_ids = {emote_id for emote_id, _ in rows}
+        rows.extend((emote_id, 0) for emote_id in emote_ids if emote_id not in used_emote_ids)
 
         # all emotes total
         all_emotes_total = sum(t for _, t in rows)
@@ -243,7 +258,7 @@ class EmoteStats(Cog):
         split_size = 20
         tables: list[str] = []
 
-        for batch in itertools.batched(rows, n=split_size):
+        for batch in itertools.batched(rows, n=split_size):  # ruff: ignore[batched-without-explicit-strict]
             table = tabulate(
                 tabular_data=[
                     [
@@ -269,7 +284,7 @@ class EmoteStats(Cog):
             interaction,
             tables,
             template={
-                "color": const.Color.prpl,
+                "color": const.Palette.purple_500,
                 "title": "Emote leaderboard",
                 "author": {
                     "name": (
@@ -280,7 +295,9 @@ class EmoteStats(Cog):
                     "text": (
                         f"During the timeframe: total {all_emotes_total} emotes were used; {all_emotes_per_day} per day"
                     ),
-                    "icon_url": interaction.guild.icon.url if interaction.guild.icon else discord.utils.MISSING,
+                    "icon_url": (
+                        interaction.guild.icon.url if interaction.guild.icon is not None else discord.utils.MISSING
+                    ),
                 },
             },
         )
@@ -297,16 +314,15 @@ class EmoteStats(Cog):
         emote = self.bot.get_emoji(emote_id)
         if emote is None:
             full_name = f"[\N{WHITE QUESTION MARK ORNAMENT}](https://cdn.discordapp.com/emojis/{emote_id}.png)"
-            emote = discord.Object(id=emote_id)
             colon_name = "**Unknown Emote**"
+            created_at = discord.utils.snowflake_time(emote_id)
         else:
             full_name = str(emote)
             colon_name = emote.name
+            created_at = emote.created_at
 
-        per_day = self.usage_per_day(emote.created_at, count)
-        percent = count / (total or 1)
-
-        return full_name, f"`:{colon_name}:", str(count), f"{percent:.1%}", f"{per_day}`"
+        per_day = self.usage_per_day(created_at, count)
+        return full_name, f"`:{colon_name}:", str(count), percent(count, total), f"{per_day}`"
 
     @staticmethod
     def usage_per_day(dt: datetime.datetime, usages: int) -> str:
@@ -315,7 +331,7 @@ class EmoteStats(Cog):
         days = (datetime.datetime.now(datetime.UTC) - base).total_seconds() / 86400  # 86400 seconds in a day
         return f"{usages / (int(days) or 1):.1f}"  # or 1 takes care of days = 1 DivisionError
 
-    @aluloop(time=datetime.time(hour=12, minute=11, second=45))
+    @loop(time=datetime.time(hour=12, minute=11, second=45))
     async def clean_up_old_records(self) -> None:
         """Clean up "way too old" records from the Last Year emote usage database.
 
@@ -335,30 +351,29 @@ class EmoteStats(Cog):
             await self.bot.pool.execute(query, clean_up_dt)
 
     @emotestats_group.command(name="specific")
-    async def emotestats_specific(self, interaction: AluInteraction, emote: str) -> None:
+    async def emotestats_specific(self, interaction: Interaction, emote: str) -> None:
         """\N{ROLLING ON THE FLOOR LAUGHING} Show information and stats about specific emote.
 
         Parameters
         ----------
-        emote: str
+        emote
             Emote to get information/stats about.
-
         """
         assert interaction.guild
 
         emoji = discord.utils.find(lambda e: str(e) == emote, interaction.guild.emojis)
         if not emoji:
             msg = f"Didn't find any emotes matching the name `{emote}`"
-            raise errors.NotFound(msg)
+            raise errors.BadUserInputError(msg)
 
         embed = (
             discord
-            .Embed(color=const.Color.prpl, title=f"`:{emoji.name}:`")
+            .Embed(color=const.Palette.purple_500, title=f"`:{emoji.name}:`")
             .set_author(name="Emote Stats")
             .set_thumbnail(url=emoji.url)
             .add_field(
                 name="Emote Information",
-                value=f"ID: `{emoji.id}`\nCreated: {fmt.format_dt_tdR(emoji.created_at)}",
+                value=f"ID: `{emoji.id}`\nCreated: {clock.discord(emoji.created_at, 'd', 't', 'R')}",
                 inline=False,
             )
         )
@@ -371,7 +386,7 @@ class EmoteStats(Cog):
                 WHERE guild_id = $1
                 GROUP BY guild_id;
             """
-            all_emotes_total: int = await self.bot.pool.fetchval(query, interaction.guild.id)
+            all_emotes_total: int = await self.bot.pool.fetchval(query, interaction.guild.id) or 0
 
             # all time this emote
             query = """
@@ -380,12 +395,12 @@ class EmoteStats(Cog):
                 WHERE emote_id=$1 AND guild_id = $2
                 GROUP BY emote_id;
             """
-            emote_usage_total: int = await self.bot.pool.fetchval(query, emoji.id, interaction.guild.id)
+            emote_usage_total: int = await self.bot.pool.fetchval(query, emoji.id, interaction.guild.id) or 0
 
             all_time_period = [
                 "All-time",
                 emote_usage_total,
-                f"{emote_usage_total / all_emotes_total:.1%}",
+                percent(emote_usage_total, all_emotes_total),
                 self.usage_per_day(emoji.created_at, emote_usage_total),
             ]
 
@@ -408,19 +423,20 @@ class EmoteStats(Cog):
             last_year_period = [
                 "Last Year",
                 emote_usage_last_year,
-                f"{emote_usage_last_year / all_emotes_last_year:.1%}",
+                percent(emote_usage_last_year, all_emotes_last_year),
                 self.usage_per_day(
                     max(emoji.created_at, datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=365)),
                     emote_usage_last_year,
                 ),
             ]
 
-            server_stats = fmt.code(
+            server_stats = fmt.codeblock(
                 tabulate(
                     headers=["Period", "Usages", "Percent", "Per Day"],
                     tabular_data=[all_time_period, last_year_period],
                     tablefmt="plain",
-                )
+                ),
+                language="",
             )
 
         else:

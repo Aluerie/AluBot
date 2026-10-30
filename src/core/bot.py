@@ -1,10 +1,6 @@
-"""Bot.
-
-Notices
--------
-* MPL-2.0 License, see LICENSE file for more details.
-* Copyright (C) 2020-present @Aluerie.
-"""
+# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Licensed under MPL-2.0, see the LICENSE file for details.
+"""Bot."""
 
 from __future__ import annotations
 
@@ -24,6 +20,7 @@ from shared.concepts import BotBase
 from utils import const
 
 from .scheduler import Scheduler
+from .timezones import TimezoneManager
 from .tree import AppCommandTree
 
 if TYPE_CHECKING:
@@ -60,6 +57,8 @@ class Bot(BotBase, commands.Bot):
         logs_via_webhook_handler: Any
         tree: AppCommandTree
         user: discord.ClientUser
+        timers: Scheduler
+        tz_manager: TimezoneManager
 
     def __init__(
         self,
@@ -270,6 +269,13 @@ class Bot(BotBase, commands.Bot):
         self.bot_app_info = await self.application_info()
         await const.load_emojis(self)
 
+        # cogs use these (reminders, birthdays, timezone settings, etc.), so they have to exist before the extensions
+        # are loaded. They can't be created in `__init__` because they need the event loop and a ready-event
+        # of the client which only exist since the `setup_hook` is called.
+        self.tz_manager = TimezoneManager(self)
+        self.tz_manager.start()
+        self.timers = Scheduler(bot=self)
+
         failed_to_load_extensions = False
         for extension in self.extensions_to_load:
             try:
@@ -281,8 +287,6 @@ class Bot(BotBase, commands.Bot):
                     description=f"Failed to load extension `{extension}`.",
                 ).set_footer(text=f'setup_hook: loading extension "{extension}"')
                 await self.error_notification_manager.register(error, embed)
-
-        self.timers = Scheduler(bot=self)
 
         if self.test:
             if failed_to_load_extensions:
@@ -348,6 +352,9 @@ class Bot(BotBase, commands.Bot):
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
         log.info("%s is closing.", self.__class__.__name__)
+        for component_name in ("timers", "tz_manager"):
+            if (component := getattr(self, component_name, None)) is not None:
+                component.close()
         await super().close()
         await self.pool.close()
         await self.session.close()

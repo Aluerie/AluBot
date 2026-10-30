@@ -1,26 +1,35 @@
+"""Timezone Settings.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
-import asyncio
-import datetime
-import zoneinfo
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING
 
 import discord
 from discord import app_commands
-from utils.timezones import TimeZone, TimeZoneTransformer  # noqa: TC001
 
-from core import Cog
+from core import Cog, TransformTimeZone
+from shared import clock
 
 if TYPE_CHECKING:
-    from core import AluInteraction, Bot
+    from core import Bot, Interaction
+
+__all__ = ("TimezoneSettings",)
+
+TIME_FORMAT = "%Y-%m-%d %I:%M %p"
 
 
 class TimezoneSettings(Cog):
-    """Manage your timezone settings."""
+    """Manage your timezone settings.
 
-    @override
-    async def cog_load(self) -> None:
-        await super().cog_load()
+    Your timezone is used by the bot to understand the times you type in (reminders)
+    and to show your dates correctly (birthdays).
+    """
 
     timezone_group = app_commands.Group(
         name="timezone",
@@ -28,12 +37,8 @@ class TimezoneSettings(Cog):
     )
 
     @timezone_group.command(name="set")
-    async def timezone_set(
-        self,
-        interaction: AluInteraction,
-        timezone: app_commands.Transform[TimeZone, TimeZoneTransformer],
-    ) -> None:
-        """Sets your timezone.
+    async def timezone_set(self, interaction: Interaction, timezone: TransformTimeZone) -> None:
+        """Set your timezone.
 
         This is used to convert times to your local timezone when
         using the reminder command and other miscellaneous commands
@@ -42,65 +47,64 @@ class TimezoneSettings(Cog):
         Parameters
         ----------
         timezone
-            The timezone to change to.
+            The timezone to change to. Type and pick from the autocomplete or try IANA alias or country/city names.
         """
         await self.bot.tz_manager.set_timezone(interaction.user.id, timezone)
         content = f"Your timezone has been set to {timezone.label} (IANA ID: {timezone.key})."
         await interaction.response.send_message(content, ephemeral=True)
 
     @timezone_group.command(name="info")
-    async def timezone_info(
-        self, interaction: AluInteraction, timezone: app_commands.Transform[TimeZone, TimeZoneTransformer]
-    ) -> None:
-        """Retrieves info about a timezone.
+    async def timezone_info(self, interaction: Interaction, timezone: TransformTimeZone) -> None:
+        """Retrieve info about a timezone.
 
         Parameters
         ----------
         timezone
             The timezone to get info about.
         """
-        now = datetime.datetime.now(datetime.UTC)
-        dt = now.astimezone(tz=zoneinfo.ZoneInfo(key=timezone.key))
+        now = clock.utcnow()
+        local_now = now.astimezone(timezone.to_tzinfo())
 
         embed = (
             discord
             .Embed(color=discord.Color.blurple(), title=timezone.label)
-            .add_field(name="Current Time", value=dt.strftime("%Y-%m-%d %I:%M %p"))
+            .add_field(name="Current Time", value=local_now.strftime(TIME_FORMAT))
             .add_field(name="UTC Offset", value=self.bot.tz_manager.get_utc_offset_string(timezone.key, now))
             .add_field(name="IANA Database Alias", value=timezone.key)
         )
         await interaction.response.send_message(embed=embed)
 
     @timezone_group.command(name="check")
-    async def timezone_check(self, interaction: AluInteraction, user: discord.User | None = None) -> None:
-        """Shows the timezone of a user.
+    async def timezone_check(self, interaction: Interaction, user: discord.User | None = None) -> None:
+        """Show the timezone of a user.
 
         Parameters
         ----------
         user
-            The member to get the timezone of. Defaults to yourself if not provided -
+            The user to get the timezone of. Defaults to yourself if not provided.
         """
         person = user or interaction.user
-        tz = await self.bot.tz_manager.get_timezone(person.id)
-        if tz is None:
-            await interaction.response.send_message(f"{user} has not set their timezone.")
+        is_self = person.id == interaction.user.id
+
+        key = await self.bot.tz_manager.get_timezone(person.id)
+        if key is None:
+            who = "You have" if is_self else f"{person} has"
+            await interaction.response.send_message(f"{who} not set a timezone.", ephemeral=is_self)
             return
 
-        time = discord.utils.utcnow().astimezone(zoneinfo.ZoneInfo(tz)).strftime("%Y-%m-%d %I:%M %p")
-        if person.id == interaction.user.id:
-            await interaction.response.send_message(f"Your timezone is {tz!r}. The current time is {time}.")
-            msg = await interaction.original_response()
-            await asyncio.sleep(5.0)
-            await msg.edit(content=f"Your current time is {time}.")
+        tzinfo = await self.bot.tz_manager.get_tzinfo(person.id)
+        time = clock.utcnow().astimezone(tzinfo).strftime(TIME_FORMAT)
+        if is_self:
+            # nobody needs to see the exact timezone of somebody else's check, so it stays private
+            content = f"Your timezone is `{key}`. Your current time is {time}."
         else:
-            await interaction.response.send_message(f"The current time for {user} is {time}.")
+            content = f"The current time for {person} is {time}."
+        await interaction.response.send_message(content, ephemeral=is_self)
 
     @timezone_group.command(name="clear")
-    async def timezone_clear(self, interaction: AluInteraction) -> None:
-        """Clears your timezone."""
-        query = "UPDATE user_settings SET timezone = NULL WHERE id=$1"
-        await interaction.client.pool.execute(query, interaction.user.id)
-        self.bot.tz_manager.get_timezone.invalidate(self, interaction.user.id)
+    async def timezone_clear(self, interaction: Interaction) -> None:
+        """Clear your timezone."""
+        await self.bot.tz_manager.clear_timezone(interaction.user.id)
         await interaction.response.send_message("Your timezone has been cleared.", ephemeral=True)
 
 

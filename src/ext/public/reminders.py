@@ -1,26 +1,35 @@
+"""Reminders.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
 import datetime  # ruff: ignore[typing-only-standard-library-import]
 import logging
 import textwrap
-from typing import TYPE_CHECKING, Any, Self, TypedDict, override
+from typing import TYPE_CHECKING, NotRequired, Self, TypedDict, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import AluView, Cog
-from shared import clock, fmt
-from utils import MISSING, const, errors, pages, times
+from core import Cog, Modal, View
+from shared import clock, errors, fmt
+from utils import const, pages, prompts, times
 
 if TYPE_CHECKING:
-    from core import Interaction, Bot, Timer
+    from core import Bot, Interaction, Timer
 
     class RemindTimerData(TypedDict):
         author_id: int
         channel_id: int
         text: str
         message_id: int
+        guild_id: NotRequired[int | None]  # timers created before this key was introduced don't have it
 
 
 __all__ = ("Reminders",)
@@ -28,8 +37,19 @@ __all__ = ("Reminders",)
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+MAX_TEXT_LENGTH = 1500
+MAX_LIST_TEXT_LENGTH = 200
+"""Reminder texts are shortened to this in `/remind list`, so a page of them fits into an embed description."""
 
-class SnoozeModal(discord.ui.Modal, title="Snooze"):
+
+def reminder_url(*, guild_id: int | None, channel_id: int, message_id: int) -> str:
+    """Make a link to a message: guild-less (DMs) messages live under "@me"."""
+    return f"https://discord.com/channels/{guild_id or '@me'}/{channel_id}/{message_id}"
+
+
+class SnoozeModal(Modal, title="Snooze"):
+    """Modal asking for how long a fired reminder should be snoozed."""
+
     duration = discord.ui.TextInput(label="Duration", placeholder="10 minutes", default="10 minutes", min_length=2)
 
     def __init__(self, parent: ReminderView, timer: Timer[RemindTimerData]) -> None:
@@ -38,76 +58,49 @@ class SnoozeModal(discord.ui.Modal, title="Snooze"):
         self.timer: Timer[RemindTimerData] = timer
 
     @override
-    async def on_submit(self, interaction: AluInteraction) -> None:
+    async def on_submit(self, interaction: Interaction) -> None:
+        tz_manager = interaction.client.tz_manager
+        tzinfo = await tz_manager.get_tzinfo(interaction.user.id)
         try:
-            when = times.FutureTime(str(self.duration)).dt
-        except commands.BadArgument:  # Exception
+            when = times.FutureTime(str(self.duration), now=interaction.created_at, tzinfo=tzinfo).dt
+        except errors.BadUserInputError:
             msg = 'Duration could not be parsed, sorry. Try something like "5 minutes" or "1 hour"'
             await interaction.response.send_message(msg, ephemeral=True)
             return
 
+        await interaction.client.timers.create(
+            event=self.timer.event,
+            expires_at=when,
+            created_at=self.timer.created_at,  # still the reminder that was originally set at that time
+            timezone=await tz_manager.get_timezone(interaction.user.id) or "UTC",
+            data=self.timer.data,
+        )
+
         self.parent.snooze.disabled = True
         await interaction.response.edit_message(view=self.parent)
 
-        zone = await interaction.client.tz_manager.get_timezone(interaction.user.id)
-        refreshed = await interaction.client.timers.create(
-            event=self.timer.event,
-            expires_at=when,
-            created_at=interaction.created_at,
-            timezone=zone or "UTC",
-            data=self.timer.data,
-        )
-        author_id = self.timer.data.get("author_id")
-        text = self.timer.data.get("text")
-        delta = clock.human_timedelta(when, source=refreshed.created_at)
-        msg = f"Alright <@{author_id}>, I've snoozed your reminder for {delta}: {text}"
-        await interaction.followup.send(msg, ephemeral=True)
+        delta = clock.human_datetime_diff(when, relative_to=interaction.created_at)
+        text = self.timer.data["text"]
+        msg = f"Alright {interaction.user.mention}, I've snoozed your reminder for {delta}: {text}"
+        await interaction.followup.send(msg, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
 
 
-class SnoozeButton(discord.ui.Button["ReminderView"]):
-    def __init__(self, cog: Reminders, timer: Timer[RemindTimerData]) -> None:
-        super().__init__(label="Snooze", style=discord.ButtonStyle.blurple)
+class ReminderView(View):
+    """Buttons under a fired reminder: a link to the original message and a snooze button."""
+
+    def __init__(self, *, url: str, timer: Timer[RemindTimerData], author_id: int) -> None:
+        super().__init__(author_id=author_id, timeout=300)
         self.timer: Timer[RemindTimerData] = timer
-        self.cog: Reminders = cog
-
-    @override
-    async def callback(self, interaction: AluInteraction) -> Any:
-        assert self.view is not None
-        await interaction.response.send_modal(SnoozeModal(self.view, self.timer))
-
-
-class ReminderView(AluView, name="Reminder Buttons"):
-    def __init__(self, *, url: str, timer: Timer[RemindTimerData], cog: Reminders, author_id: int) -> None:
-        super().__init__(timeout=300, author_id=author_id)
-        self.timer: Timer[RemindTimerData] = timer
-        self.cog: Reminders = cog
-        self.author_id: int = author_id
         self.add_item(discord.ui.Button(url=url, label="Go to original message"))
 
-    @override
-    async def interaction_check(self, interaction: AluInteraction) -> bool:
-        if interaction.user.id != self.author_id:
-            await interaction.response.send_message("This snooze button is not for you, sorry!", ephemeral=True)
-            return False
-        return True
-
-    @override
-    async def on_timeout(self) -> None:
-        self.snooze.disabled = True
-        await self.message.edit(view=self)
-
     @discord.ui.button(label="Snooze", style=discord.ButtonStyle.blurple)
-    async def snooze(self, interaction: AluInteraction, button: discord.ui.Button[Self]) -> None:
-        """Make a non-anonymous confession."""
+    async def snooze(self, interaction: Interaction, _: discord.ui.Button[Self]) -> None:
+        """Ask for how long to snooze the reminder."""
         await interaction.response.send_modal(SnoozeModal(self, self.timer))
 
 
 class Reminders(Cog):
     """Remind yourself of something at sometime."""
-
-    @override
-    async def cog_load(self) -> None:
-        await super().cog_load()
 
     remind_group = app_commands.Group(
         name="remind",
@@ -117,94 +110,81 @@ class Reminders(Cog):
     @remind_group.command(name="set")
     async def reminder_set(
         self,
-        interaction: AluInteraction,
+        interaction: Interaction,
         when: app_commands.Transform[datetime.datetime, times.TimeTransformer],
         text: str = "...",
     ) -> None:
-        """Sets a reminder to remind you of something at a specific time.
+        """Set a reminder to remind you of something at a specific time.
 
         Parameters
         ----------
         when
-            When to be reminded of something, in GMT.
+            When to be reminded of something: "10m", "2 days", "tomorrow at 3pm", etc. In your timezone if you set it.
         text
             What to be reminded of.
         """
-        if len(text) >= 1500:
-            msg = "Reminder must be fewer than 1500 characters."
-            raise errors.BadArgument(msg)
-
-        assert interaction.channel
+        if len(text) > MAX_TEXT_LENGTH:
+            msg = f"Reminder must be at most {MAX_TEXT_LENGTH} characters long."
+            raise errors.BadUserInputError(msg)
 
         zone = await self.bot.tz_manager.get_timezone(interaction.user.id)
-        data: RemindTimerData = {
-            "author_id": interaction.user.id,
-            "channel_id": interaction.channel.id,
-            "text": text,
-            "message_id": interaction.id,  # synthetic, it's invalid id
-        }
-        timer = await self.bot.timers.create(
-            event="reminder",
-            expires_at=when,
-            created_at=interaction.created_at,
-            timezone=zone or "UTC",
-            data=data,
-        )
-        delta = clock.human_timedelta(when, source=timer.created_at)
+
+        delta = clock.human_datetime_diff(when, relative_to=interaction.created_at)
         embed = discord.Embed(
-            color=interaction.user.color, description=f"in {delta} — {fmt.format_dt_tdR(when)}\n{text}"
+            color=interaction.user.color,
+            description=f"in {delta} — {clock.discord(when, 'd', 't', 'R')}\n{text}",
         ).set_author(
-            name=f"Reminder for {interaction.user.display_name} is created", icon_url=interaction.user.display_avatar
+            name=f"Reminder for {interaction.user.display_name} is created",
+            icon_url=interaction.user.display_avatar,
         )
         if zone is None:
-            mention = interaction.client.tree.find_mention("timezone set")
+            mention = self.bot.tree.find_mention_for("timezone set") or "`/timezone set`"
             embed.add_field(
                 name="P.S.",
                 value=f"\N{ELECTRIC LIGHT BULB} You can set your timezone with {mention}",
             )
-        await interaction.response.send_message(embed=embed)
 
-    # @remind.command(name="me", with_app_command=False)
-    # async def remind_me(
-    #     self,
-    #     ctx: AluContext,
-    #     *,
-    #     when_and_what: Annotated[
-    #         times.FriendlyTimeResult, times.UserFriendlyTime(commands.clean_content, default="...")
-    #     ],
-    # ) -> None:
-    #     """Reminds you of something after a certain amount of time. \
-    #     The input can be any direct date (i.e. DD/MM/YYYY) or a human \
-    #     readable offset. Examples:
-    #     * "next thursday at 3pm do something funny"
-    #     * "do the dishes tomorrow"
-    #     * "in 50 minutes do the thing"
-    #     * "2d unmute someone"
-    #     Times are assumed in UTC.
-    #     """
-    #     await self.remind_helper(ctx, dt=when_and_what.dt, text=when_and_what.arg)
+        # The reminder points to this very response message, so it has to be sent before the timer is created.
+        await interaction.response.send_message(embed=embed)
+        response = await interaction.original_response()
+
+        data: RemindTimerData = {
+            "author_id": interaction.user.id,
+            "channel_id": response.channel.id,
+            "guild_id": interaction.guild_id,
+            "text": text,
+            "message_id": response.id,
+        }
+        try:
+            await self.bot.timers.create(
+                event="reminder",
+                expires_at=when,
+                created_at=interaction.created_at,
+                timezone=zone or "UTC",
+                data=data,
+            )
+        except Exception:
+            # do not leave the user thinking everything is fine
+            await interaction.edit_original_response(content="Failed to create the reminder, sorry!", embed=None)
+            raise
 
     @remind_group.command(name="list")
-    async def remind_list(self, interaction: AluInteraction) -> None:
-        """Shows a list of your current reminders."""
-        query = """
-            SELECT id, expires_at, extra #>> '{args,2}'
-            FROM timers
-            WHERE event = 'reminder'
-            AND data #>> '{author_id}' = $1
-            ORDER BY expires_at
-        """
-        records = await self.bot.pool.fetch(query, str(interaction.user.id))
+    async def remind_list(self, interaction: Interaction) -> None:
+        """Show a list of your current reminders."""
+        timers: list[Timer[RemindTimerData]] = await self.bot.timers.fetch_by_kwargs(
+            "reminder", author_id=interaction.user.id
+        )
 
-        string_list = []
-        for _id, expires_at, message in records:
-            shorten = textwrap.shorten(message, width=512)
-            string_list.append(f"\N{BLACK CIRCLE} {_id}: {fmt.format_dt_tdR(expires_at)}\n{shorten}")
-
-        pgs = pages.EmbedDescriptionPaginator(
+        entries = [
+            f"\N{BLACK CIRCLE} {timer.id}: {clock.discord(timer.expires_at, 'd', 't', 'R')}\n"
+            f"{textwrap.shorten(timer.data['text'], width=MAX_LIST_TEXT_LENGTH)}"
+            for timer in timers
+        ]
+        paginator = pages.EmbedDescriptionPaginator(
             interaction,
-            string_list,
+            entries,
             per_page=10,
+            empty_description="You do not have any reminders.",
             template={
                 "color": interaction.user.color.value,
                 "author": {
@@ -213,137 +193,107 @@ class Reminders(Cog):
                 },
             },
         )
-        await pgs.start()
-
-    # TODO: finish this?
-    # async def remind_delete_id_autocomplete(
-    #         self,
-    #         interaction: AluInteraction,
-    #         current: str
-    # ) -> List[app_commands.Choice[str]]:
-    #     """idk if it is a good idea"""
-    #     query = """ SELECT id, expires, extra #>> '{args,2}'
-    #                 FROM reminders
-    #                 WHERE event = 'reminder'
-    #                 AND data #>> '{author_id}' = $1
-    #                 ORDER BY similarity(extra #>> '{args, 2}', $2) DESC
-    #                 LIMIT 10
-    #             """
-    #     records = await self.bot.pool.fetch(query, str(ntr.user.id), current)
-    #     choice_list = [
-    #         (_id, f"{_id}: ({expires.strftime('%d/%b/%y')}) {textwrap.shorten(message, width=100)}")
-    #         for _id, expires, message in records
-    #     ]
-    #     return [app_commands.Choice(name=m, value=n) for n, m in choice_list if current.lower() in m.lower()]
+        await paginator.start()
 
     @remind_group.command(name="delete")
-    # @app_commands.autocomplete(id=remind_delete_id_autocomplete)  # type: ignored
-    # @app_commands.describe(id='either input a number of reminder id or choose it from suggestion^')
-    async def remind_delete(self, interaction: AluInteraction, id_: int) -> None:
-        """Deletes a reminder by its ID.
+    async def remind_delete(self, interaction: Interaction, reminder_id: int) -> None:
+        """Delete a reminder by its ID.
 
-        To get a reminder ID, use the reminder list command or autocomplete for slash command.
+        To get a reminder ID, use the reminder list command.
 
         You must own the reminder to delete it, obviously.
+
+        Parameters
+        ----------
+        reminder_id
+            ID of the reminder to delete.
         """
-        query = """
-            DELETE FROM timers
-            WHERE id=$1
-            AND event = 'reminder'
-            AND data #>> '{author_id}' = $2;
-        """
-        status = await interaction.client.pool.execute(query, id_, str(interaction.user.id))
-        if status == "DELETE 0":
+        deleted = await self.bot.timers.delete_by_id(reminder_id, "reminder", author_id=interaction.user.id)
+        if not deleted:
             embed = discord.Embed(
-                color=const.Color.error,
+                color=const.Palette.red_500,
                 description="Could not delete any reminders with that ID.",
             ).set_author(name="NotFound")
-            await interaction.response.send_message(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
-        self.bot.timers.check_reschedule(id_)
-
-        embed = discord.Embed(description="Successfully deleted reminder.", color=const.Color.prpl)
+        embed = discord.Embed(description="Successfully deleted reminder.", color=const.Palette.purple_500)
         await interaction.response.send_message(embed=embed)
 
     @remind_group.command(name="clear")
-    async def reminder_clear(self, interaction: AluInteraction) -> None:
-        """Clears all reminders you have set."""
-        # For UX purposes this has to be two queries.
-        query = """
-            SELECT COUNT(*) FROM timers
-            WHERE event = 'reminder'
-            AND data #>> '{author_id}' = $1;
-        """
-        author_id = str(interaction.user.id)
-        total: int = await interaction.client.pool.fetchval(query, author_id)
+    async def reminder_clear(self, interaction: Interaction) -> None:
+        """Clear all reminders you have set."""
+        total = len(await self.bot.timers.fetch_by_kwargs("reminder", author_id=interaction.user.id))
         if total == 0:
-            no_reminders_embed = discord.Embed(
-                color=interaction.user.color,
-                description="You do not have any reminders to delete.",
-            )
-            await interaction.response.send_message(embed=no_reminders_embed)
+            embed = discord.Embed(color=interaction.user.color, description="You do not have any reminders to delete.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         confirm_embed = discord.Embed(
             color=interaction.user.color,
             description=f"Are you sure you want to delete {fmt.plural(total):reminder}?",
         )
-        if not await interaction.client.disambiguator.confirm(interaction, embed=confirm_embed):
+        if not await prompts.confirm(interaction, embed=confirm_embed):
             return
 
-        query = """
-            DELETE FROM timers
-            WHERE event = 'reminder'
-            AND data #>> '{author_id}' = $1;
-        """  # ruff: ignore[missing-f-string-syntax]
-        await interaction.client.pool.execute(query, author_id)
-
-        # Check if the current timer is the one being cleared and cancel it if so
-        current_timer = self.bot.timers.current_timer
-        if current_timer and current_timer.event == "reminder" and current_timer.data:
-            author_id = current_timer.data.get("author_id")
-            if author_id == interaction.user.id:
-                self.bot.timers.reschedule()
-
-        response_embed = discord.Embed(
+        deleted = await self.bot.timers.delete_by_kwargs("reminder", author_id=interaction.user.id)
+        embed = discord.Embed(
             color=interaction.user.color,
-            description=f"Successfully deleted {fmt.plural(total):reminder}.",
+            description=f"Successfully deleted {fmt.plural(deleted):reminder}.",
         )
-        await interaction.response.send_message(embed=response_embed)
+        # `confirm` has used up the initial response
+        await interaction.followup.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_reminder_timer_complete(self, timer: Timer[RemindTimerData]) -> None:
+        """Send the reminder when its time comes."""
         log.debug('Timer Event "on_reminder_timer_complete" starts now')
+        try:
+            await self._send_reminder(timer)
+        finally:
+            # whatever happened (the channel was deleted, the user blocked the bot, ...) a reminder is never retried
+            await self.bot.timers.cleanup(timer.id)
 
+    async def _send_reminder(self, timer: Timer[RemindTimerData]) -> None:
+        """Deliver the reminder to its channel; if that's impossible then to the author's DMs."""
         author_id = timer.data["author_id"]
         channel_id = timer.data["channel_id"]
-        text = timer.data["text"]
         message_id = timer.data["message_id"]
+        text = timer.data["text"]
 
-        try:
-            channel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
-        except discord.HTTPException:
-            log.warning("Discarding channel %s as it's not found.", channel_id)
-            return
-
-        guild_id = channel.guild.id if isinstance(channel, discord.TextChannel | discord.Thread) else "@me"
         content = f"<@{author_id}>, {discord.utils.format_dt(timer.created_at, style='R')}\n{text}"
-        view = MISSING
+        # The text is typed by the user, but the bot sends it: only the author may ever be pinged by it
+        # (not `@everyone`, not roles that the user wouldn't be allowed to ping themselves).
+        mentions = discord.AllowedMentions(everyone=False, roles=False, users=[discord.Object(author_id)])
 
-        if message_id:
-            url = f"https://discord.com/channels/{guild_id}/{channel.id}/{message_id}"
-            view = ReminderView(url=url, timer=timer, cog=self, author_id=author_id)
+        channel = self.bot.get_channel(channel_id)
+        if channel is None:
+            try:
+                channel = await self.bot.fetch_channel(channel_id)
+            except discord.HTTPException:
+                log.info("Reminder channel %s is gone, trying to DM the author %s instead.", channel_id, author_id)
 
+        # (guild_id wasn't stored by earlier versions: take it from the channel then)
+        guild_id = timer.data.get("guild_id") or getattr(getattr(channel, "guild", None), "id", None)
+        url = reminder_url(guild_id=guild_id, channel_id=channel_id, message_id=message_id)
+        view = ReminderView(url=url, timer=timer, author_id=author_id)
+
+        if isinstance(channel, discord.abc.Messageable):
+            try:
+                view.message = await channel.send(content, view=view, allowed_mentions=mentions)
+            except discord.HTTPException:
+                log.info("Could not send reminder to the channel %s.", channel_id, exc_info=True)
+            else:
+                return
+
+        # the channel is gone or we can't speak there anymore
         try:
-            msg = await channel.send(content, view=view)  # ty: ignore[unresolved-attribute]
+            user = self.bot.get_user(author_id) or await self.bot.fetch_user(author_id)
+            view.message = await user.send(content, view=view, allowed_mentions=mentions)
         except discord.HTTPException:
-            pass
-        else:
-            if view is not MISSING:
-                view.message = msg
-
-        await self.bot.timers.cleanup(timer.id)
+            log.warning(
+                "Discarding reminder %s: neither channel %s nor DMs of %s work.", timer.id, channel_id, author_id
+            )
 
 
 async def setup(bot: Bot) -> None:

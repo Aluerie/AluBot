@@ -1,26 +1,50 @@
+"""Birthdays.
+
+Notices
+-------
+* MPL-2.0 License, see LICENSE file for more details.
+* Copyright (C) 2020-present @Aluerie.
+"""
+
 from __future__ import annotations
 
+import calendar
 import datetime
+import enum
+import operator
 import random
 import zoneinfo
-from typing import TYPE_CHECKING, TypedDict, override
+from typing import TYPE_CHECKING, Final, NotRequired, TypedDict, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from core import Cog
-from utils import const, converters, errors, fmt, pages, timezones
+from core import Cog, TransformTimeZone
+from shared import clock, errors
+from utils import const, pages, prompts
 
 if TYPE_CHECKING:
-    from core import AluInteraction, Bot, Timer, TimerRow
+    from core import Bot, Interaction, Timer
 
     class BirthdayTimerData(TypedDict):
         user_id: int
-        year: int
+        year: int  # 1900 if the user didn't tell the year
+        month: NotRequired[int]  # timers created by earlier versions don't have `month` and `day`
+        day: NotRequired[int]
+
+    class RemoveRoleTimerData(TypedDict):
+        user_id: int
 
 
 __all__ = ("Birthdays",)
+
+UNKNOWN_YEAR = 1900
+"""Year that is stored when the user doesn't want to tell the year of their birth."""
+MIN_YEAR = UNKNOWN_YEAR + 1
+"""The earliest year of birth that can be entered."""
+STALE_AFTER = datetime.timedelta(days=1)
+"""If the bot was down for longer than this since the birthday, congratulating "today" is pointless."""
 
 
 CONGRATULATION_TEXT_BANK = (
@@ -44,8 +68,6 @@ CONGRATULATION_TEXT_BANK = (
     "The joy is in the air because your special day is here!",
     "Your birthday only comes once a year, so make sure this is the most memorable one ever and have a colorful day.",
     "Today I wish you a fun time, shared with your dear ones, and a lifelong happiness!",
-    "I always wished to be a great friend like you. "
-    "But there is no way to be a better friend than you in the world. Happy birthday.",
     "Wishing you a wonderful day and all the most amazing things on your Big Day!",
     "Life is tough but birthdays are smooth because I will finally have a chance to smile at you. Happy birthday.",
     "May your birthday be full of happy hours and special moments to remember for a long long time!",
@@ -89,16 +111,78 @@ GIF_URLS_BANK = (
 )
 
 
-def birthday_fmt(birthday_date: datetime.datetime) -> str:
+class Month(enum.IntEnum):
+    """Months for the slash command choices (the names are what users see)."""
+
+    January = 1
+    February = 2
+    March = 3
+    April = 4
+    May = 5
+    June = 6
+    July = 7
+    August = 8
+    September = 9
+    October = 10
+    November = 11
+    December = 12
+
+
+def birthday_fmt(month: int, day: int, year: int) -> str:
     """Format a date to show in the bot's embeds.
 
-    Example:
-    -------
-    Output: "28/August/2025"
+    Parameters
+    ----------
+    month
+        Month of the birthday.
+    day
+        Day of the birthday.
+    year
+        Year of the birth. `UNKNOWN_YEAR` hides it.
 
+    Returns
+    -------
+    str
+        Date like "28/August/2025" (or "28/August" if the year is unknown).
     """
-    fmt = "%d/%B" if birthday_date.year == 1900 else "%d/%B/%Y"
-    return birthday_date.strftime(fmt)
+    text = f"{day:02d}/{Month(month).name}"
+    return text if year == UNKNOWN_YEAR else f"{text}/{year}"
+
+
+def birthday_in_year(month: int, day: int, year: int) -> datetime.date:
+    """Get the date of a birthday in the given year.
+
+    People born on the 29th of February celebrate on the 28th of February in non-leap years.
+    """
+    if month == 2 and day == 29 and not calendar.isleap(year):  # noqa: PLR2004
+        day = 28
+    return datetime.date(year, month, day)
+
+
+def next_birthday_date(month: int, day: int, *, on_or_after: datetime.date) -> datetime.date:
+    """Get the first date of the birthday that is not earlier than `on_or_after`."""
+    date = birthday_in_year(month, day, on_or_after.year)
+    if date < on_or_after:
+        date = birthday_in_year(month, day, on_or_after.year + 1)
+    return date
+
+
+def start_of_day(date: datetime.date, tzinfo: datetime.tzinfo) -> datetime.datetime:
+    """Get the very beginning of the date in the given timezone (aware)."""
+    return datetime.datetime.combine(date, datetime.time(), tzinfo=tzinfo)
+
+
+def month_and_day(timer: Timer[BirthdayTimerData]) -> tuple[int, int]:
+    """Get the month and the day of the birthday of the timer.
+
+    Timers created by the earlier versions of the bot don't store them,
+    but they can be restored from the moment of the timer in the timer's timezone.
+    """
+    data = timer.data
+    if "month" in data and "day" in data:
+        return data["month"], data["day"]
+    local = timer.expires_at.astimezone(zoneinfo.ZoneInfo(timer.timezone))
+    return local.month, local.day
 
 
 class Birthdays(Cog):
@@ -109,55 +193,83 @@ class Birthdays(Cog):
     congratulate you.
     """
 
+    # TODO: fill these in. They were part of the old `bot.community` helper object which does not exist anymore.
+    BIRTHDAY_CHANNEL_ID: Final = const.ChannelId(748604236190842881)
+    """Channel where the birthday congratulations are sent."""
+    BIRTHDAY_ROLE_ID: Final = const.RoleId(748586533627363469)
+    """Role that is given to people for the day of their birthday."""
+    BLACKLISTED_ROLE_ID: Final = const.RoleId(0)
+    """Members with this role are not congratulated. Leave `0` if there is no such role."""
+
+    TEST_CHANNEL_ID: Final = const.ChannelId(724986090632642653)
+    """Channel where the test bot sends congratulations instead (it's the bot spam channel)."""
+
     @override
     async def cog_load(self) -> None:
-        self.bot.instantiate_tz_manager()
+        if not (self.BIRTHDAY_CHANNEL_ID and self.BIRTHDAY_ROLE_ID):
+            msg = "Birthdays: BIRTHDAY_CHANNEL_ID and BIRTHDAY_ROLE_ID have to be filled in."
+            raise RuntimeError(msg)
         await super().cog_load()
 
-    @discord.utils.cached_property
+    @property
     def birthday_channel(self) -> discord.TextChannel:
         """The channel where birthday notifications are sent."""
-        return self.community.logs if self.bot.test else self.community.bday_notifs
+        return self.bot.get_text_channel_or_test(self.BIRTHDAY_CHANNEL_ID)
+
+    @property
+    def birthday_role(self) -> discord.Role:
+        """The role that is given to people on their birthday."""
+        role = self.bot.community.get_role(self.BIRTHDAY_ROLE_ID)
+        if role is None:
+            msg = f"Birthday role {self.BIRTHDAY_ROLE_ID} is not found in the community guild."
+            raise LookupError(msg)
+        return role
 
     birthday_group = app_commands.Group(
         name="birthday",
         description="Birthday related commands.",
-        guild_ids=const.MY_GUILDS,
+        guild_ids=[const.Guild.community],
     )
+
+    ####################################################################################################################
+    # COMMANDS
+    ####################################################################################################################
 
     @birthday_group.command(name="set")
     async def birthday_set(
         self,
-        interaction: AluInteraction,
+        interaction: Interaction,
         day: app_commands.Range[int, 1, 31],
-        month: app_commands.Transform[int, converters.MonthPicker],
-        year: app_commands.Range[int, 1970],
-        timezone: timezones.TransformTimeZone,
+        month: Month,
+        timezone: TransformTimeZone,
+        year: int | None = None,
     ) -> None:
         """Set your birthday.
 
         Parameters
         ----------
-        day: app_commands.Range[int, 1, 31]
+        day
             Day of your birthday, number from 1 till 31.
-        month: app_commands.Transform[int, converters.MonthPicker]
+        month
             Month of your birthday, full month name.
-        year: app_commands.Range[int, 1970]
-            Year of your birthday, optional.
-        timezone: timezones.TransformTimeZone
-            Timezone, type and pick from the autocomplete or try IANA alias or country/city names, optional.
+        timezone
+            Timezone, type and pick from the autocomplete or try IANA alias or country/city names.
+        year
+            Year of your birth, optional.
         """
-        await interaction.response.defer()
+        now = clock.utcnow()
+        tzinfo = timezone.to_tzinfo()
+
         try:
-            birthday = datetime.datetime(
-                day=day,
-                month=month,
-                year=year,
-                tzinfo=timezone.to_tzinfo(),
-            )
+            # the year only matters for the validity of the date, so for an unknown year pick a leap one (29 Feb)
+            datetime.date(year or 2000, month, day)
         except ValueError:
             msg = "Invalid date given, please recheck the date."
-            raise errors.BadArgument(msg) from None
+            raise errors.BadUserInputError(msg) from None
+        if year is not None and not MIN_YEAR <= year <= now.astimezone(tzinfo).year:
+            msg = f"The year of your birth must be between {MIN_YEAR} and the current year, please recheck it."
+            raise errors.BadUserInputError(msg)
+        year = year or UNKNOWN_YEAR
 
         confirm_embed = (
             discord
@@ -166,7 +278,7 @@ class Birthdays(Cog):
                 title="Birthday Confirmation",
                 description="Do you confirm that this is the correct date/timezone for your birthday?",
             )
-            .add_field(name="Date", value=birthday_fmt(birthday))
+            .add_field(name="Date", value=birthday_fmt(month, day, year))
             .add_field(name="Timezone", value=timezone.label)
             .set_footer(
                 text=(
@@ -175,39 +287,32 @@ class Birthdays(Cog):
                 ),
             )
         )
-        if not await self.bot.disambiguator.confirm(interaction, embed=confirm_embed):
+        if not await prompts.confirm(interaction, embed=confirm_embed):
             return
 
         # settle down timezone questions
-        zone = await interaction.client.tz_manager.get_timezone(interaction.user.id)
-        if not zone:
+        saved_timezone = await self.bot.tz_manager.get_timezone(interaction.user.id)
+        if saved_timezone is None:
             # no database timezone entry thus we set one
             await self.bot.tz_manager.set_timezone(interaction.user.id, timezone)
-        elif timezone.key != zone:
+        elif saved_timezone != timezone.key:
             # different tz in input and database - let's warn the person
             # but still use birthday timezone
             text = (
                 "Hey, I noticed that you just entered different timezone "
                 "from the one we have in the timezone database for reminders (that you set with `/timezone set`). "
                 "I did not change anything right now, but if you need to change "
-                "your timezone for stuff like reminders then use `/timezone set` again.",
+                "your timezone for stuff like reminders then use `/timezone set` again."
             )
-            e = discord.Embed(description=text)
-            await interaction.followup.send(embed=e, ephemeral=True)
+            await interaction.followup.send(embed=discord.Embed(description=text), ephemeral=True)
 
-        data: BirthdayTimerData = {
-            "user_id": interaction.user.id,
-            "year": birthday.year,
-        }
+        # if the birthday is today, the date is today and the timer expires right away: it's celebrated immediately
+        birthday_date = next_birthday_date(month, day, on_or_after=now.astimezone(tzinfo).date())
+        expires_at = start_of_day(birthday_date, tzinfo)
 
-        end_of_today = datetime.datetime.now(timezone.to_tzinfo()).replace(hour=0, minute=0, second=0)
-        expires_at = birthday.replace(hour=0, minute=0, second=1, year=end_of_today.year)
-        if expires_at < end_of_today:
-            # the birthday already happened this year
-            expires_at = birthday.replace(year=end_of_today.year + 1)
-
+        data: BirthdayTimerData = {"user_id": interaction.user.id, "year": year, "month": month, "day": day}
         # clear the previous birthday data before adding a new one
-        await self.remove_birthday_helper(interaction.user.id)
+        await self.bot.timers.delete_by_kwargs("birthday", user_id=interaction.user.id)
         await self.bot.timers.create(
             event="birthday",
             expires_at=expires_at,
@@ -218,199 +323,198 @@ class Birthdays(Cog):
         embed = (
             discord
             .Embed(color=interaction.user.color, title="Your birthday is successfully set")
-            .add_field(name="Data", value=birthday_fmt(birthday))
+            .add_field(name="Date", value=birthday_fmt(month, day, year))
             .add_field(name="Timezone", value=timezone.label)
-            .add_field(name="Next congratulations incoming", value=fmt.format_dt(expires_at, "R"))
+            .add_field(name="Next congratulations incoming", value=clock.discord(expires_at, "R"))
             .set_footer(text="Important! By submitting this information you agree it can be shown to anyone.")
         )
+        # `confirm` has used up the initial response
         await interaction.followup.send(embed=embed)
 
-    async def remove_birthday_helper(self, user_id: int) -> str:
-        """Helper function to remove user's birthday from timers."""
-        query = """
-            DELETE FROM timers
-            WHERE event = 'birthday'
-            AND data #>> '{user_id}' = $1;
-        """  # ruff: ignore[missing-f-string-syntax]
-        status = await self.bot.pool.execute(query, str(user_id))
-
-        current_timer = self.bot.timers.current_timer
-        if current_timer and current_timer.event == "birthday" and current_timer.data:
-            author_id = current_timer.data.get("user_id")
-            if author_id == user_id:
-                self.bot.timers.reschedule()
-
-        return status
-
-    @birthday_group.command()
-    async def remove(self, interaction: AluInteraction) -> None:
+    @birthday_group.command(name="remove")
+    async def birthday_remove(self, interaction: Interaction) -> None:
         """Remove your birthday data and stop getting congratulations."""
-        # TODO: make confirm message YES NO;
-        status = await self.remove_birthday_helper(interaction.user.id)
-        if status == "DELETE 0":
+        deleted = await self.bot.timers.delete_by_kwargs("birthday", user_id=interaction.user.id)
+        if not deleted:
             embed = discord.Embed(
-                color=const.Color.error,
-                description="Could not delete your birthday with that ID.",
-            ).set_author(name="DatabaseError")
-            await interaction.response.send_message(embed=embed)
+                color=const.Palette.red_500,
+                description="You don't have a birthday set.",
+            ).set_author(name="NotFound")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return
 
         embed = discord.Embed(
-            color=interaction.user.color, description="Your birthday is successfully removed from the bot database"
+            color=interaction.user.color,
+            description="Your birthday is successfully removed from the bot database",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @birthday_group.command()
-    async def check(self, interaction: AluInteraction, member: discord.Member | None) -> None:
+    @birthday_group.command(name="check")
+    async def birthday_check(self, interaction: Interaction, member: discord.Member | None = None) -> None:
         """Check your or somebody's birthday in database.
 
         Parameters
         ----------
-        member: discord.Member | None
+        member
             Member of the server. If not specified - it will show your birthday.
         """
-        if not member:
+        if member is None:
             assert isinstance(interaction.user, discord.Member)
             member = interaction.user
 
-        query = """
-            SELECT * FROM timers
-            WHERE event = 'birthday'
-            AND data #>> '{user_id}' = $1;
-        """
-        row: TimerRow[BirthdayTimerData] | None = await self.bot.pool.fetchrow(query, str(member.id))
+        timer: Timer[BirthdayTimerData] | None = await self.bot.timers.get_by_kwargs("birthday", user_id=member.id)
 
         embed = discord.Embed(color=member.color)
         embed.set_author(name=f"{member.display_name}'s birthday status", icon_url=member.display_avatar.url)
-        if row is None:
+        if timer is None:
             embed.description = "It's not set yet."
         else:
-            embed.add_field(name="Date", value=birthday_fmt(row["expires_at"].replace(year=row["data"]["year"])))
-            embed.add_field(name="Timezone", value=row["timezone"])
+            month, day = month_and_day(timer)
+            embed.add_field(name="Date", value=birthday_fmt(month, day, timer.data["year"]))
+            embed.add_field(name="Timezone", value=timer.timezone)
         await interaction.response.send_message(embed=embed)
+
+    @birthday_group.command(name="list")
+    async def birthday_list(self, interaction: Interaction) -> None:
+        """Show list of birthdays in this server."""
+        guild = self.bot.community
+
+        timers: list[Timer[BirthdayTimerData]] = await self.bot.timers.fetch_by_kwargs("birthday")
+
+        birthdays: list[tuple[int, int, int, str, discord.Member]] = []
+        for timer in timers:
+            member = guild.get_member(timer.data["user_id"])
+            if member is not None:
+                month, day = month_and_day(timer)
+                birthdays.append((month, day, timer.data["year"], timer.timezone, member))
+
+        # the calendar order, regardless of the year (and of the timers' UTC moments, which depend on the timezone)
+        birthdays.sort(key=operator.itemgetter(slice(2)))
+        entries = [
+            f"{birthday_fmt(month, day, year)}, {timezone} - {member.mention}"
+            for month, day, year, timezone, member in birthdays
+        ]
+
+        paginator = pages.EmbedDescriptionPaginator(
+            interaction,
+            entries,
+            per_page=20,
+            empty_description="Nobody has set their birthday yet.",
+            template={
+                "title": "Birthday List",
+                "color": const.Palette.purple_500,
+                "footer": {"text": "DD/Month/YYYY format"},
+            },
+        )
+        await paginator.start()
+
+    ####################################################################################################################
+    # TIMERS
+    ####################################################################################################################
 
     @commands.Cog.listener("on_birthday_timer_complete")
     async def birthday_congratulations(self, timer: Timer[BirthdayTimerData]) -> None:
-        """Send birthday notifications."""
+        """Send birthday notifications and schedule the next ones."""
         user_id = timer.data["user_id"]
-        year = timer.data["year"]
+        member = self.bot.community.get_member(user_id)
 
-        guild = self.community.guild
-
-        member = guild.get_member(user_id)
         if member is None:
-            # user is not in the guild anymore
-            # so let's check if the user data is deleted from the database
-            query = """--sql
-                SELECT * FROM community_members WHERE id = $1;
-            """
-            user_row = await self.bot.pool.fetchrow(query, user_id)
-            if user_row:
-                # continue the timer for next year :D
-                pass
-            else:
-                # don't continue the timer
-                await self.bot.timers.cleanup(timer.id)
-                return
-        else:
-            # Send notification
+            # The person is not in the server now. If the bot still remembers them they might be just temporarily
+            # away, so the timer continues for next year. Otherwise they are gone for good.
+            query = "SELECT EXISTS (SELECT 1 FROM community_members WHERE id = $1)"
+            known = await self.bot.pool.fetchval(query, user_id)
+            if known:
+                await self.renew_birthday_timer(timer)
+            await self.bot.timers.cleanup(timer.id)
+            return
 
-            if self.community.blacklisted in member.roles:
-                # the person is blacklisted from using the bot features.
-                await self.bot.timers.cleanup(timer.id)
-                return
+        if self.BLACKLISTED_ROLE_ID and member.get_role(self.BLACKLISTED_ROLE_ID):
+            # the person is blacklisted from using the bot features
+            await self.bot.timers.cleanup(timer.id)
+            return
 
-            birthday_role = self.community.birthday_role
-            await member.add_roles(birthday_role)
+        # Schedule next year first: if anything fails below, the yearly chain of the timers is not broken.
+        # (And if this fails the timer is not cleaned up, so it's retried after the next restart.)
+        await self.renew_birthday_timer(timer)
+        try:
+            await self.congratulate(member, timer)
+        finally:
+            # congratulations are not retried: it would send them twice
+            await self.bot.timers.cleanup(timer.id)
 
-            content = f"Chat, today is {member.mention}'s birthday ! {const.Role.birthday_lover}"
+    async def renew_birthday_timer(self, timer: Timer[BirthdayTimerData]) -> None:
+        """Create the timer for the next birthday (the dates are computed in the timezone of the birthday)."""
+        tzinfo = zoneinfo.ZoneInfo(timer.timezone)
+        month, day = month_and_day(timer)
 
-            now_as_birthday_timezone = datetime.datetime.now().astimezone(zoneinfo.ZoneInfo(timer.timezone))
-            if year != 1900:
-                content += f"\n{member.display_name} is now {now_as_birthday_timezone.year - year} years old !"
+        # `max`: if the bot was down for a long time, the timer is not for "today": skip to the first future birthday
+        today = max(timer.expires_at.astimezone(tzinfo).date(), clock.utcnow().astimezone(tzinfo).date())
+        next_date = next_birthday_date(month, day, on_or_after=today + datetime.timedelta(days=1))
 
-            embed = (
-                discord
-                .Embed(
-                    color=member.color,
-                    title=f"CONGRATULATIONS !!! {const.Emoji.peepoRoseDank * 3}",
-                    description=f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emoji.peepoHappyDank}",
-                )
-                .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
-                .set_thumbnail(url=member.display_avatar.url)
-                .set_image(url=random.choice(GIF_URLS_BANK))
-                .set_footer(
-                    text=(f"Their birthday: {birthday_fmt(now_as_birthday_timezone)}. Timezone: {timer.timezone}.")
-                )
-            )
-
-            await self.birthday_channel.send(content=content, embed=embed)
-
-            # create remove roles timer
-            await self.bot.timers.create(
-                event="remove_birthday_role",
-                expires_at=timer.expires_at + datetime.timedelta(days=1),
-                created_at=timer.created_at,
-                timezone=timer.timezone,
-                data=timer.data,
-            )
-
-        # create next year timer
+        data: BirthdayTimerData = {
+            "user_id": timer.data["user_id"],
+            "year": timer.data["year"],
+            "month": month,
+            "day": day,
+        }
         await self.bot.timers.create(
             event="birthday",
-            expires_at=timer.expires_at.replace(year=timer.expires_at.year + 1),
-            created_at=timer.created_at,
+            expires_at=start_of_day(next_date, tzinfo),
             timezone=timer.timezone,
-            data=timer.data,
+            data=data,
         )
-        await self.bot.timers.cleanup(timer.id)
+
+    async def congratulate(self, member: discord.Member, timer: Timer[BirthdayTimerData]) -> None:
+        """Give the member the birthday role and congratulate them in the channel."""
+        if clock.utcnow() - timer.expires_at > STALE_AFTER:
+            # the bot was down during the birthday, congratulating "today" a few days later is just weird
+            return
+
+        tzinfo = zoneinfo.ZoneInfo(timer.timezone)
+        month, day = month_and_day(timer)
+        year = timer.data["year"]
+        now_local = clock.utcnow().astimezone(tzinfo)
+
+        role = self.birthday_role
+        await member.add_roles(role)
+
+        content = f"Chat, today is {member.mention}'s birthday ! {role.mention}"
+        if year != UNKNOWN_YEAR:
+            content += f"\n{member.display_name} is now {now_local.year - year} years old !"
+
+        embed = (
+            discord
+            .Embed(
+                color=member.color,
+                title=f"CONGRATULATIONS !!! {str(const.Emoji.peepoRoseDank) * 3}",
+                description=f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emoji.DankLove}",
+            )
+            .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
+            .set_thumbnail(url=member.display_avatar.url)
+            .set_image(url=random.choice(GIF_URLS_BANK))
+            .set_footer(text=f"Their birthday: {birthday_fmt(month, day, year)}. Timezone: {timer.timezone}.")
+        )
+        mentions = discord.AllowedMentions(users=[discord.Object(member.id)], roles=[discord.Object(role.id)])
+        await self.birthday_channel.send(content=content, embed=embed, allowed_mentions=mentions)
+
+        # the role stays until the end of the birthday day in the person's timezone
+        remove_role_data: RemoveRoleTimerData = {"user_id": member.id}
+        await self.bot.timers.create(
+            event="remove_birthday_role",
+            expires_at=start_of_day(now_local.date() + datetime.timedelta(days=1), tzinfo),
+            timezone=timer.timezone,
+            data=remove_role_data,
+        )
 
     @commands.Cog.listener("on_remove_birthday_role_timer_complete")
-    async def birthday_cleanup(self, timer: Timer[BirthdayTimerData]) -> None:
+    async def birthday_cleanup(self, timer: Timer[RemoveRoleTimerData]) -> None:
         """Remove @Birthday Role from people when their birthday has passed."""
-        user_id = timer.data["user_id"]
-        birthday_role = self.community.birthday_role
-        guild = self.community.guild
-
-        member = guild.get_member(user_id)
-        if member is not None:
-            await member.remove_roles(birthday_role)
-        await self.bot.timers.cleanup(timer.id)
-
-    @birthday_group.command(name="list")
-    async def birthday_list(self, interaction: AluInteraction) -> None:
-        """Show list of birthdays in this server."""
-        guild = self.community.guild
-
-        query = """
-            SELECT expires_at, timezone, data FROM timers
-            WHERE event = 'birthday'
-            ORDER BY extract(MONTH FROM expires_at), extract(DAY FROM expires_at);
-        """
-        rows: list[TimerRow[BirthdayTimerData]] = await self.bot.pool.fetch(query)
-
-        string_list = []
-        for row in rows:
-            birthday_person = guild.get_member(row["data"]["user_id"])
-            if birthday_person is not None:
-                date = (
-                    row["expires_at"]
-                    .astimezone(zoneinfo.ZoneInfo(key=row["timezone"]))
-                    .replace(year=row["data"]["year"])
-                )
-                string_list.append(f"{birthday_fmt(date)}, {row['timezone']} - {birthday_person.mention}")
-
-        pgs = pages.EmbedDescriptionPaginator(
-            interaction,
-            entries=string_list,
-            template={
-                "title": "Birthday List",
-                "color": const.Color.prpl,
-                "footer": {"text": "DD/Month/YYYY format"},
-            },
-            per_page=20,
-        )
-        await pgs.start()
+        try:
+            member = self.bot.community.get_member(timer.data["user_id"])
+            if member is not None:
+                await member.remove_roles(self.birthday_role)
+        finally:
+            await self.bot.timers.cleanup(timer.id)
 
 
 async def setup(bot: Bot) -> None:

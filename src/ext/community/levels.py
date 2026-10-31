@@ -13,7 +13,7 @@ import logging
 import re
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal, TypedDict, override
+from typing import TYPE_CHECKING, Final, TypedDict, override
 
 import discord
 from discord import app_commands
@@ -22,7 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 from tabulate import tabulate
 
 from core import Cog
-from shared import errors, fmt, globs
+from shared import clock, errors, fmt, globs
 from shared.concepts import loop
 from utils import const, pages
 
@@ -220,23 +220,15 @@ class Levels(Cog):
 
     @app_commands.guilds(*const.MY_GUILDS)
     @app_commands.command(name="leaderboard")
-    async def leaderboard(self, interaction: Interaction, sort_by: Literal["exp", "rep"] = "exp") -> None:
-        """View experience leaderboard for this server.
-
-        Parameters
-        ----------
-        sort_by
-            Choose how to sort leaderboard.
-        """
+    async def leaderboard(self, interaction: Interaction) -> None:
+        """View experience leaderboard for this server."""
         guild = self.bot.community
 
-        # `sort_by` is one of the two literals, discord doesn't let anything else in, so it's safe to format it in
-        query = f"""
-            SELECT id, exp, rep
+        query = """
+            SELECT id, experience
             FROM community_members
-            WHERE in_lvl = TRUE
-            ORDER BY {sort_by} DESC;
-        """  # ruff: ignore[hardcoded-sql-expression]
+            ORDER BY experience DESC;
+        """
         rows: list[LeaderboardQueryRow] = await self.bot.pool.fetch(query)
         # clean up the rows from inactive members
         members = [(member, row) for row in rows if (member := guild.get_member(row["id"])) is not None]
@@ -261,7 +253,6 @@ class Levels(Cog):
                         f"{member.mention}\n{' ' * len(member.mention)}",
                         f"‎\n{get_level(row['exp'])}",
                         f"‎\n{row['exp']}",
-                        f"‎\n{row['rep']}`",
                     ]
                     for counter, (member, row) in enumerate(batch, start=offset + 1)
                 ],
@@ -269,8 +260,7 @@ class Levels(Cog):
                     "`" + fmt.label_indent("N", offset + 1, split_size),
                     "Name",
                     "Level",
-                    "Exp",
-                    "Rep`",
+                    "Exp`",
                 ],
                 tablefmt="plain",
             )
@@ -279,38 +269,16 @@ class Levels(Cog):
 
         paginator = pages.EmbedDescriptionPaginator(
             interaction,
-            tables,
+            entries=tables,
             empty_description="Nobody is on the leaderboard yet.",
             template={
                 "footer": {
-                    "text": f"Sorted by {sort_by}",
+                    "text": guild.name,
                     "icon_url": guild.icon.url if guild.icon is not None else discord.utils.MISSING,
                 }
             },
         )
         await paginator.start()
-
-    @app_commands.command(name="give-rep")
-    @app_commands.guilds(const.Guild.community)
-    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    @app_commands.describe(member="Member to give rep to")
-    async def reputation(self, interaction: Interaction, member: discord.Member) -> None:
-        """Give +1 to `@member`'s reputation."""
-        if member == interaction.user or member.bot:
-            msg = "You can't give reputation to yourself or bots."
-            raise errors.BadUserInputError(msg)
-
-        query = "UPDATE community_members SET rep = rep + 1 WHERE id = $1 RETURNING rep"
-        reputation: int | None = await self.bot.pool.fetchval(query, member.id)
-        if reputation is None:
-            msg = f"I don't have any data about {member.display_name} yet."
-            raise errors.BadUserInputError(msg)
-
-        embed = discord.Embed(
-            color=discord.Color.green(),
-            description=f"Added +1 reputation to **{member.display_name}**: now {reputation} reputation",
-        )
-        await interaction.response.send_message(embed=embed)
 
     ####################################################################################################################
     # LISTENERS
@@ -326,7 +294,7 @@ class Levels(Cog):
         query = """
             WITH m AS (SELECT last_seen FROM community_members WHERE id = $1)
             UPDATE community_members
-            SET msg_count = msg_count + 1, last_seen = (now() at time zone 'utc')
+            SET message_count = message_count + 1, last_seen = now()
             WHERE id = $1
             RETURNING (SELECT last_seen FROM m)
         """
@@ -363,21 +331,6 @@ class Levels(Cog):
             await author.remove_roles(previous_level_role)
         await author.add_roles(level_up_role)
 
-    @commands.Cog.listener(name="on_message")
-    async def reputation_counting(self, message: discord.Message) -> None:
-        """Message listener that gives reputation to the people who were thanked."""
-        if message.author.bot or not message.guild or message.guild.id != const.Guild.community:
-            return
-
-        if not THANKS_REGEX.search(message.content):
-            return
-
-        # one thanks is one reputation, no matter how many thanking words are in the message
-        member_ids = {m.id for m in message.mentions if m.id != message.author.id and not m.bot}
-        if member_ids:
-            query = "UPDATE community_members SET rep = rep + 1 WHERE id = ANY($1::bigint[])"
-            await self.bot.pool.execute(query, list(member_ids))
-
     ####################################################################################################################
     # TASKS
     ####################################################################################################################
@@ -390,13 +343,13 @@ class Levels(Cog):
         365 days is probably enough to warrant that they no longer come back.
         `community_members` table holds stuff like auto_roles, experience, msg_count.
         """
-        if discord.utils.utcnow().weekday() != 3:
+        if clock.utcnow().weekday() != 3:
             # let's do this task on Thursdays only, why not xd.
             return
 
         guild = self.bot.community
         query = "SELECT id, last_seen, name FROM community_members WHERE last_seen < $1"
-        rows: list[RemoveLongGoneRow] = await self.bot.pool.fetch(query, discord.utils.utcnow() - LONG_GONE_AFTER)
+        rows: list[RemoveLongGoneRow] = await self.bot.pool.fetch(query, clock.utcnow() - LONG_GONE_AFTER)
 
         for row in rows:
             if guild.get_member(row["id"]) is not None:

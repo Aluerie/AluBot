@@ -156,7 +156,7 @@ class EmoteStats(Cog):
 
             # LAST YEAR COUNT
             query_last_year = """
-                INSERT INTO emote_stats_last_year (emote_id, guild_id, author_id, used)
+                INSERT INTO emote_usage_logger (emote_id, guild_id, author_id, used)
                     SELECT x.emote_id, x.guild_id, x.author_id, x.used
                     FROM jsonb_to_recordset($1::jsonb) AS
                     x(
@@ -241,7 +241,7 @@ class EmoteStats(Cog):
 
             query = f"""
                 SELECT emote_id, COUNT(*) as "total"
-                FROM emote_stats_last_year
+                FROM emote_usage_logger
                 WHERE guild_id = $1 AND emote_id = ANY($2::bigint[]) {clause}
                 GROUP BY emote_id
                 ORDER BY total DESC;
@@ -354,7 +354,7 @@ class EmoteStats(Cog):
         """
         # no `_batch_lock` here: the batches live in memory and this only touches old rows in the database
         clean_up_dt = clock.utcnow() - dt.timedelta(days=365)
-        query = "DELETE FROM emote_stats_last_year WHERE used < $1::date"
+        query = "DELETE FROM emote_usage_logger WHERE used < $1::date"
         await self.bot.pool.execute(query, clean_up_dt)
 
     @emotestats_group.command(name="specific")
@@ -414,7 +414,7 @@ class EmoteStats(Cog):
             # last year total
             query = """
                 SELECT COUNT(*) as "total"
-                FROM emote_stats_last_year
+                FROM emote_usage_logger
                 WHERE guild_id = $1;
             """
             all_emotes_last_year: int = await self.bot.pool.fetchval(query, interaction.guild.id)
@@ -422,7 +422,7 @@ class EmoteStats(Cog):
             # last year this emote
             query = """
                 SELECT COUNT(*) as "total"
-                FROM emote_stats_last_year
+                FROM emote_usage_logger
                 WHERE emote_id = $1 AND guild_id = $2;
             """
             emote_usage_last_year: int = await self.bot.pool.fetchval(query, emoji.id, interaction.guild.id)

@@ -34,13 +34,7 @@ if TYPE_CHECKING:
 
     class LeaderboardQueryRow(TypedDict):
         id: int
-        exp: int
-        rep: int
-
-    class RankQueryRow(TypedDict):
-        in_lvl: bool
-        exp: int
-        rep: int
+        experience: int
 
 
 __all__ = ("Levels",)

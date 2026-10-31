@@ -30,22 +30,18 @@ if TYPE_CHECKING:
     from core import Bot, Interaction
 
     class RemoveLongGoneRow(TypedDict):
+        """RemoveLongGoneRow."""
+
         id: int
         name: str
         last_seen: dt.datetime
 
     class LeaderboardQueryRow(TypedDict):
+        """LeaderboardQueryRow."""
+
         id: int
-        exp: int
-        rep: int
+        experience: int
 
-    class RankQueryRow(TypedDict):
-        in_lvl: bool
-        exp: int
-        rep: int
-
-
-__all__ = ("Levels",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -251,8 +247,8 @@ class Levels(Cog):
                             f"\n`{' ' * len(label)}"
                         ),
                         f"{member.mention}\n{' ' * len(member.mention)}",
-                        f"‎\n{get_level(row['exp'])}",
-                        f"‎\n{row['exp']}",
+                        f"‎\n{get_level(row['experience'])}",
+                        f"‎\n{row['experience']}",
                     ]
                     for counter, (member, row) in enumerate(batch, start=offset + 1)
                 ],
@@ -305,8 +301,7 @@ class Levels(Cog):
         if discord.utils.utcnow() - last_seen <= dt.timedelta(seconds=LAST_SEEN_TIMEOUT):
             return
 
-        # members who opted out (`in_lvl = FALSE`) do not get experience, hence no row to return for them
-        query = "UPDATE community_members SET exp = exp + 1 WHERE id = $1 AND in_lvl RETURNING exp"
+        query = "UPDATE community_members SET experience = experience + 1 WHERE id = $1 RETURNING experience"
         exp: int | None = await self.bot.pool.fetchval(query, message.author.id)
         if exp is None:
             return
@@ -331,9 +326,7 @@ class Levels(Cog):
             await author.remove_roles(previous_level_role)
         await author.add_roles(level_up_role)
 
-    ####################################################################################################################
-    # TASKS
-    ####################################################################################################################
+    # --- TASKS --------------------------------------------------------------------------------------------------------
 
     @loop(time=dt.time(hour=13, minute=13, tzinfo=dt.UTC), wait_for_ready=True)
     async def remove_long_gone_members(self) -> None:

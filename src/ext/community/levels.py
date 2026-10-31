@@ -291,6 +291,7 @@ class Levels(Cog):
     # LISTENERS
     ####################################################################################################################
 
+    @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
         """Start tracking the experience of a new community member."""
         if member.guild.id != const.Guild.community or member.bot:

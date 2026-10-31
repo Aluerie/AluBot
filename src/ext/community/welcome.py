@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Final
 
 import discord
 from discord.ext import commands
-from PIL import Image, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 from core import Cog, Context
 from shared import globs

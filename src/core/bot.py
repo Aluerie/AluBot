@@ -451,13 +451,6 @@ class Bot(BotBase, commands.Bot):
         ----------
         channel_id
             The ID of the channel to look up on the production bot account.
-
-        Raises
-        ------
-        LookupError
-            If the channel is not in the bot's cache.
-        TypeError
-            If the channel exists but is not a ``discord.TextChannel``.
         """
         return self.get_text_channel(const.TEST_CHANNEL_ID if self.test else channel_id)
 

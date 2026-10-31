@@ -141,7 +141,7 @@ def birthday_fmt(month: int, day: int, year: int | None) -> str:
     day
         Day of the birthday.
     year
-        Year of the birth. `UNKNOWN_YEAR` hides it.
+        Year of the birth. ``None`` hides it.
 
     Returns
     -------
@@ -149,7 +149,7 @@ def birthday_fmt(month: int, day: int, year: int | None) -> str:
         Date like "28/August/2025" (or "28/August" if the year is unknown).
     """
     text = f"{day:02d}/{Month(month).name}"
-    return text if year is not None else f"{text}/{year}"
+    return text if year is None else f"{text}/{year}"
 
 
 def birthday_in_year(month: int, day: int, year: int) -> dt.date:
@@ -176,11 +176,7 @@ def start_of_day(date: dt.date, tzinfo: dt.tzinfo) -> dt.datetime:
 
 
 def month_and_day(timer: Timer[BirthdayTimerData]) -> tuple[int, int]:
-    """Get the month and the day of the birthday of the timer.
-
-    Timers created by the earlier versions of the bot don't store them,
-    but they can be restored from the moment of the timer in the timer's timezone.
-    """
+    """Get the month and the day of the birthday of the timer."""
     data = timer.data
     return data["month"], data["day"]
 

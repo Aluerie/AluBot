@@ -58,42 +58,15 @@ class IndexModal(Modal, title="Go to page"):
             await interaction.response.send_message("Took too long", ephemeral=True)
             return
 
-        value = str(self.goto.value)
-        if not value.isdigit():
+        value = str(self.goto.value).strip()
+        # `str.isdecimal` instead of `str.isdigit`: the latter accepts things like "²" which `int` can't parse
+        if not value.isdecimal() or not 1 <= int(value) <= self.paginator.max_pages:
             await interaction.response.send_message(
-                f"Expected a page number between 1 and {self.paginator.max_pages}, not `{value!r}`", ephemeral=True
+                f"Expected a page number between 1 and {self.paginator.max_pages}, not `{value}`", ephemeral=True
             )
             return
 
-        new_page_number = int(self.goto.value) - 1
-        await self.paginator.show_page(interaction, new_page_number)
-
-
-def label_indent(label: str | int, number: int, split_size: int = 10) -> str:
-    """Pad a table label to the width of the widest row number on its page.
-
-    Leaderboards are split into pages of `split_size` rows, so labels (row numbers and the "N" header)
-    only have to be as wide as the biggest number of their page: ``9`` and ``10`` live on different pages
-    but ``1`` and ``10`` don't, i.e. the first page is padded to 2 characters and the 11-20 page to 2 as well,
-    while a 91-100 page is padded to 3.
-
-    Parameters
-    ----------
-    label
-        The label to pad.
-    number
-        Any row number (0-based) that belongs to the page. Use ``counter - 1`` for the row with number `counter`
-        and ``offset + 1`` for the header of a page that starts after `offset` rows.
-    split_size
-        How many rows there are in one page.
-
-    Returns
-    -------
-    str
-        The label padded with spaces on the right.
-    """
-    last_number_on_page = (number // split_size + 1) * split_size
-    return str(label).ljust(len(str(last_number_on_page)))
+        await self.paginator.show_page(interaction, int(value) - 1)
 
 
 class Paginator(View):
@@ -106,22 +79,31 @@ class Paginator(View):
 
     Parameters
     ----------
-    author_id: int | None = None
+    interaction
+        Interaction, with which paginator is getting invoked. It can be used in `format_page` method.
+    entries
+        The sequence of items to paginate. This is used by `format_page` method as a data source.
+    per_page
+        How many elements are in a page. `format_page` takes `per_page` amount of entries.
+    author_id
         Author ID for the purposes of interaction checks in View.
-        If `None`, which is default, `interaction.user.id` will be passed to View constructor.
+        If ``None``, which is default, ``interaction.user.id`` will be passed to View constructor.
+    timeout
+        Seconds of inactivity after which the paginator stops listening. ``None`` for no timeout.
 
     Attributes
     ----------
-    interaction: Interaction
-        Interaction, with which paginator is getting invoked. It can be used in `format_page` method.
-    entries: Sequence[Any]
-        The sequence of items to paginate. This is used by `format_page` method as a data source.
-    per_page: int = 1
-        How many elements are in a page. `format_page` takes `per_page` amount of entries.
-    max_pages: int
+    interaction
+        Interaction, with which paginator is getting invoked.
+    entries
+        The sequence of items that are paginated.
+    per_page
+        How many elements are in a page.
+    max_pages
         Total amount of pages in the paginator.
-    current_page_number: int = 0
-        Number of current page that we are in. Zero-indexed between [0, `self.max_pages`).
+    current_page_number
+        Number of the page that is shown now. Zero-indexed between ``0`` (inclusive) and `max_pages` (exclusive).
+        It is already updated when `format_page` is called for the page.
 
     Notes
     -----
@@ -178,6 +160,8 @@ class Paginator(View):
         page_number
             Page number to start with.
         """
+        # before `format_page`: subclasses may use `current_page_number` (e.g. to enumerate entries)
+        self.current_page_number = page_number
         page_entries = await self.get_page_entries(page_number)
         send_kwargs = await self._get_page_send_kwargs(page_entries)
         self._update_navigation_labels(page_number)
@@ -235,13 +219,13 @@ class Paginator(View):
 
         Parameters
         ----------
-        page_number: int
+        page_number
             The page number to access.
 
         Returns
         -------
-        Any | List[Any]
-            The data returned. This is passed into `self.format_page`.
+        Any | Sequence[Any]
+            The data returned. This is passed into `format_page`.
         """
         if self.per_page == 1:
             return self.entries[page_number]
@@ -297,7 +281,7 @@ class Paginator(View):
 
         Parameters
         ----------
-        page_number: int = 0
+        page_number
             Page number to update navigation labels for.
         """
         self.index.label = f"{page_number + 1}/{self.max_pages}"
@@ -344,16 +328,17 @@ class Paginator(View):
 
         Parameters
         ----------
-        interaction:
-            Interaction
-        page_number: int
-            Page number to show.
+        interaction
+            Interaction to respond to.
+        page_number
+            Page number to show. It wraps around, i.e. ``-1`` is the last page and ``max_pages`` is the first one.
         """
         real_page_number = page_number % self.max_pages  # includes offset, i.e. page_number = -1 means last page.
 
+        # before `format_page`: subclasses may use `current_page_number` (e.g. to enumerate entries)
+        self.current_page_number = real_page_number
         page_entries = await self.get_page_entries(real_page_number)
         send_kwargs = await self._get_page_send_kwargs(page_entries)
-        self.current_page_number = real_page_number
 
         self._update_navigation_labels(real_page_number)
         if send_kwargs:

@@ -445,9 +445,21 @@ class Bot(BotBase, commands.Bot):
         return channel
 
     def get_text_channel_or_test(self, channel_id: int) -> discord.TextChannel:
-        """get_text_channel_or_test."""
-        channel_id = channel_id if not self.test else 970823670702411810
-        return self.get_text_channel(channel_id)
+        """Return the cached text channel, or the dedicated testing channel if this is the test bot account.
+
+        Parameters
+        ----------
+        channel_id
+            The ID of the channel to look up on the production bot account.
+
+        Raises
+        ------
+        LookupError
+            If the channel is not in the bot's cache.
+        TypeError
+            If the channel exists but is not a ``discord.TextChannel``.
+        """
+        return self.get_text_channel(const.TEST_CHANNEL_ID if self.test else channel_id)
 
     def get_role(self, guild_id: int, role_id: int) -> discord.Role:
         """Return the cached role with the given ID.
@@ -476,32 +488,6 @@ class Bot(BotBase, commands.Bot):
             raise LookupError(msg)
         return role
 
-    # @staticmethod
-    # def get_guild_role(guild: discord.Guild, role_id: int) -> discord.Role:
-    #     """Return the role with the given ID from the guild.
-
-    #     Parameters
-    #     ----------
-    #     guild
-    #         The guild to search.
-    #     role_id
-    #         The ID of the role to look up.
-
-    #     Returns
-    #     -------
-    #     The matching role.
-
-    #     Raises
-    #     ------
-    #     LookupError
-    #         If the role is not in the guild.
-    #     """
-    #     role = guild.get_role(role_id)
-    #     if role is None:
-    #         msg = f"Role {role_id} not found in guild {guild.id}"
-    #         raise LookupError(msg)
-    #     return role
-
     #########################################################################################################################
     # TRANSPOSE X TO Y (Mainly to transpose to/from ``discord.File``, but some other types too)
     #########################################################################################################################
@@ -509,14 +495,12 @@ class Bot(BotBase, commands.Bot):
     @staticmethod
     def str_to_file(string: str, filename: str = "file.txt") -> discord.File:
         """Convert ``str`` to ``discord.File``."""
-        fp = io.BytesIO(io.StringIO(string).read().encode("utf8"))
-        fp.seek(0)
-        return discord.File(fp, filename=filename)
+        return discord.File(io.BytesIO(string.encode("utf-8")), filename=filename)
 
     @staticmethod
-    def image_to_file(image: Image.Image, filename: str = "fromAluBot.png", fmt: str = "PNG") -> discord.File:
+    def image_to_file(image: Image.Image, filename: str = "fromAluBot.png", image_format: str = "PNG") -> discord.File:
         """Convert ``PIL.Image.Image`` to ``discord.File``."""
         image_binary = io.BytesIO()
-        image.save(image_binary, fmt)
+        image.save(image_binary, image_format)
         image_binary.seek(0)
         return discord.File(fp=image_binary, filename=filename)

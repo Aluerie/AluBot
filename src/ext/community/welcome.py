@@ -3,20 +3,18 @@
 """Community Features."""
 
 import asyncio
-import functools
 import logging
 import time
 from io import BytesIO
-from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 import discord
 from discord.ext import commands
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageFont
 
 from core import Cog, Context
 from shared import globs
-from utils import const
+from utils import const, images
 
 if TYPE_CHECKING:
     from core import Bot
@@ -27,11 +25,8 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-ASSETS = Path(__file__).resolve().parents[2] / "assets"
-
 # Welcome image constants
 MARGIN = 10
-MASK_SUPERSAMPLING = 4
 NAME_FONT = "Inter-Black-slnt=0.ttf"
 NAME_FONT_SIZE = 110
 NAME_FONT_MIN_SIZE = 24
@@ -50,29 +45,16 @@ MODERATION_ACTIONS: dict[discord.AuditLogAction, tuple[str, str, discord.Color]]
 }
 
 
-@functools.cache
-def _font(filename: str, size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(str(ASSETS / "fonts" / filename), size)
-
-
 def _fit_font(text: str, filename: str, size: int, max_width: float) -> ImageFont.FreeTypeFont:
     """Return the largest font (at most `size`) in which `text` fits into `max_width`."""
-    while size > NAME_FONT_MIN_SIZE and _font(filename, size).getlength(text) > max_width:
+    while size > NAME_FONT_MIN_SIZE and images.font(filename, size).getlength(text) > max_width:
         size -= 4
-    return _font(filename, size)
-
-
-def _circle_mask(size: int) -> Image.Image:
-    """Make an anti-aliased circular mask by drawing large and downscaling."""
-    big_size = size * MASK_SUPERSAMPLING
-    big = Image.new("L", (big_size, big_size), 0)
-    ImageDraw.Draw(big).ellipse((0, 0, big_size - 1, big_size - 1), fill=255)
-    return big.resize((size, size), Image.Resampling.LANCZOS)
+    return images.font(filename, size)
 
 
 def _build_welcome_image(avatar_bytes: bytes, display_name: str) -> Image.Image:
     """Blocking part of the welcome image. Run it in a thread."""
-    with Image.open(ASSETS / "images" / "profile" / "welcome.png") as template:
+    with Image.open(const.ASSETS / "images" / "profile" / "welcome.png") as template:
         canvas = template.convert("RGBA")
     canvas_w, canvas_h = canvas.size
 
@@ -81,7 +63,7 @@ def _build_welcome_image(avatar_bytes: bytes, display_name: str) -> Image.Image:
     with Image.open(BytesIO(avatar_bytes)) as raw_avatar:
         avatar = raw_avatar.convert("RGBA").resize((avatar_size, avatar_size), Image.Resampling.LANCZOS)
     left = (canvas_w - avatar_size) // 2
-    canvas.paste(avatar, (left, 0), _circle_mask(avatar_size))
+    canvas.paste(avatar, (left, 0), images.circle_mask(avatar_size))
 
     draw = ImageDraw.Draw(canvas)
     right, bottom = canvas_w - MARGIN, canvas_h - MARGIN
@@ -92,7 +74,7 @@ def _build_welcome_image(avatar_bytes: bytes, display_name: str) -> Image.Image:
     draw.text((right, bottom), display_name, fill="white", font=name_font, anchor="rd")
     name_top = draw.textbbox((right, bottom), display_name, font=name_font, anchor="rd")[1]
 
-    welcome_font = _font(WELCOME_FONT, WELCOME_FONT_SIZE)
+    welcome_font = images.font(WELCOME_FONT, WELCOME_FONT_SIZE)
     draw.text((right, name_top - MARGIN), "Welcome !", fill="white", font=welcome_font, anchor="rd")
     return canvas
 
@@ -188,8 +170,8 @@ class Community(Cog):
         try:
             if member.bot:
                 await member.add_roles(self.BOTS_ROLE_ID.object, reason="Bot joined the server")
-                return
-            await member.add_roles(*self.CATEGORY_ROLES, reason="Category roles for a new member")
+            else:
+                await member.add_roles(*self.CATEGORY_ROLES, reason="Category roles for a new member")
         except discord.HTTPException:
             log.exception("Failed to add join roles to %s", member)
 

@@ -80,7 +80,7 @@ async def start_the_bot(
     default=False,  # usual default: False ✅
     help=(
         "Whether to launch the bot in subset-mode. "
-        "In this mode the bot only loads extensions that are listed in `ext_subset.py` file."
+        "In this mode the bot only loads extensions that are listed in `subset.py` file."
         "Useful for debugging as it makes launch times much faster."
     ),
 )

@@ -11,6 +11,7 @@ import discord
 from discord import app_commands
 
 from core import Cog
+from utils import const
 
 if TYPE_CHECKING:
     from core import Bot, Interaction
@@ -23,7 +24,8 @@ class Uncategorized(Cog):
     async def coin_flip(self, interaction: Interaction) -> None:
         """🪙 Flip a coin: Heads or Tails?"""  # ruff: ignore[missing-trailing-period]
         word = random.choice(["Heads", "Tails"])
-        await interaction.response.send_message(content=word, file=discord.File(f"assets/images/coinflip/{word}.png"))
+        file = discord.File(const.ASSETS / "images" / "coinflip" / f"{word}.png")
+        await interaction.response.send_message(content=word, file=file)
 
 
 async def setup(bot: Bot) -> None:

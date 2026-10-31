@@ -71,7 +71,6 @@ def _build_interaction_error_embed(interaction: Interaction, *, title: str, colo
         mapping={
             "response_done": interaction.response.is_done(),
             "age_seconds": round((clock.utcnow() - interaction.created_at).total_seconds(), 2),
-            # "locale": interaction.locale.value,
         },
     )
     return embed
@@ -265,8 +264,8 @@ class AppCommandTree(app_commands.CommandTree["Bot"]):
 
         Yields
         ------
-        Tuple[Union[app_commands.Command`, commands.HybridCommand], str]
-
+        tuple[app_commands.Command | commands.HybridCommand, str | None]
+            The command and its mention (``None`` for unknown mentions, only if `yield_unknown` is set).
         """
         for command in self._walk_children(self.get_commands(guild=guild, type=discord.AppCommandType.chat_input)):
             mention = await self.find_mention_for(command, guild=guild)

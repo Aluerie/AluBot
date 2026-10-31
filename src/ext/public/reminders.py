@@ -134,7 +134,7 @@ class Reminders(Cog):
             icon_url=interaction.user.display_avatar,
         )
         if zone is None:
-            mention = self.bot.tree.find_mention_for("timezone set") or "`/timezone set`"
+            mention = await self.bot.tree.find_mention_for("timezone set") or "`/timezone set`"
             embed.add_field(
                 name="P.S.",
                 value=f"\N{ELECTRIC LIGHT BULB} You can set your timezone with {mention}",

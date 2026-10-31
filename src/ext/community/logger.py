@@ -3,6 +3,7 @@
 """Logger."""
 
 import asyncio
+import contextlib
 import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Final, override
@@ -29,7 +30,7 @@ class Logger(Cog):
     """Logger."""
 
     BOT_SPAM_CHANNEL_ID: Final = const.ChannelId(724986090632642653)
-    VOICE_CHAT_ROLE_ID = const.RoleId(1564454008905670797)
+    VOICE_CHAT_ROLE_ID: Final = const.RoleId(1564454008905670797)
 
     @override
     async def cog_load(self) -> None:
@@ -196,23 +197,6 @@ class Logger(Cog):
                 inline=False,
             )
 
-        # before_roles = set(before.roles)
-        # after_roles = set(after.roles)
-        # if added := after_roles - before_roles:
-        #     changed = True
-        #     embed.add_field(
-        #         name="Roles added",
-        #         value=", ".join(role.mention for role in sorted(added, reverse=True)),
-        #         inline=False,
-        #     )
-        # if removed := before_roles - after_roles:
-        #     changed = True
-        #     embed.add_field(
-        #         name="Roles removed",
-        #         value=", ".join(role.mention for role in sorted(removed, reverse=True)),
-        #         inline=False,
-        #     )
-
         if before.timed_out_until != after.timed_out_until:
             changed = True
             if after.timed_out_until is None:
@@ -330,14 +314,16 @@ class Logger(Cog):
         await self._sync_role(member, self.VOICE_CHAT_ROLE_ID.object, reason="Voice state changed")
 
         old, new = before.channel, after.channel
-        if old is None and new is not None:
-            await new.send(f"-# {member.mention}🟢\n-# {new.mention}", allowed_mentions=const.NO_PINGS)
-        elif old is not None and new is None:
-            await old.send(f"-# {member.mention}🔴\n-# {old.mention}", allowed_mentions=const.NO_PINGS)
-        elif old is not None and new is not None:
-            content = f"-# {member.mention}🟡\n-# {old.mention} ➡️ {new.mention}"
-            for channel in (old, new):
-                await channel.send(content, allowed_mentions=const.NO_PINGS)
+        # a voice channel that the bot can't write into must not break the role syncing or spam the error channel
+        with contextlib.suppress(discord.Forbidden):
+            if old is None and new is not None:
+                await new.send(f"-# {member.mention}🟢\n-# {new.mention}", allowed_mentions=const.NO_PINGS)
+            elif old is not None and new is None:
+                await old.send(f"-# {member.mention}🔴\n-# {old.mention}", allowed_mentions=const.NO_PINGS)
+            elif old is not None and new is not None:
+                content = f"-# {member.mention}🟡\n-# {old.mention} ➡️ {new.mention}"
+                for channel in (old, new):
+                    await channel.send(content, allowed_mentions=const.NO_PINGS)
 
     @loop(count=1, wait_for_ready=True)
     async def restart_clean_up(self) -> None:

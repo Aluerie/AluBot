@@ -31,8 +31,6 @@ class ReloadAllCog(DevCog):
         await interaction.response.defer(ephemeral=True)
         failed: list[str] = []
         for ext in list(self.bot.extensions):
-            # if ext == __name__:
-            #     continue
             try:
                 await self.bot.reload_extension(ext)
             except commands.ExtensionError as e:

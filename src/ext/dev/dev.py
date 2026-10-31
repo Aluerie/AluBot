@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 type SyncSpecLiteral = Literal["global", "current", "copy", "clear", "~", "*", "^"]
@@ -58,14 +58,6 @@ class Dev(DevCog):
         self.database_backup.stop()
         self.autosync.cancel()
         await super().cog_unload()
-
-    @override
-    async def cog_check(self, ctx: Context) -> bool:
-        return await self.bot.is_owner(ctx.author)  # ty: ignore[invalid-argument-type]
-
-    @override
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        return await self.bot.is_owner(interaction.user)  # ty: ignore[invalid-argument-type]
 
     ####################################################################################################################
     # AUTOSYNC
@@ -415,7 +407,8 @@ class Dev(DevCog):
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, _stderr = await proc.communicate()
-        await interaction.followup.send(file=self.bot.str_to_file(stdout.decode(), f"{project}-journal.log"))
+        journal = self.bot.str_to_file(stdout.decode(errors="replace"), f"{project}-journal.log")
+        await interaction.followup.send(file=journal)
 
     ####################################################################################################################
     # DEV COMMANDS

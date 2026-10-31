@@ -35,7 +35,7 @@ PERIODIC_MESSAGES = [
     f"hey chat, {const.Emoji.peepoRoseDank}",
     "hey chat, be kind",
     "Hey chat, be nice.",
-    "Hey chat, fix your posture {const.Emoji.peepoRoseDank}",
+    f"Hey chat, fix your posture {const.Emoji.WeirdChamp}",
 ]
 
 
@@ -49,9 +49,6 @@ class Chatter(Cog):
 
     GENERAL_CHANNEL_ID: Final = const.ChannelId(702561315478044807)
 
-    def __init__(self, bot: Bot) -> None:
-        super().__init__(bot)
-
     @discord.utils.cached_property
     def general_channel(self) -> discord.TextChannel:
         """General channel."""
@@ -62,9 +59,7 @@ class Chatter(Cog):
         """Community check."""
         if message.guild is None or message.guild.id != const.Guild.community:
             return False
-        if message.author.bot or message.webhook_id:  # ruff: ignore[needless-bool]
-            return False
-        return True
+        return not (message.author.bot or message.webhook_id)
 
     # --- FLAVOUR ------------------------------------------------------------------------------------------------------
 
@@ -104,16 +99,19 @@ class Chatter(Cog):
         Periodically send informational messages in general.
         """
         index = timer.data["index"]
-        await self.bot.wait_for("message", check=self.community_check)
-        await asyncio.sleep(random.randrange(5, 10))
-        embed = discord.Embed(
-            title="Informational message",
-            colour=0x122366,
-            description=PERIODIC_MESSAGES[index % len(PERIODIC_MESSAGES)],
-        )
-        await self.general_channel.send(embed=embed)
-        await self.bot.timers.cleanup(timer.id)
-        data: PeriodicMessageTimerData = {"index": index}
+        try:
+            await self.bot.wait_for("message", check=self.community_check)
+            await asyncio.sleep(random.randrange(5, 10))
+            embed = discord.Embed(
+                title="Informational message",
+                colour=0x122366,
+                description=PERIODIC_MESSAGES[index % len(PERIODIC_MESSAGES)],
+            )
+            await self.general_channel.send(embed=embed)
+        finally:
+            await self.bot.timers.cleanup(timer.id)
+
+        data: PeriodicMessageTimerData = {"index": index + 1}
         await self.bot.timers.create(
             event="periodic_message",
             expires_at=(

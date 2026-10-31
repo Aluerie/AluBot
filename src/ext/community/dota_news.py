@@ -11,6 +11,7 @@ import re
 import textwrap
 from dataclasses import dataclass, field
 from operator import attrgetter
+from pathlib import Path
 from typing import TYPE_CHECKING, Final, override
 
 import discord
@@ -79,9 +80,9 @@ class ActionKind:
     emoji: const.Emoji
 
     @property
-    def file_path(self) -> str:
+    def file_path(self) -> Path:
         """Path to the image file to put into thumbnail for the embed."""
-        return f"./assets/images/git/{self.name}.png"
+        return const.ASSETS / "images" / "git" / f"{self.name}.png"
 
     def file(self, number: int) -> discord.File:
         """Get discord.File linked to the action image."""
@@ -288,7 +289,6 @@ class BugTracker(Cog):
     valve_devs: set[str]
 
     BUGTRACKER_CHANNEL_ID: Final = const.ChannelId(1119041743002800138)
-    HIDEOUT_SPAM_CHANNEL_ID: Final = const.ChannelId(970823670702411810)
     HIDEOUT_STEAM_DB_CHANNEL_ID: Final = const.ChannelId(873430376033452053)
 
     @override
@@ -386,7 +386,7 @@ class BugTracker(Cog):
                     continue
                 # otherwise we can consider that this person is a valve dev
                 self.valve_devs.add(login)
-                query = "UPDATE bot_variables SET dota2bugtracker_devs = dota2bugtracker_devs || $1"
+                query = "UPDATE bot_variables SET dota2bugtracker_devs = array_append(dota2bugtracker_devs, $1)"
                 await self.bot.pool.execute(query, login)
 
             timelines.setdefault(event.issue.number, TimeLine(issue=event.issue)).add_action(

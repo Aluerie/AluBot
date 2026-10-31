@@ -10,13 +10,13 @@ from typing import TYPE_CHECKING, Self, override
 import discord
 from discord.ext import commands
 
-from core import Cog
+from core import Cog, View
 
 if TYPE_CHECKING:
     from core import Bot, Context, Interaction
 
 
-class ColorRolesView(discord.ui.View):
+class ColorRolesView(View):
     """Persistent view with a dropdown for choosing a colour role."""
 
     COLOR_CATEGORY_ROLE_ID = 851786344354938880
@@ -73,7 +73,9 @@ class ColorRolesView(discord.ui.View):
                 if old_colors:
                     await member.remove_roles(*old_colors)
                 await member.add_roles(role)
-                message = f"Added {role.mention} colour role; removed {', '.join(r.mention for r in old_colors)}!"
+                message = f"Added {role.mention} colour role!"
+                if old_colors:
+                    message = f"{message[:-1]}; removed {', '.join(r.mention for r in old_colors)}!"
         except discord.HTTPException:
             await interaction.followup.send("I couldn't change your roles, please tell the admins.", ephemeral=True)
             return

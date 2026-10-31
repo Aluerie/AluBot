@@ -284,6 +284,7 @@ class EmoteStats(Cog):
             offset += split_size
             tables.append(table)
 
+        timeframe_label = timeframe if timeframe == "all-time" else f"last {timeframe}"
         paginator = pages.EmbedDescriptionPaginator(
             interaction,
             tables,
@@ -291,9 +292,7 @@ class EmoteStats(Cog):
                 "color": const.Palette.purple_500,
                 "title": "Emote leaderboard",
                 "author": {
-                    "name": (
-                        f"Emote Type: {emote_type}, Timeframe: {'last' if timeframe != 'all-time' else ''} {timeframe}"
-                    ),
+                    "name": f"Emote Type: {emote_type}, Timeframe: {timeframe_label}",
                 },
                 "footer": {
                     "text": (
@@ -329,9 +328,17 @@ class EmoteStats(Cog):
         return full_name, f"`:{colon_name}:", str(count), percent(count, total), f"{per_day}`"
 
     @staticmethod
-    def usage_per_day(dt: dt.datetime, usages: int) -> str:
-        """Usage per day formatting."""
-        base = max(dt, EMOTE_STATS_TRACKING_START)
+    def usage_per_day(since: dt.datetime, usages: int) -> str:
+        """Format the average usage per day.
+
+        Parameters
+        ----------
+        since
+            The moment to count the days from (the tracking start is used if it's later).
+        usages
+            How many times the emote was used since then.
+        """
+        base = max(since, EMOTE_STATS_TRACKING_START)
         days = (clock.utcnow() - base).total_seconds() / 86400  # 86400 seconds in a day
         return f"{usages / (int(days) or 1):.1f}"  # or 1 takes care of days = 1 DivisionError
 
@@ -345,14 +352,10 @@ class EmoteStats(Cog):
 
         Note that this doesn't affect `emote_stats_total` in any way. Everything is correct there.
         """
-        async with self._batch_lock:
-            clean_up_dt = clock.utcnow() - dt.timedelta(days=365)
-
-            query = """
-                    DELETE FROM emote_stats_last_year
-                    WHERE used < $1::date
-                """
-            await self.bot.pool.execute(query, clean_up_dt)
+        # no `_batch_lock` here: the batches live in memory and this only touches old rows in the database
+        clean_up_dt = clock.utcnow() - dt.timedelta(days=365)
+        query = "DELETE FROM emote_stats_last_year WHERE used < $1::date"
+        await self.bot.pool.execute(query, clean_up_dt)
 
     @emotestats_group.command(name="specific")
     async def emotestats_specific(self, interaction: Interaction, emote: str) -> None:

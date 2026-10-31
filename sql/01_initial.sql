@@ -85,9 +85,12 @@ Bot Variables and internals
 CREATE TABLE
     IF NOT EXISTS alubot.bot_variables (
         id BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
-        dota2bugtracker_last_checked TIMESTAMPTZ DEFAULT NOW (),
+        dota2bugtracker_last_checked TIMESTAMPTZ DEFAULT NOW(),
         dota2bugtracker_devs TEXT[] NOT NULL DEFAULT '{}'
     );
+
+-- Create bot_variables row
+INSERT INTO alubot.bot_variables DEFAULT VALUES ON CONFLICT DO NOTHING;
 
 CREATE TABLE
     IF NOT EXISTS alubot.auto_sync (

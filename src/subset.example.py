@@ -17,7 +17,7 @@ SUBSET: dict[str, list[str]] = {
     "dev": [
         # "sync",
     ],
-    "mimics": [
-        "embed_fixer",
+    "public": [
+        # "reminders",
     ],
 }

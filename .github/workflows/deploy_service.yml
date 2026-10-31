@@ -6,6 +6,9 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,7 +16,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Restarting the bot
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
@@ -28,7 +31,6 @@ jobs:
             set -e
             cd ./AluBot
             git pull --ff-only
-            git submodule update --recursive
+            git submodule update --init --recursive
             ~/.local/bin/uv sync --no-dev
             sudo systemctl restart alubot.service
-            sudo systemctl start alubot.service

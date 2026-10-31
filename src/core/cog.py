@@ -19,13 +19,12 @@ __all__ = (
 
 
 class CogBase(commands.Cog):
-    """AluCogBase.
+    """Base class for the bot's cogs.
 
     Attributes
     ----------
-    bot: AluBot
+    bot
         The bot instance.
-
     """
 
     def __init__(self, bot: Bot, *args: Any, **kwargs: Any) -> None:

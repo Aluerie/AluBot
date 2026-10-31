@@ -95,7 +95,6 @@ class Meta(Cog):
             headers=(" ", "Ping", "Time, ms"),
             tablefmt="plain",
             colalign=("left", "left", "right"),
-            # floatfmt=("g", "g", "07.3f"),
             disable_numparse=True,  # values are pre-formatted by `_cell`
         )
         new_content = f"{content}\n{fmt.codeblock(table)}"

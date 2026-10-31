@@ -7,46 +7,46 @@ from __future__ import annotations
 import asyncio
 import bisect
 import datetime as dt
-import functools
 import itertools
 import logging
 import re
 from io import BytesIO
-from pathlib import Path
 from typing import TYPE_CHECKING, Final, TypedDict, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from tabulate import tabulate
 
 from core import Cog
 from shared import clock, errors, fmt, globs
 from shared.concepts import loop
-from utils import const, pages
+from utils import const, images, pages
 
 if TYPE_CHECKING:
     from core import Bot, Interaction
 
     class RemoveLongGoneRow(TypedDict):
-        """RemoveLongGoneRow."""
-
         id: int
         name: str
         last_seen: dt.datetime
 
     class LeaderboardQueryRow(TypedDict):
-        """LeaderboardQueryRow."""
-
         id: int
-        experience: int
+        exp: int
+        rep: int
 
+    class RankQueryRow(TypedDict):
+        in_lvl: bool
+        exp: int
+        rep: int
+
+
+__all__ = ("Levels",)
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
-
-ASSETS = Path(__file__).resolve().parents[2] / "assets"
 
 LAST_SEEN_TIMEOUT = 60
 """Seconds between messages that give experience: spamming doesn't level you up faster."""
@@ -57,7 +57,6 @@ THANKS_REGEX = re.compile(r"\b(?:thanks?|ty)\b", re.IGNORECASE)
 
 RANK_FONT = "Inter-Black-slnt=0.ttf"
 RANK_FONT_SIZE = 60
-MASK_SUPERSAMPLING = 4
 
 
 EXP_LEVEL_TABLE = (
@@ -115,19 +114,6 @@ def exp_to_reach(level: int) -> int:
     return EXP_LEVEL_TABLE[min(level, MAX_LEVEL) - 1]
 
 
-@functools.cache
-def _font(filename: str, size: int) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(str(ASSETS / "fonts" / filename), size)
-
-
-def _circle_mask(size: int) -> Image.Image:
-    """Make an anti-aliased circular mask by drawing large and downscaling."""
-    big_size = size * MASK_SUPERSAMPLING
-    big = Image.new("L", (big_size, big_size), 0)
-    ImageDraw.Draw(big).ellipse((0, 0, big_size - 1, big_size - 1), fill=255)
-    return big.resize((size, size), Image.Resampling.LANCZOS)
-
-
 def _build_rank_image(
     *,
     avatar_bytes: bytes,
@@ -138,18 +124,18 @@ def _build_rank_image(
     experience: int,
 ) -> Image.Image:
     """Blocking part of the rank image. Run it in a thread."""
-    with Image.open(ASSETS / "images" / "profile" / "welcome.png") as template:
+    with Image.open(const.ASSETS / "images" / "profile" / "welcome.png") as template:
         canvas = template.convert("RGBA")
     canvas_w, canvas_h = canvas.size
 
     # the avatar is a circle as tall as the canvas, glued to the right side
     with Image.open(BytesIO(avatar_bytes)) as raw_avatar:
         avatar = raw_avatar.convert("RGBA").resize((canvas_h, canvas_h), Image.Resampling.LANCZOS)
-    canvas.paste(avatar, (canvas_w - canvas_h, 0), _circle_mask(canvas_h))
+    canvas.paste(avatar, (canvas_w - canvas_h, 0), images.circle_mask(canvas_h))
 
     draw = ImageDraw.Draw(canvas)
     white = (255, 255, 255)
-    font = _font(RANK_FONT, RANK_FONT_SIZE)
+    font = images.font(RANK_FONT, RANK_FONT_SIZE)
 
     # the progress bar to the next level; at the max level it's simply full
     prev_exp = exp_to_reach(level)
@@ -183,6 +169,7 @@ class Levels(Cog):
 
     @override
     async def cog_load(self) -> None:
+        self.register_existing_members.start()
         self.remove_long_gone_members.start()
         await super().cog_load()
 
@@ -195,7 +182,7 @@ class Levels(Cog):
     # COMMANDS
     ####################################################################################################################
 
-    @app_commands.guilds(*const.MY_GUILDS)
+    @app_commands.guilds(const.Guild.community)
     @app_commands.command(name="rank")
     @app_commands.rename(member_="member")
     async def rank(self, interaction: Interaction, member_: discord.Member | None = None) -> None:
@@ -215,7 +202,7 @@ class Levels(Cog):
             msg = "Sorry! our system does not count experience for bots."
             raise errors.BadUserInputError(msg)
 
-        query = "SELECT experience FROM community_members WHERE id = $1"
+        query = "SELECT exp FROM community_members WHERE id = $1"
         experience: int | None = await self.bot.pool.fetchval(query, member.id)
         if experience is None:
             msg = f"I don't have any experience data about {member.display_name} yet."
@@ -224,7 +211,7 @@ class Levels(Cog):
         # building the image takes a while (the avatar download + the drawing), longer than 3 seconds on a bad day
         await interaction.response.defer()
 
-        query = "SELECT COUNT(*) FROM community_members WHERE experience > $1"
+        query = "SELECT COUNT(*) FROM community_members WHERE exp > $1"
         place: int = 1 + await self.bot.pool.fetchval(query, experience)
         avatar_bytes = await member.display_avatar.with_static_format("png").with_size(512).read()
         image = await asyncio.to_thread(
@@ -238,7 +225,7 @@ class Levels(Cog):
         )
         await interaction.followup.send(file=self.bot.image_to_file(image, filename="rank.png"))
 
-    @app_commands.guilds(*const.MY_GUILDS)
+    @app_commands.guilds(const.Guild.community)
     @app_commands.command(name="leaderboard")
     async def leaderboard(self, interaction: Interaction) -> None:
         """View experience leaderboard for this server."""
@@ -304,6 +291,30 @@ class Levels(Cog):
     # LISTENERS
     ####################################################################################################################
 
+    async def on_member_join(self, member: discord.Member) -> None:
+        """Start tracking the experience of a new community member."""
+        if member.guild.id != const.Guild.community or member.bot:
+            return
+        await self._register_members([member])
+
+    async def _register_members(self, members: list[discord.Member]) -> None:
+        """Create the database rows for the members that don't have one yet.
+
+        Nothing else inserts into ``community_members``, while every query of this cog only updates existing rows.
+
+        Parameters
+        ----------
+        members
+            Members to register. Existing rows are left untouched (so the experience is never reset).
+        """
+        query = "INSERT INTO community_members (id, name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING"
+        await self.bot.pool.executemany(query, [(m.id, m.name) for m in members])
+
+    @loop(count=1, wait_for_ready=True)
+    async def register_existing_members(self) -> None:
+        """Register the members who joined while the bot was offline (or before this cog tracked them)."""
+        await self._register_members([m for m in self.bot.community.members if not m.bot])
+
     @commands.Cog.listener(name="on_message")
     async def experience_counting(self, message: discord.Message) -> None:
         """Message listener that counts experience points."""
@@ -322,7 +333,7 @@ class Levels(Cog):
         if last_seen is None:
             return
 
-        if discord.utils.utcnow() - last_seen <= dt.timedelta(seconds=LAST_SEEN_TIMEOUT):
+        if clock.utcnow() - last_seen <= dt.timedelta(seconds=LAST_SEEN_TIMEOUT):
             return
 
         query = "UPDATE community_members SET experience = experience + 1 WHERE id = $1 RETURNING experience"
@@ -350,7 +361,9 @@ class Levels(Cog):
             await author.remove_roles(previous_level_role)
         await author.add_roles(level_up_role)
 
-    # --- TASKS --------------------------------------------------------------------------------------------------------
+    ####################################################################################################################
+    # TASKS
+    ####################################################################################################################
 
     @loop(time=dt.time(hour=13, minute=13, tzinfo=dt.UTC), wait_for_ready=True)
     async def remove_long_gone_members(self) -> None:

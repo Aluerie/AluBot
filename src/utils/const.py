@@ -4,6 +4,7 @@
 # ruff: file-ignore[mixed-case-variable-in-class-scope]
 
 from enum import Enum, IntEnum, auto
+from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar, Final, override
 
 import discord
@@ -12,10 +13,14 @@ if TYPE_CHECKING:
     from core import Bot
 
 __all__ = (
+    "ASSETS",
     "MY_GUILDS",
+    "NO_PINGS",
+    "TEST_CHANNEL_ID",
     "ChannelId",
     "Emoji",
     "Guild",
+    "Palette",
     "RoleId",
     "UserId",
     "load_emojis",
@@ -25,7 +30,19 @@ __all__ = (
 # SPECIAL CONSTANTS
 ########################################################################################################################
 
+ASSETS: Final = Path(__file__).resolve().parents[2] / "assets"
+"""Absolute path to the ``assets`` folder in the repository root (does not depend on the working directory)."""
+
 NO_PINGS = discord.AllowedMentions.none()
+
+
+class Palette:
+    """Material Design 500-shade colors as integers, e.g. for ``discord.Embed(color=...)``."""
+
+    red_500: Final = 0xF44336
+    purple_500: Final = 0x9C27B0
+    green_500: Final = 0x4CAF50
+
 
 ########################################################################################################################
 # GUILDS
@@ -183,3 +200,7 @@ class UserId(DiscordId):
 
     _mention_template = "<@{}>"
     _object_type = discord.abc.User
+
+
+TEST_CHANNEL_ID: Final = ChannelId(970823670702411810)
+"""Channel (in the hideout server) that the test bot account uses instead of the production channels."""

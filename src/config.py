@@ -31,6 +31,7 @@ class Env(EnvConfig):
     PING_TEST_MENTION: str
     WOLFRAM_TOKEN: str
     GIT_PERSONAL_TOKEN: str
+    LOCAL_API_KEY: str
 
 
 env = Env()

@@ -3,7 +3,7 @@ name = "AluBot"
 version = "1.0.7"
 description = "Personal Discord Bot"
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 authors = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
 maintainers = [{ name = "Aluerie", email = "aluerie@gmail.com" }]
 urls.Homepage = "https://github.com/Aluerie/AluBot"
@@ -85,7 +85,7 @@ unsound-yield = "ignore" # `Any` is fine
 [tool.ruff]
 preview = true
 line-length = 120
-target-version = "py314"
+target-version = "py315"
 exclude = [".venv"]
 src = ["src"]
 
@@ -167,6 +167,15 @@ flake8-quotes.inline-quotes = "double"
 ]
 "src/ext/*.py" = [
     "undocumented-param", # I don't want to document all the `ctx: AluContext`
+]
+"**/tests/**/*.py" = [
+    "undocumented-public-function", # test names say what they test
+    "undocumented-public-method",
+    "private-member-access", # tests are allowed to poke at internals
+    "unused-async", # fake coroutines have to be `async` even when they don't await
+    "unused-function-argument", # fakes mirror real signatures
+    "hardcoded-password-func-arg", # fake tokens
+    "pytest-fixture-autouse",
 ]
 
 [tool.ruff.format]

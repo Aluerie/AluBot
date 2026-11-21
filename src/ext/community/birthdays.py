@@ -300,8 +300,17 @@ class Birthdays(Cog):
             )
             await interaction.followup.send(embed=discord.Embed(description=text), ephemeral=True)
 
-        # if the birthday is today, the date is today and the timer expires right away: it's celebrated immediately
-        birthday_date = next_birthday_date(month, day, on_or_after=now.astimezone(tzinfo).date())
+        # if the birthday is today, the date is today and the timer expires right away: it's celebrated immediately.
+        # But only once: after a congratulation the member keeps the birthday role (and the timer to remove it)
+        # until the end of the day, so setting the birthday again (or removing and setting it) can't repeat it.
+        user = interaction.user
+        congratulated_today = (
+            isinstance(user, discord.Member) and user.get_role(self.birthday_role.id) is not None
+        ) or await self.bot.timers.get_by_kwargs("remove_birthday_role", user_id=user.id) is not None
+        earliest = now.astimezone(tzinfo).date()
+        if congratulated_today:
+            earliest += dt.timedelta(days=1)
+        birthday_date = next_birthday_date(month, day, on_or_after=earliest)
         expires_at = start_of_day(birthday_date, tzinfo)
 
         data: BirthdayTimerData = {"user_id": interaction.user.id, "year": year, "month": month, "day": day}

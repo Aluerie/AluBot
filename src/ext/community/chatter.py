@@ -9,7 +9,7 @@ import contextlib
 import datetime as dt
 import logging
 import random
-from typing import TYPE_CHECKING, ClassVar, Final, TypedDict
+from typing import TYPE_CHECKING, ClassVar, Final, TypedDict, override
 
 import discord
 from discord.ext import commands
@@ -92,26 +92,16 @@ class Chatter(Cog):
 
     # --- PERIODIC MESSAGES IN #GENERAL --------------------------------------------------------------------------------
 
-    @commands.Cog.listener()
-    async def on_periodic_message_timer_complete(self, timer: Timer[PeriodicMessageTimerData]) -> None:
-        """On periodic message timer complete.
+    @override
+    async def cog_load(self) -> None:
+        # start the chain of periodic messages if there isn't one yet (a fresh database, or it was deleted)
+        if await self.bot.timers.get_by_kwargs("periodic_message") is None:
+            await self._schedule_periodic_message(index=0)
+        await super().cog_load()
 
-        Periodically send informational messages in general.
-        """
-        index = timer.data["index"]
-        try:
-            await self.bot.wait_for("message", check=self.community_check)
-            await asyncio.sleep(random.randrange(5, 10))
-            embed = discord.Embed(
-                title="Informational message",
-                colour=0x122366,
-                description=PERIODIC_MESSAGES[index % len(PERIODIC_MESSAGES)],
-            )
-            await self.general_channel.send(embed=embed)
-        finally:
-            await self.bot.timers.cleanup(timer.id)
-
-        data: PeriodicMessageTimerData = {"index": index + 1}
+    async def _schedule_periodic_message(self, *, index: int) -> None:
+        """Create the timer for the next periodic message, a few weeks from now."""
+        data: PeriodicMessageTimerData = {"index": index}
         await self.bot.timers.create(
             event="periodic_message",
             expires_at=(
@@ -125,6 +115,28 @@ class Chatter(Cog):
             ),
             data=data,
         )
+
+    @commands.Cog.listener()
+    async def on_periodic_message_timer_complete(self, timer: Timer[PeriodicMessageTimerData]) -> None:
+        """On periodic message timer complete.
+
+        Periodically send informational messages in general.
+        """
+        index = timer.data["index"]
+        # Schedule the next one first: if anything fails below, the chain of the timers is not broken.
+        # (And if this fails the timer is not cleaned up, so it's retried after the next restart.)
+        await self._schedule_periodic_message(index=index + 1)
+        try:
+            await self.bot.wait_for("message", check=self.community_check)
+            await asyncio.sleep(random.randrange(5, 10))
+            embed = discord.Embed(
+                title="Informational message",
+                colour=0x122366,
+                description=PERIODIC_MESSAGES[index % len(PERIODIC_MESSAGES)],
+            )
+            await self.general_channel.send(embed=embed)
+        finally:
+            await self.bot.timers.cleanup(timer.id)
 
 
 async def setup(bot: Bot) -> None:

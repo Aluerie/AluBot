@@ -43,7 +43,7 @@ CREATE TABLE
         name TEXT,
         last_seen TIMESTAMPTZ DEFAULT NOW(),
         experience INTEGER DEFAULT (0),
-        message_count BIGINT DEFAULT (0),
+        message_count BIGINT DEFAULT (0)
     );
 
 CREATE TABLE

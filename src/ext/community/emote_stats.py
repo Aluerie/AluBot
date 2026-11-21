@@ -42,6 +42,8 @@ log.setLevel(logging.INFO)
 
 EMOJI_REGEX = re.compile(r"<a?:.+?:([0-9]{15,21})>")
 EMOTE_STATS_TRACKING_START = dt.datetime(2024, 2, 6, tzinfo=dt.UTC)
+MAX_PENDING_ENTRIES = 100_000
+"""How many emote usages can wait for the database. Above it, new usages are not counted until it's back."""
 
 
 def percent(count: int, total: int) -> str:
@@ -61,6 +63,7 @@ class EmoteStats(Cog):
         self._batch_total: defaultdict[int, Counter[int]] = defaultdict(Counter)
         self._batch_last_year: list[BatchLastYearEntry] = []
         self._batch_lock = asyncio.Lock()
+        self._batch_full_warned = False
 
         self.bulk_insert.add_exception_type(asyncpg.PostgresConnectionError)
 
@@ -107,6 +110,13 @@ class EmoteStats(Cog):
         matches = list(dict.fromkeys(matches))
 
         async with self._batch_lock:
+            if len(self._batch_last_year) >= MAX_PENDING_ENTRIES:
+                # the database has been unreachable for a long while: don't let the batches eat all the memory
+                if not self._batch_full_warned:
+                    log.warning("Emote stats batch is full (%s entries): new usages are dropped.", MAX_PENDING_ENTRIES)
+                    self._batch_full_warned = True
+                return
+
             # TOTAL COUNT
             self._batch_total[message.guild.id].update(map(int, matches))
 
@@ -126,7 +136,23 @@ class EmoteStats(Cog):
     @loop(seconds=60.0)
     async def bulk_insert(self) -> None:
         """Bulk insert gathered emoji stats in the last minute."""
-        await self.flush_batches()
+        try:
+            await self.flush_batches()
+        except asyncpg.PostgresConnectionError:
+            raise  # whitelisted: the loop retries later and the batches are kept for that attempt
+        except asyncpg.PostgresError as exc:
+            # Any other database error is most likely about the batch itself: a retry would fail the same way.
+            # So the batch is dropped (and reported) instead of letting this error stop the task for good.
+            async with self._batch_lock:
+                dropped = len(self._batch_last_year)
+                self._batch_total.clear()
+                self._batch_last_year.clear()
+            embed = discord.Embed(
+                colour=0x1A7A8A,
+                title="Emote stats batch was dropped",
+                description=f"Could not insert {dropped} emote usages. The task keeps running.",
+            )
+            await self.bot.error_notification_manager.register(exc, embed)
 
     async def flush_batches(self) -> None:
         """Write the collected batches into the database (and forget them if it went well)."""
@@ -163,7 +189,7 @@ class EmoteStats(Cog):
                         emote_id BIGINT,
                         guild_id BIGINT,
                         author_id BIGINT,
-                        used TIMESTAMP
+                        used TIMESTAMPTZ
                     )
                 """
             # both tables or none: otherwise a retry of the batch would count some of it twice
@@ -173,6 +199,7 @@ class EmoteStats(Cog):
 
             self._batch_total.clear()
             self._batch_last_year.clear()
+            self._batch_full_warned = False
 
     emotestats_group = app_commands.Group(
         name="emote-stats",
@@ -235,9 +262,8 @@ class EmoteStats(Cog):
             # "year" needs no filter: records older than a year are cleaned up by `clean_up_old_records`
             clause, args = "", []
             if timeframe == "month":
-                # `used` is a `TIMESTAMP` (without a timezone) that is always kept in UTC, so is this parameter
                 clause = "AND used > $3"
-                args = [(clock.utcnow() - dt.timedelta(days=30)).replace(tzinfo=None)]
+                args = [clock.utcnow() - dt.timedelta(days=30)]
 
             query = f"""
                 SELECT emote_id, COUNT(*) as "total"
@@ -354,7 +380,7 @@ class EmoteStats(Cog):
         """
         # no `_batch_lock` here: the batches live in memory and this only touches old rows in the database
         clean_up_dt = clock.utcnow() - dt.timedelta(days=365)
-        query = "DELETE FROM emote_usage_logger WHERE used < $1::date"
+        query = "DELETE FROM emote_usage_logger WHERE used < $1"
         await self.bot.pool.execute(query, clean_up_dt)
 
     @emotestats_group.command(name="specific")

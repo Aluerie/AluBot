@@ -41,6 +41,9 @@ GITHUB_OWNER = "ValveSoftware"
 GITHUB_REPO = "Dota2-Gameplay"
 GITHUB_REPO_URL = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}"
 ISSUE_URL_REGEX = re.compile(rf"({re.escape(GITHUB_REPO_URL)}/issues/(\d+))")
+EMBED_MAX_FIELDS = 25
+MIN_FIELD_VALUE = 100
+"""Don't start a field that has less room than this: the rest of the timeline goes to "more in the issue"."""
 
 type Timelines = dict[int, TimeLine]
 
@@ -225,18 +228,33 @@ class TimeLine:
         """Fill the embed with every action listed chronologically."""
         embed.color = 0x4078C0  # git color
         actions = self.sorted_actions()
-
-        for action in actions:
-            body = action.markdown_body if isinstance(action, Comment) else ""
-            # discord doesn't allow empty field values, so fall back to a space
-            chunks = itertools.batched(body or " ", fmt.EMBED_FIELD_VALUE_LIMIT, strict=False)
-            for chunk in map("".join, chunks):
-                embed.add_field(name=f"{action.kind.emoji}{action.author_str}", value=chunk, inline=False)
+        # the author goes first so its length counts towards the embed limits below
         embed.set_author(
             name=f"Bugtracker issue #{self.issue.number} update",
             url=self.last_comment_url,
             icon_url="https://em-content.zobj.net/thumbs/120/microsoft/319/frog_1f438.png",
         )
+
+        # Discord rejects the whole message if an embed is too big, and the worker task would stop for good on that.
+        # So the fields are cut to fit, and the last field (with room kept for it) points to the issue instead.
+        overflow_name, overflow_value = "\N{HORIZONTAL ELLIPSIS}", f"More in [the issue]({self.issue.html_url})."
+        char_budget = fmt.EMBED_SUM_ALL_LIMIT - len(overflow_name) - len(overflow_value)
+        overflow = False
+        for action in actions:
+            name = f"{action.kind.emoji}{action.author_str}"
+            body = action.markdown_body if isinstance(action, Comment) else ""
+            # discord doesn't allow empty field values, so fall back to a space
+            chunks = itertools.batched(body or " ", fmt.EMBED_FIELD_VALUE_LIMIT, strict=False)
+            for chunk in map("".join, chunks):
+                room = char_budget - len(embed) - len(name)
+                if len(embed.fields) >= EMBED_MAX_FIELDS - 1 or room < MIN_FIELD_VALUE:
+                    overflow = True
+                    break
+                embed.add_field(name=name, value=fmt.shorten(chunk, limit=room), inline=False)
+            if overflow:
+                break
+        if overflow:
+            embed.add_field(name=overflow_name, value=overflow_value, inline=False)
 
         # stack the action icons diagonally, each one shifted by `offset` pixels
         icon_size, offset = 128, 32

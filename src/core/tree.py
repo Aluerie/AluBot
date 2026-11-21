@@ -248,7 +248,10 @@ class AppCommandTree(app_commands.CommandTree["Bot"]):
                 yield command
 
     async def walk_mentions(
-        self, *, guild: discord.abc.Snowflake | None = None, yield_unknown: bool = False
+        self,
+        *,
+        guild: discord.abc.Snowflake | None = None,
+        yield_unknown: bool = False,
     ) -> AsyncGenerator[tuple[app_commands.Command[Any, ..., Any] | commands.HybridCommand[Any, ..., Any], str | None]]:
         """Get all valid mentions for app commands in a specific guild.
 

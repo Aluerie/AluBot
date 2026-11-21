@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
-import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Self, TypedDict, override
 
 import asyncpg
 import discord
+from loguru import logger
 
 from shared import clock
 
@@ -37,9 +37,6 @@ SHORT_TIMER = dt.timedelta(seconds=60)
 """Timers expiring sooner than this skip the database entirely and live in memory."""
 MAX_RETRY_DELAY = 300.0
 """Upper bound (in seconds) for the dispatch loop's exponential backoff after errors."""
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class TimerRow[TimerDataT: TimerData](TypedDict):
@@ -238,7 +235,7 @@ class Scheduler:
             try:
                 timer = await self._wait_for_next_timer()
                 self.current_timer = timer
-                log.debug("Current timer = %s", timer)
+                logger.trace("Current timer = {}", timer)
 
                 await self._sleep_until(timer.expires_at)
 
@@ -249,7 +246,7 @@ class Scheduler:
             except OSError, discord.ConnectionClosed, asyncpg.PostgresConnectionError:
                 # the database/connection is down: do not hot-loop, just wait for it to come back
                 self.current_timer = None
-                log.warning("Scheduler lost the connection, retrying in %.0f seconds.", delay)
+                logger.warning("Scheduler lost the connection, retrying in {:.0f} seconds.", delay)
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, MAX_RETRY_DELAY)
             except Exception as exc:  # ruff: ignore[blind-except]
@@ -313,7 +310,7 @@ class Scheduler:
             await self._warn_no_listener(timer)
             return
 
-        log.debug("Dispatching the timer %s with event %s", timer.id, timer.event)
+        logger.debug("Dispatching the timer {} with event {}", timer.id, timer.event)
         self.bot.dispatch(timer.event_name, timer)
 
     def _has_listener(self, timer: Timer[TimerData]) -> bool:
@@ -327,7 +324,7 @@ class Scheduler:
         """Tell developers about a timer that has nobody to be dispatched to (once per event)."""
         if self.bot.test:
             # the test bot usually loads just a few extensions, so this is expected
-            log.debug("No listener for %s, skipping the timer %s.", timer.event_name, timer.id)
+            logger.debug("No listener for {}, skipping the timer {}.", timer.event_name, timer.id)
             return
         if timer.event_name in self._warned_events:
             return
@@ -339,7 +336,9 @@ class Scheduler:
                 "It is kept in the database and will be dispatched again after the next bot start."
             )
         except discord.HTTPException:
-            log.warning("Could not notify developers about %s having no listener.", timer.event_name, exc_info=True)
+            logger.opt(exception=True).warning(
+                "Could not notify developers about {} having no listener.", timer.event_name
+            )
 
     def reschedule(self) -> None:
         """Restart the dispatch loop: cancel the current one and start a new one that re-queries the database."""
@@ -404,7 +403,7 @@ class Scheduler:
         now = clock.utcnow()
         expires_at = expires_at.astimezone(dt.UTC)
         created_at = created_at.astimezone(dt.UTC) if created_at else now
-        log.debug("Creating %s timer for %s", event, expires_at)
+        logger.debug("Creating {} timer for {}", event, expires_at)
 
         timer = Timer.temporary(
             id=self._next_temporary_id,

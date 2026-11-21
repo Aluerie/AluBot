@@ -18,6 +18,7 @@ import discord
 from discord.ext import commands
 from githubkit import GitHub
 from githubkit.exception import RequestError, RequestFailed
+from loguru import logger
 from PIL import Image
 
 from config import env
@@ -31,8 +32,6 @@ if TYPE_CHECKING:
 
     from core import Bot
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 # this might backfire but why the hell `githubkit` put `GET REST` logs from `httpx` as `log.INFO`, jesus christ.
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -348,7 +347,7 @@ class BugTracker(Cog):
         * analyzes them and build Timelines
         * sends messages to news channel if Valve developers activity was spotted.
         """
-        log.debug("^^^ BugTracker task started ^^^")
+        logger.debug("^^^ BugTracker task started ^^^")
 
         query = "SELECT dota2bugtracker_last_checked FROM bot_variables"
         last_checked: dt.datetime = await self.bot.pool.fetchval(query)
@@ -366,7 +365,7 @@ class BugTracker(Cog):
 
         query = "UPDATE bot_variables SET dota2bugtracker_last_checked = $1"
         await self.bot.pool.execute(query, now)
-        log.debug("^^^ BugTracker task is finished ^^^")
+        logger.debug("^^^ BugTracker task is finished ^^^")
 
     async def _collect_events(
         self, timelines: dict[int, TimeLine], last_checked: dt.datetime, now: dt.datetime
@@ -386,7 +385,7 @@ class BugTracker(Cog):
                 continue
 
             created_at = event.created_at
-            log.debug("Found event: %s %s %s %s ", event.event, event.issue.number, event.actor.login, created_at)
+            logger.trace("Found event: {} {} {} {} ", event.event, event.issue.number, event.actor.login, created_at)
             if created_at < last_checked:
                 # we reached events that we already checked
                 break

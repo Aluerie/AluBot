@@ -4,11 +4,11 @@
 
 import contextlib
 import functools
-import logging
 from typing import TYPE_CHECKING, Any, override
 
 import discord
 from discord import app_commands
+from loguru import logger
 
 from shared import clock, fmt
 
@@ -24,8 +24,6 @@ __all__ = (
     "Interaction",
 )
 
-
-_log = logging.getLogger(__name__)
 
 type Interaction = discord.Interaction[Bot]
 
@@ -280,4 +278,4 @@ class AppCommandTree(app_commands.CommandTree["Bot"]):
                 if mention is not None or yield_unknown:
                     yield command, mention
                 else:
-                    _log.warning("Could not find a mention for command %s in the API. Are you out of sync?", command)
+                    logger.warning("Could not find a mention for command {} in the API. Are you out of sync?", command)

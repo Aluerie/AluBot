@@ -5,11 +5,11 @@
 import asyncio
 import contextlib
 import datetime as dt
-import logging
 from typing import TYPE_CHECKING, Final, override
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from core import Cog
 from shared import clock, globs
@@ -20,10 +20,6 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from core import Bot
-
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class Logger(Cog):
@@ -79,7 +75,7 @@ class Logger(Cog):
                     if entry.target is not None and entry.target.id == emoji.id:
                         return entry.user
             except discord.Forbidden:
-                log.warning("Missing View Audit Log permission in %s", guild)
+                logger.warning("Missing View Audit Log permission in {}", guild)
                 return None
             if attempt < 2:
                 await asyncio.sleep(1)

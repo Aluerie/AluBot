@@ -7,7 +7,6 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import itertools
-import logging
 import re
 from collections import Counter, defaultdict
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
@@ -16,6 +15,7 @@ import asyncpg
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 from tabulate import tabulate
 
 from core import Cog
@@ -37,8 +37,6 @@ if TYPE_CHECKING:
 
 __all__ = ("EmoteStats",)
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 EMOJI_REGEX = re.compile(r"<a?:.+?:([0-9]{15,21})>")
 EMOTE_STATS_TRACKING_START = dt.datetime(2024, 2, 6, tzinfo=dt.UTC)
@@ -81,7 +79,7 @@ class EmoteStats(Cog):
             # whatever was collected in the last minute would be lost otherwise
             await self.flush_batches()
         except Exception:
-            log.exception("Could not save the last emote usage batch on unload.")
+            logger.exception("Could not save the last emote usage batch on unload.")
         await super().cog_unload()
 
     @commands.Cog.listener("on_message")
@@ -113,7 +111,9 @@ class EmoteStats(Cog):
             if len(self._batch_last_year) >= MAX_PENDING_ENTRIES:
                 # the database has been unreachable for a long while: don't let the batches eat all the memory
                 if not self._batch_full_warned:
-                    log.warning("Emote stats batch is full (%s entries): new usages are dropped.", MAX_PENDING_ENTRIES)
+                    logger.warning(
+                        "Emote stats batch is full ({} entries): new usages are dropped.", MAX_PENDING_ENTRIES
+                    )
                     self._batch_full_warned = True
                 return
 

@@ -2,11 +2,11 @@
 # Licensed under MPL-2.0, see the LICENSE file for details.
 """LiveStreamers."""
 
-import logging
 from typing import TYPE_CHECKING, Final, override
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 from core import Cog
 from shared.concepts import loop
@@ -14,10 +14,6 @@ from utils import const
 
 if TYPE_CHECKING:
     from core import Bot
-
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 class LiveStreamers(Cog):
@@ -55,7 +51,7 @@ class LiveStreamers(Cog):
             elif not is_streaming and has_role:
                 await member.remove_roles(role, reason="Stopped streaming")
         except discord.HTTPException:
-            log.exception("Failed to sync the streamer role for %s", member)
+            logger.exception("Failed to sync the streamer role for {}", member)
 
     @commands.Cog.listener(name="on_presence_update")
     async def community_streamer_role_management(self, before: discord.Member, after: discord.Member) -> None:

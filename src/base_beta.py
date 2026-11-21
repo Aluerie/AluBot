@@ -19,7 +19,6 @@ import abc
 import asyncio
 import datetime as dt
 import enum
-import logging
 import os
 import pprint
 import random
@@ -55,9 +54,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Sequence
 
     from core import Context, Interaction
-
-
-log = logging.getLogger(__name__)
 
 
 class BetaCog(Cog):

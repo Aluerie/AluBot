@@ -3,13 +3,13 @@
 """Community Features."""
 
 import asyncio
-import logging
 import time
 from io import BytesIO
 from typing import TYPE_CHECKING, Final
 
 import discord
 from discord.ext import commands
+from loguru import logger
 from PIL import Image, ImageDraw, ImageFont
 
 from core import Cog, Context
@@ -19,10 +19,6 @@ from utils import const, images
 if TYPE_CHECKING:
     from core import Bot
     from shared.typings.dpy import SendKwargs
-
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 # Welcome image constants
@@ -151,7 +147,7 @@ class Community(Cog):
             image = await self.welcome_image(member)
             send_kwargs["file"] = await asyncio.to_thread(self.bot.image_to_file, image)
         except discord.HTTPException, OSError:
-            log.exception("Failed to build the welcome image for %s", member)
+            logger.exception("Failed to build the welcome image for {}", member)
 
         return send_kwargs
 
@@ -171,7 +167,7 @@ class Community(Cog):
             else:
                 await member.add_roles(*self.CATEGORY_ROLES, reason="Category roles for a new member")
         except discord.HTTPException:
-            log.exception("Failed to add join roles to %s", member)
+            logger.exception("Failed to add join roles to {}", member)
 
         send_kwargs = await self.get_send_welcome_kwargs(member)
         await self.welcome_channel.send(**send_kwargs)

@@ -5,13 +5,13 @@
 from __future__ import annotations
 
 import datetime as dt  # ruff: ignore[typing-only-standard-library-import]
-import logging
 import textwrap
 from typing import TYPE_CHECKING, NotRequired, Self, TypedDict, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 
 from core import Cog, Modal, View
 from shared import clock, errors, fmt
@@ -30,8 +30,6 @@ if TYPE_CHECKING:
 
 __all__ = ("Reminders",)
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 MAX_TEXT_LENGTH = 1500
 MAX_LIST_TEXT_LENGTH = 200
@@ -243,7 +241,7 @@ class Reminders(Cog):
     @commands.Cog.listener()
     async def on_reminder_timer_complete(self, timer: Timer[RemindTimerData]) -> None:
         """Send the reminder when its time comes."""
-        log.debug('Timer Event "on_reminder_timer_complete" starts now')
+        logger.debug('Timer Event "on_reminder_timer_complete" starts now')
         try:
             await self._send_reminder(timer)
         finally:
@@ -267,7 +265,7 @@ class Reminders(Cog):
             try:
                 channel = await self.bot.fetch_channel(channel_id)
             except discord.HTTPException:
-                log.info("Reminder channel %s is gone, trying to DM the author %s instead.", channel_id, author_id)
+                logger.info("Reminder channel {} is gone, trying to DM the author {} instead.", channel_id, author_id)
 
         # (guild_id wasn't stored by earlier versions: take it from the channel then)
         guild_id = timer.data.get("guild_id") or getattr(getattr(channel, "guild", None), "id", None)
@@ -278,7 +276,7 @@ class Reminders(Cog):
             try:
                 view.message = await channel.send(content, view=view, allowed_mentions=mentions)
             except discord.HTTPException:
-                log.info("Could not send reminder to the channel %s.", channel_id, exc_info=True)
+                logger.opt(exception=True).info("Could not send reminder to the channel {}.", channel_id)
             else:
                 return
 
@@ -287,8 +285,8 @@ class Reminders(Cog):
             user = self.bot.get_user(author_id) or await self.bot.fetch_user(author_id)
             view.message = await user.send(content, view=view, allowed_mentions=mentions)
         except discord.HTTPException:
-            log.warning(
-                "Discarding reminder %s: neither channel %s nor DMs of %s work.", timer.id, channel_id, author_id
+            logger.warning(
+                "Discarding reminder {}: neither channel {} nor DMs of {} work.", timer.id, channel_id, author_id
             )
 
 

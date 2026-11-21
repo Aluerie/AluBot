@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import math
 import os
 import platform
@@ -18,6 +17,7 @@ import discord
 import psutil
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 from tabulate import tabulate
 
 from core import Cog
@@ -28,9 +28,6 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable
 
     from core import Bot, Context, Interaction
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 async def _timed_ping(awaitable: Awaitable[object]) -> float | None:
@@ -225,7 +222,7 @@ class Meta(Cog):
                 else:
                     await ctx.reply(f"Sorry! Couldn't fetch the data (HTTP {resp.status}).")
         except TimeoutError, aiohttp.ClientError:
-            log.exception("Failed to fetch host location")
+            logger.exception("Failed to fetch host location")
             await ctx.reply("Sorry! Couldn't reach the geolocation service.")
 
     @commands.command(hidden=True, aliases=["database-health"])

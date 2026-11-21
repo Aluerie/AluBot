@@ -7,13 +7,13 @@ from __future__ import annotations
 import bisect
 import datetime as dt
 import itertools
-import logging
 import re
 from typing import TYPE_CHECKING, Final, TypedDict, override
 
 import discord
 from discord import app_commands
 from discord.ext import commands
+from loguru import logger
 from tabulate import tabulate
 
 from core import Cog
@@ -36,8 +36,6 @@ if TYPE_CHECKING:
 
 __all__ = ("Levels",)
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 LAST_SEEN_TIMEOUT = 60
 """Seconds between messages that give experience: spamming doesn't level you up faster."""
@@ -283,7 +281,7 @@ class Levels(Cog):
                 continue  # they are in the server: `last_seen` is only updated by messages, they might just be quiet
 
             await self.bot.pool.execute("DELETE FROM community_members WHERE id = $1", row["id"])
-            log.info("Removed %s (%s) from the database: gone for too long.", row["name"], row["id"])
+            logger.info("Removed {} ({}) from the database: gone for too long.", row["name"], row["id"])
 
             if self.LOGS_CHANNEL_ID:
                 embed = discord.Embed(color=0xE6D690, description=f"id = {row['id']}").set_author(

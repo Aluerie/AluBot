@@ -29,6 +29,7 @@ dependencies = [
     "ffmpeg",
     "githubkit",
     "jishaku",
+    "loguru>=0.8.0",
     "lru-dict",
     "lxml",
     "matplotlib",
@@ -144,6 +145,9 @@ ignore = [
     "suspicious-non-cryptographic-random-usage",
     "undefined-local-with-import-star",
     "undefined-local-with-import-star-usage",
+    # Loguru formats with `{}`, these rules only understand standard `logging`'s `%s` placeholders
+    "logging-too-few-args",
+    "logging-too-many-args",
 ]
 extend-select = [
     # NumPy Doc convention turns these rules off
@@ -155,6 +159,7 @@ unfixable = [
     "unused-noqa",
 ]
 flake8-quotes.inline-quotes = "double"
+logger-objects = ["loguru.logger"] # so `blind-except` etc. know `logger.exception` logs the traceback
 
 [tool.ruff.lint.per-file-ignores]
 "{src/ext/beta.py,templates/fresh_beta.py,src/xi.py,*.ipynb}" = [

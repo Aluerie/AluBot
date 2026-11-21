@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
-import logging
 import zoneinfo
 from typing import TYPE_CHECKING, Final, NamedTuple, override
 
 import aiohttp
 from discord import app_commands
+from loguru import logger
 from lxml import etree  # ty: ignore[unresolved-import]
 
 from shared import cache, clock, errors, fuzzy
@@ -30,8 +30,6 @@ __all__ = (
     "TransformTimeZone",
 )
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 CLDR_TIMEZONE_URL: Final = "https://raw.githubusercontent.com/unicode-org/cldr/main/common/bcp47/timezone.xml"
 LABELS_REFRESH_INTERVAL: Final = dt.timedelta(hours=6)
@@ -234,14 +232,14 @@ class TimezoneManager:
             try:
                 self._entries = parse_cldr_timezones(await self._download_cldr())
             except aiohttp.ClientError, TimeoutError, etree.XMLSyntaxError, KeyError:
-                log.warning("Could not load CLDR timezone data (attempt %s).", attempt, exc_info=True)
+                logger.opt(exception=True).warning("Could not load CLDR timezone data (attempt {}).", attempt)
                 if delay is None:
-                    log.exception("Giving up on CLDR timezone data: falling back to plain IANA keys.")
+                    logger.exception("Giving up on CLDR timezone data: falling back to plain IANA keys.")
                     return
                 await asyncio.sleep(delay)
             else:
                 self._build_aliases()
-                log.info("Loaded %s CLDR timezone entries.", len(self._entries))
+                logger.success("Loaded {} CLDR timezone entries.", len(self._entries))
                 return
 
     async def _download_cldr(self) -> bytes:
@@ -446,7 +444,7 @@ class TimezoneManager:
         try:
             return zoneinfo.ZoneInfo(key)
         except zoneinfo.ZoneInfoNotFoundError, ValueError:
-            log.warning("User %s has an unknown timezone saved: %r", user_id, key)
+            logger.warning("User {} has an unknown timezone saved: {!r}", user_id, key)
             return dt.UTC
 
     async def set_timezone(self, user_id: int, timezone: TimeZone, /) -> None:

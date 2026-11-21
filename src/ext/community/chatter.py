@@ -7,7 +7,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime as dt
-import logging
 import random
 from typing import TYPE_CHECKING, ClassVar, Final, TypedDict, override
 
@@ -26,9 +25,6 @@ if TYPE_CHECKING:
 
         index: int
 
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 # TODO: Write proper messages (embed fixer, birthday, colour roles)
 PERIODIC_MESSAGES = [

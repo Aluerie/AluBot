@@ -6,12 +6,12 @@ from __future__ import annotations
 
 import asyncio
 import io
-import logging
 import sys
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
 from discord.ext import commands
+from loguru import logger
 
 import ext
 from config import env
@@ -38,7 +38,6 @@ __all__ = (
     "Context",
 )
 
-log = logging.getLogger(__name__)
 
 type Context = commands.Context[Bot]
 
@@ -125,7 +124,9 @@ class Bot(BotBase, commands.Bot):
         self.extensions_to_load: tuple[str, ...] = self.get_extensions(is_subset_mode=is_subset_mode)
         if not self.test:
             self.extensions_to_load += ("jishaku",)
-        log.info("The list of extensions (%s total) to load: %s", len(self.extensions_to_load), self.extensions_to_load)
+        logger.info(
+            "The list of extensions ({} total) to load: {}", len(self.extensions_to_load), self.extensions_to_load
+        )
 
         # Stats / Info
         self.repository_url: str = "https://github.com/Aluerie/AluBot"
@@ -288,7 +289,7 @@ class Bot(BotBase, commands.Bot):
 
         if self.test:
             if failed_to_load_extensions:
-                log.info("Autosync: cancelled ❌ One or more cogs failed to load.")
+                logger.info("Autosync: cancelled ❌ One or more cogs failed to load.")
             else:
                 self._autosync_task = asyncio.create_task(self.try_autosync_hideout())
 
@@ -296,11 +297,13 @@ class Bot(BotBase, commands.Bot):
         """Wrap `auto_sync_hideout` into `try/except` with some logging."""
         try:
             result = await self.autosync_hideout()
-        except Exception as err:
-            log.exception("Autosync: failed ❌", exc_info=err)
+        except Exception:
+            logger.exception("Autosync: failed ❌")
         else:
-            phrase = "success ✅" if result else "not needed 🫰"
-            log.info("Autosync: %s.", phrase)
+            if result:
+                logger.success("Autosync: success.")
+            else:
+                logger.info("Autosync: not needed 🫰.")
 
     async def autosync_hideout(self) -> bool:
         """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
@@ -337,7 +340,7 @@ class Bot(BotBase, commands.Bot):
         if not self.ready_flag:
             self.launch_time = clock.utcnow()
             self.ready_flag = True
-        log.info("Logged in as `%s`", self.user)
+        logger.success("Logged in as `{}`", self.user)
 
     @override
     async def start(self) -> None:  # ty: ignore[invalid-method-override]
@@ -349,7 +352,7 @@ class Bot(BotBase, commands.Bot):
     @override
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
-        log.info("%s is closing.", self.__class__.__name__)
+        logger.info("{} is closing.", self.__class__.__name__)
         for component_name in ("timers", "tz_manager"):
             if (component := getattr(self, component_name, None)) is not None:
                 component.close()

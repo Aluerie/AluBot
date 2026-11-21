@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
-import logging
 import unicodedata
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, assert_never, cast, override
@@ -15,6 +14,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from jishaku.codeblocks import codeblock_converter
+from loguru import logger
 
 from core import DevCog
 from shared import errors, fmt
@@ -25,10 +25,6 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from core import Bot, Context, Interaction
-
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 
 type SyncSpecLiteral = Literal["global", "current", "copy", "clear", "~", "*", "^"]
@@ -79,7 +75,7 @@ class Dev(DevCog):
         await asyncio.sleep(30.0)
         await self.bot.tree.sync(guild=discord.Object(id=const.Guild.hideout))
 
-        log.info("Synced global and Hideout bound commands.")
+        logger.success("Synced global and Hideout bound commands.")
 
     # --- SYNC COMMANDS ------------------------------------------------------------------------------------------------
 
@@ -130,7 +126,7 @@ class Dev(DevCog):
                 try:
                     await self.bot.tree.sync(guild=guild)
                 except discord.HTTPException as e:
-                    log.warning("Failed to sync guild %s: %s", guild.id, e)
+                    logger.warning("Failed to sync guild {}: {}", guild.id, e)
                     failed.append(guild.id)
                 else:
                     ok += 1
@@ -372,7 +368,7 @@ class Dev(DevCog):
         )
         _, stderr = await proc.communicate()
         if proc.returncode != 0:
-            log.error("Failed to restart %s: %s", project, stderr.decode())
+            logger.error("Failed to restart {}: {}", project, stderr.decode())
             await interaction.followup.send(f"Something went wrong:\n{fmt.codeblock(stderr.decode()[:1500])}")
 
     @project_group.command(name="journal")

@@ -62,6 +62,8 @@ dev = [
     "asyncpg-stubs",
     "ipykernel",
     "ty",
+    "pytest",
+    "pytest-asyncio",
 ]
 
 [[tool.uv.index]]

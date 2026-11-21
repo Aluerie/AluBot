@@ -51,9 +51,7 @@ class Hideout(DiscordWebhookLogs, DevCog):
         await self.teardown()
         await super().cog_unload()
 
-    ####################################################################################################################
-    # JAILED BOTS
-    ####################################################################################################################
+    # --- JAILED BOTS --------------------------------------------------------------------------------------------------
 
     @commands.Cog.listener(name="on_member_join")
     async def moderate_hideout_joiners(self, member: discord.Member) -> None:
@@ -75,9 +73,7 @@ class Hideout(DiscordWebhookLogs, DevCog):
             )
             await member.kick(reason="Non-bot account joined hideout (it's private)")
 
-    ####################################################################################################################
-    # GUILD JOIN/REMOVE LOGGING
-    ####################################################################################################################
+    # --- GUILD JOIN/REMOVE LOGGING ------------------------------------------------------------------------------------
 
     @staticmethod
     def _info_section(

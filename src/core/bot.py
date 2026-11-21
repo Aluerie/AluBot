@@ -255,9 +255,7 @@ class Bot(BotBase, commands.Bot):
                     fmt.add_mapping_field(embed, "BotError Data", error.data)
                 await ctx.bot.error_notification_manager.register(error, embed)
 
-    #########################################################################################################################
-    # STARTING THE BOT
-    #########################################################################################################################
+    # --- STARTING THE BOT ---------------------------------------------------------------------------------------------
 
     @override
     def get_extensions(self, *, is_subset_mode: bool) -> tuple[str, ...]:  # ty: ignore[invalid-method-override]
@@ -376,9 +374,7 @@ class Bot(BotBase, commands.Bot):
         if message.guild and message.guild.id == const.Guild.hideout and not message.author.bot:
             await self.process_commands(message)
 
-    #########################################################################################################################
-    # SHORTCUTS
-    #########################################################################################################################
+    # --- SHORTCUTS ----------------------------------------------------------------------------------------------------
 
     @property
     def owner(self) -> discord.User:
@@ -403,9 +399,7 @@ class Bot(BotBase, commands.Bot):
         """Shortcut to hideout guild."""
         return self.get_known_guild(const.Guild.hideout)
 
-    #########################################################################################################################
-    # TYPE FRIENDLY LOOKUPS (Kinda unnecessary but hey)
-    #########################################################################################################################
+    # --- TYPE FRIENDLY LOOKUPS (Kinda unnecessary but hey) ------------------------------------------------------------
 
     def get_known_guild(self, guild_id: int) -> discord.Guild:
         """Get known guild."""
@@ -481,9 +475,7 @@ class Bot(BotBase, commands.Bot):
             raise LookupError(msg)
         return role
 
-    #########################################################################################################################
-    # TRANSPOSE X TO Y (Mainly to transpose to/from ``discord.File``, but some other types too)
-    #########################################################################################################################
+    # --- TRANSPOSE X TO Y (Mainly to transpose to/from ``discord.File``, but some other types too) --------------------
 
     @staticmethod
     def str_to_file(string: str, filename: str = "file.txt") -> discord.File:

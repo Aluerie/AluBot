@@ -217,9 +217,7 @@ class TimezoneManager:
         self._labels_built_at: dt.datetime | None = None
         self._load_task: asyncio.Task[None] | None = None
 
-    ####################################################################################################################
-    # LIFECYCLE
-    ####################################################################################################################
+    # --- LIFECYCLE ----------------------------------------------------------------------------------------------------
 
     def start(self) -> None:
         """Start downloading the user-friendly timezone data in the background."""
@@ -257,9 +255,7 @@ class TimezoneManager:
             response.raise_for_status()
             return await response.read()
 
-    ####################################################################################################################
-    # LABELS
-    ####################################################################################################################
+    # --- LABELS -------------------------------------------------------------------------------------------------------
 
     def _pick_alias(self, entry: CLDRDataEntry) -> str | None:
         """Pick an IANA key for the entry that this system actually knows about.
@@ -324,9 +320,7 @@ class TimezoneManager:
         hours, minutes = divmod(abs(total_minutes), 60)
         return f"{'-' if total_minutes < 0 else '+'}{hours:02d}:{minutes:02d}"
 
-    ####################################################################################################################
-    # SEARCH
-    ####################################################################################################################
+    # --- SEARCH -------------------------------------------------------------------------------------------------------
 
     def default_timezones(self) -> list[app_commands.Choice[str]]:
         """Get the most popular timezones for the default autocomplete drop down (when nothing is typed yet)."""
@@ -418,9 +412,7 @@ class TimezoneManager:
             msg = f"`{query}` matches several timezones, please be more specific:\n{suggestions}\n\n{help_text}"
         raise errors.BadUserInputError(msg)
 
-    ####################################################################################################################
-    # USER SETTINGS
-    ####################################################################################################################
+    # --- USER SETTINGS ------------------------------------------------------------------------------------------------
 
     @cache.cache()
     async def get_timezone(self, user_id: int, /) -> str | None:

@@ -107,9 +107,7 @@ class Community(Cog):
         # user id -> `time.monotonic()` of their latest kick/ban audit log entry
         self._moderated: dict[int, float] = {}
 
-    ####################################################################################################################
-    # WELCOME
-    ####################################################################################################################
+    # --- WELCOME ------------------------------------------------------------------------------------------------------
 
     @discord.utils.cached_property
     def welcome_channel(self) -> discord.TextChannel:
@@ -192,9 +190,7 @@ class Community(Cog):
         send_kwargs = await self.get_send_welcome_kwargs(ctx.author)
         await ctx.send(**send_kwargs)
 
-    ####################################################################################################################
-    # MEMBER LEAVE
-    ####################################################################################################################
+    # --- MEMBER LEAVE -------------------------------------------------------------------------------------------------
 
     def _recently_moderated(self, user_id: int) -> bool:
         timestamp = self._moderated.get(user_id)

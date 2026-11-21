@@ -59,9 +59,7 @@ class Dev(DevCog):
         self.autosync.cancel()
         await super().cog_unload()
 
-    ####################################################################################################################
-    # AUTOSYNC
-    ####################################################################################################################
+    # --- AUTOSYNC -----------------------------------------------------------------------------------------------------
 
     @loop(count=1, wait_for_ready=True)
     async def autosync(self) -> None:
@@ -83,9 +81,7 @@ class Dev(DevCog):
 
         log.info("Synced global and Hideout bound commands.")
 
-    ####################################################################################################################
-    # SYNC COMMANDS
-    ####################################################################################################################
+    # --- SYNC COMMANDS ------------------------------------------------------------------------------------------------
 
     async def sync_command_worker(
         self,
@@ -219,9 +215,7 @@ class Dev(DevCog):
         content = await self.sync_command_worker(spec, current_guild=ctx.guild, guilds=guilds)
         await ctx.reply(content)
 
-    ####################################################################################################################
-    # LOAD / RELOAD / UNLOAD EXTENSION COMMANDS
-    ####################################################################################################################
+    # --- LOAD / RELOAD / UNLOAD EXTENSION COMMANDS --------------------------------------------------------------------
 
     ext_group = app_commands.Group(
         name="ext-dev",
@@ -291,9 +285,7 @@ class Dev(DevCog):
             if name not in self.bot.extensions and current.lower() in name.lower()
         ][:25]
 
-    ####################################################################################################################
-    # DATABASE BACKUP
-    ####################################################################################################################
+    # --- DATABASE BACKUP ----------------------------------------------------------------------------------------------
 
     def get_database_channel(self) -> discord.TextChannel:
         """Get the text channel used for database backups."""
@@ -333,9 +325,7 @@ class Dev(DevCog):
         finally:
             path.unlink(missing_ok=True)
 
-    ####################################################################################################################
-    # PROJECT CONTROL
-    ####################################################################################################################
+    # --- PROJECT CONTROL ----------------------------------------------------------------------------------------------
 
     project_group = app_commands.Group(
         name="project-dev",
@@ -410,12 +400,9 @@ class Dev(DevCog):
         journal = self.bot.str_to_file(stdout.decode(errors="replace"), f"{project}-journal.log")
         await interaction.followup.send(file=journal)
 
-    ####################################################################################################################
-    # DEV COMMANDS
-    # -------------
+    # --- DEV COMMANDS -------------------------------------------------------------------------------------------------
     # These commands aren't public only because I don't think people would find them useful.
     # It's just some helping commands that I use myself when coding the bot.
-    ####################################################################################################################
 
     @commands.command(name="invite-link")
     async def invite_link(self, ctx: Context) -> None:

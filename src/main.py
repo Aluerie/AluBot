@@ -27,7 +27,7 @@ import click
 
 from config import env
 from core import Bot
-from shared import ut
+from shared import systemd, ut
 from shared.concepts import db, logs
 
 # generated at https://patorjk.com/software/taag/ using "Standard" font
@@ -53,22 +53,26 @@ async def start_the_bot(
     is_test_account: bool,
 ) -> None:
     """Start the bot."""
-    async with (
-        aiohttp.ClientSession() as session,
-        await db.try_create_pool(
-            env.POSTGRES_PROD,
-            env.POSTGRES_TEST,
-            search_path="alubot,shared",
-            is_test=is_test_account,
-        ) as pool,
-        Bot(
-            session=session,
-            pool=pool,
-            is_subset_mode=is_subset_mode,
-            is_test_account=is_test_account,
-        ) as alubot,
-    ):
-        await alubot.start()
+    watchdog_task = asyncio.create_task(systemd.watchdog_loop())
+    try:
+        async with (
+            aiohttp.ClientSession() as session,
+            await db.try_create_pool(
+                env.POSTGRES_PROD,
+                env.POSTGRES_TEST,
+                search_path="alubot,shared",
+                is_test=is_test_account,
+            ) as pool,
+            Bot(
+                session=session,
+                pool=pool,
+                is_subset_mode=is_subset_mode,
+                is_test_account=is_test_account,
+            ) as alubot,
+        ):
+            await alubot.start()
+    finally:
+        watchdog_task.cancel()
 
 
 @click.group(invoke_without_command=True, options_metavar="[options]")

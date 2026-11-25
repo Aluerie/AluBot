@@ -10,14 +10,16 @@ import unicodedata
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, assert_never, cast, override
 
+import aiohttp
 import discord
 from discord import app_commands
 from discord.ext import commands
 from jishaku.codeblocks import codeblock_converter
 from loguru import logger
 
+from config import env
 from core import DevCog
-from shared import errors, fmt
+from shared import errors, fmt, systemd
 from shared.concepts import loop
 from utils import const
 
@@ -37,7 +39,8 @@ class Dev(DevCog):
     Features
     --------
     * `sync` prefix command and `/sync-dev` slash command for syncing the app command tree;
-    * `autosync` task that syncs global and Hideout commands shortly once the bot is ready (skipped on the test bot).
+    * `autosync` task that syncs global and Hideout commands shortly once the bot is ready (skipped on the test bot);
+    * `healthcheck` task that pings healthchecks.io while the bot is healthy (only in prod on the VPS).
     """
 
     DATABASE_CHANNEL_ID: Final[int] = 1541985585810378823
@@ -46,6 +49,10 @@ class Dev(DevCog):
     async def cog_load(self) -> None:
         if not self.bot.test:
             self.autosync.start()
+        # only the VPS (a systemd service) pings, so a bot running at home doesn't keep the check green
+        if not self.bot.test and env.HEALTHCHECK_URL and systemd.is_systemd_service():
+            self.healthcheck.add_exception_type(aiohttp.ClientError, TimeoutError)
+            self.healthcheck.start()
         self.database_backup.start()
         await super().cog_load()
 
@@ -53,7 +60,27 @@ class Dev(DevCog):
     async def cog_unload(self) -> None:
         self.database_backup.stop()
         self.autosync.cancel()
+        self.healthcheck.cancel()
         await super().cog_unload()
+
+    # --- HEALTHCHECK --------------------------------------------------------------------------------------------------
+
+    @loop(minutes=5, wait_for_ready=True)
+    async def healthcheck(self) -> None:
+        """Ping the healthchecks.io check while the bot is connected to Discord and its database answers.
+
+        healthchecks.io alerts me when these pings stop coming.
+        """
+        # `is_ready()` stays True while discord.py reconnects, so require a live gateway connection
+        if not self.bot.ws.open:
+            return
+        try:
+            await self.bot.pool.fetchval("SELECT 1")
+        except Exception as exc:  # ruff: ignore[blind-except] any database failure just means "not healthy"
+            logger.warning("Healthcheck: skipping the ping, the database doesn't answer: {!r}", exc)
+            return
+        async with self.bot.session.get(env.HEALTHCHECK_URL, timeout=aiohttp.ClientTimeout(total=10)) as response:
+            response.raise_for_status()
 
     # --- AUTOSYNC -----------------------------------------------------------------------------------------------------
 

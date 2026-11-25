@@ -1,7 +1,11 @@
-; sudo nano /etc/systemd/system/alubot.service
+; One-time setup: symlink this file into /etc/systemd/system/, so `git pull` updates the unit
+; and the deploy's `daemon-reload` applies the changes.
+; sudo systemctl link /home/ubuntu/AluBot/alubot.service
 ; sudo systemctl daemon-reload
 ; sudo systemctl enable alubot
 ; sudo systemctl start alubot
+;
+; Other commands:
 ; sudo systemctl restart alubot
 ; sudo systemctl stop alubot
 ; sudo systemctl status alubot
@@ -13,9 +17,18 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-Type=simple
+; notify + watchdog: the bot reports READY=1 once it's ready, then pings WATCHDOG=1;
+; if the pings stop (stuck event loop), systemd kills and restarts it.
+; This also makes `systemctl restart` (and so the deploy) fail when the bot crashes before getting ready.
+Type=notify
+WatchdogSec=120
+TimeoutStartSec=300
 WorkingDirectory=/home/ubuntu/AluBot/
-ExecStart=/home/ubuntu/.local/bin/uv run --no-dev src/main.py
+; venv python directly (not `uv run`), so the bot itself is the main process:
+; systemd's notify messages, signals and exit codes then refer to the bot, not to uv.
+ExecStart=/home/ubuntu/AluBot/.venv/bin/python src/main.py
+; post a Discord webhook message whenever the service stops for any reason other than a clean stop/restart
+ExecStopPost=/bin/sh /home/ubuntu/AluBot/src/shared/scripts/notify_failure.sh %n
 User=ubuntu
 Restart=always
 RestartSec=30

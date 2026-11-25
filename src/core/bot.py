@@ -15,7 +15,7 @@ from loguru import logger
 
 import ext
 from config import env
-from shared import clock, errors, fmt
+from shared import clock, errors, fmt, systemd
 from shared.concepts import BotBase
 from utils import const
 
@@ -341,6 +341,7 @@ class Bot(BotBase, commands.Bot):
             self.launch_time = clock.utcnow()
             self.ready_flag = True
         logger.success("Logged in as `{}`", self.user)
+        systemd.sd_notify("READY=1")
 
     @override
     async def start(self) -> None:  # ty: ignore[invalid-method-override]

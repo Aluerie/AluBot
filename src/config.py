@@ -32,6 +32,7 @@ class Env(EnvConfig):
     WOLFRAM_TOKEN: str
     GIT_PERSONAL_TOKEN: str
     LOCAL_API_KEY: str
+    HEALTHCHECK_URL: str = ""
 
 
 env = Env()

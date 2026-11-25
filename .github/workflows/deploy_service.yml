@@ -10,7 +10,62 @@ permissions:
   contents: read
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # fake values, only so `config.env` loads for the import check; nothing here connects anywhere
+      PROJECT_NAME: AluBot
+      DISCORD_TOKEN_ALUBOT: fake
+      DISCORD_TOKEN_YENBOT: fake
+      POSTGRES_PROD: postgresql://fake
+      POSTGRES_TEST: postgresql://fake
+      WEBHOOK_LOGGER: https://fake.invalid/logger
+      WEBHOOK_DOTANEWS: https://fake.invalid/dotanews
+      WEBHOOK_ERROR: https://fake.invalid/error
+      WEBHOOK_SPAM: https://fake.invalid/spam
+      PING_PROD_MENTION: fake
+      PING_TEST_MENTION: fake
+      WOLFRAM_TOKEN: fake
+      GIT_PERSONAL_TOKEN: fake
+      LOCAL_API_KEY: fake
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check src
+
+      - name: Check formatting
+        run: uv run ruff format --check src
+
+      - name: Type check
+        run: uv run ty check src
+
+      # Finds extensions like `BotBase.get_extensions` does: every module in every category folder of `ext/`.
+      - name: Import the bot and every extension
+        working-directory: src
+        run: |
+          uv run python -c "
+          import importlib, pkgutil, pathlib, main, ext
+          from utils import const
+          # what const.load_emojis does in setup_hook, minus fetching the real emojis from Discord
+          const._RESOLVED_EMOTES.update({e.name: f':{e.name}:' for e in const.Emoji})
+          categories = sorted(p for p in pathlib.Path(ext.__path__[0]).iterdir() if p.is_dir() and not p.name.startswith('_'))
+          modules = [f'ext.{c.name}.{m.name}' for c in categories for m in pkgutil.iter_modules([str(c)]) if not m.name.startswith('_')]
+          for module in modules:
+              importlib.import_module(module)
+          print(f'Imported {len(modules)} extensions')
+          "
+
   deploy:
+    # a broken commit must not reach the server
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - name: Restarting the bot

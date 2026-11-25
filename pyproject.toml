@@ -89,7 +89,10 @@ unsound-yield = "ignore" # `Any` is fine
 preview = true
 line-length = 120
 target-version = "py315"
-exclude = [".venv"]
+exclude = [
+    ".venv",
+    "src/shared/tests", # the submodule's own tests are checked by its own CI
+]
 src = ["src"]
 
 

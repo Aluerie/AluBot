@@ -11,8 +11,8 @@ import re
 import textwrap
 from dataclasses import dataclass, field
 from operator import attrgetter
-from pathlib import Path
 from typing import TYPE_CHECKING, Final, override
+lazy from pathlib import Path
 
 import discord
 from discord.ext import commands

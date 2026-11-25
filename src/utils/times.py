@@ -82,7 +82,7 @@ class ShortTime:
                 raise errors.BadUserInputError(msg)
             try:
                 self.dt: dt.datetime = dt.datetime.fromtimestamp(int(match.group("ts")), tz=dt.UTC)
-            except (OverflowError, ValueError, OSError):
+            except OverflowError, ValueError, OSError:
                 msg = "That timestamp is out of range."
                 raise errors.BadUserInputError(msg) from None
             return
@@ -90,7 +90,7 @@ class ShortTime:
         data = {key: int(value) for key, value in match.groupdict(default="0").items()}
         try:
             self.dt = (now or clock.utcnow()) + relativedelta(**data)
-        except (OverflowError, ValueError):
+        except OverflowError, ValueError:
             msg = "That is too far away, please choose a closer time."
             raise errors.BadUserInputError(msg) from None
 
@@ -187,6 +187,6 @@ class TimeTransformer(app_commands.Transformer):
     """
 
     @override
-    async def transform(self, interaction: Interaction, value: str) -> dt.datetime:
+    async def transform(self, interaction: Interaction, value: str) -> dt.datetime:  # ty: ignore[invalid-method-override]
         tzinfo = await interaction.client.tz_manager.get_tzinfo(interaction.user.id)
         return FutureTime(value, now=interaction.created_at, tzinfo=tzinfo).dt

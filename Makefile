@@ -6,11 +6,14 @@ ifeq ($(OS),Windows_NT)
 else
     SHELL := pwsh
 endif
-.SHELLFLAGS := -NoProfile -Command 
+.SHELLFLAGS := -NoProfile -Command
 
 # Removes `make[1]: Entering directory 'D:/CODE/AluBot' messages` https://stackoverflow.com/a/71371359/19217368
 # Allowing for nested makes without annoyance of that message.
 MAKEFLAGS += --no-print-directory
+# SSH destination of the VPS: a `Host` alias from ~/.ssh/config or user@host.
+# Override it per command, e.g. make logs VPS=ubuntu@1.2.3.4, or with a VPS environment variable.
+VPS ?= vps
 
 .PHONY: run
 .SILENT: run
@@ -40,7 +43,7 @@ update:  # Update dependencies
 
 .PHONY: ruff
 .SILENT: ruff
-ruff:  # Run the Ruff's linter 
+ruff:  # Run the Ruff's linter
 	uv run ruff check $(sources)
 	uv run ruff format --check $(sources)
 
@@ -53,4 +56,5 @@ ty:  # Run typechecker (ty)
 .PHONY: scp
 .SILENT: scp
 scp:  # Copy required files into the VPS
-	scp -i "${SSH_PRIVATE_KEY}" .env ${SSH_USERNAME}@${SSH_HOST}:~/AluBot/.env
+	scp .env $(VPS):~/AluBot/.env
+# 	scp -i "${SSH_PRIVATE_KEY}" .env ${SSH_USERNAME}@${SSH_HOST}:~/AluBot/.env

@@ -5,10 +5,8 @@
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import unicodedata
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, assert_never, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, assert_never, cast, override
 
 import aiohttp
 import discord
@@ -43,8 +41,6 @@ class Dev(DevCog):
     * `healthcheck` task that pings healthchecks.io while the bot is healthy (only in prod on the VPS).
     """
 
-    DATABASE_CHANNEL_ID: Final[int] = 1541985585810378823
-
     @override
     async def cog_load(self) -> None:
         if not self.bot.test:
@@ -53,12 +49,10 @@ class Dev(DevCog):
         if not self.bot.test and env.HEALTHCHECK_URL and systemd.is_systemd_service():
             self.healthcheck.add_exception_type(aiohttp.ClientError, TimeoutError)
             self.healthcheck.start()
-        self.database_backup.start()
         await super().cog_load()
 
     @override
     async def cog_unload(self) -> None:
-        self.database_backup.stop()
         self.autosync.cancel()
         self.healthcheck.cancel()
         await super().cog_unload()
@@ -307,121 +301,6 @@ class Dev(DevCog):
             for name in available
             if name not in self.bot.extensions and current.lower() in name.lower()
         ][:25]
-
-    # --- DATABASE BACKUP ----------------------------------------------------------------------------------------------
-
-    def get_database_channel(self) -> discord.TextChannel:
-        """Get the text channel used for database backups."""
-        return self.bot.get_text_channel(self.DATABASE_CHANNEL_ID)
-
-    @loop(time=dt.time(hour=18, minute=5, tzinfo=dt.UTC))
-    async def database_backup(self) -> None:
-        """Daily task to backup the bot's database.
-
-        Sends pg_dump to my private discord server.
-        """
-        if self.bot.test:
-            return
-
-        path = Path(".temp/alubot.sql")
-        path.parent.mkdir(exist_ok=True)
-
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                "pg_dump",
-                "-f",
-                str(path),
-                "alubot",
-                stdout=asyncio.subprocess.DEVNULL,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            try:
-                _, stderr = await asyncio.wait_for(proc.communicate(), timeout=300)
-            except TimeoutError:
-                proc.kill()
-                await proc.wait()
-                raise
-            if proc.returncode != 0:
-                msg = f"pg_dump exited with {proc.returncode}: {stderr.decode()}"
-                raise RuntimeError(msg)
-            await self.get_database_channel().send(file=discord.File(path, filename=path.name))
-        finally:
-            path.unlink(missing_ok=True)
-
-    # --- PROJECT CONTROL ----------------------------------------------------------------------------------------------
-
-    project_group = app_commands.Group(
-        name="project-dev",
-        description="Control Irene's projects",
-        guild_ids=[const.Guild.hideout],
-        default_permissions=discord.Permissions(manage_guild=True),
-    )
-
-    PROJECTS: ClassVar[dict[str, str]] = {
-        "irebot": "../IrenesBot/.temp/irebot.log",
-        "alubot": ".temp/alubot.log",
-        "dota2bot": "../Dota2Bot/.temp/d2b.log",
-    }
-
-    @project_group.command(name="logs")
-    @app_commands.choices(project=[app_commands.Choice(name=p, value=log_path) for p, log_path in PROJECTS.items()])
-    async def project_logs(self, interaction: Interaction, project: str) -> None:
-        """🪵 Get project's logs."""
-        await interaction.response.defer()
-        await interaction.followup.send(file=discord.File(project))
-
-    @project_group.command(name="restart")
-    @app_commands.choices(project=[app_commands.Choice(name=p, value=p) for p in PROJECTS])
-    async def project_restart(self, interaction: Interaction, project: str) -> None:
-        """🔌 Restart project's process.
-
-        Usable to restart the bot (or other projects) without logging to VPS machine or committing something.
-        Sometimes, it's just more comfortable to do it from discord window or mobile.
-
-        Parameters
-        ----------
-        project
-            Project to restart.
-        """
-        await interaction.response.send_message("Rebooting in 3 2 1")
-        await asyncio.sleep(3)
-        proc = await asyncio.create_subprocess_exec(
-            "sudo",
-            "systemctl",
-            "restart",
-            project,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        _, stderr = await proc.communicate()
-        if proc.returncode != 0:
-            logger.error("Failed to restart {}: {}", project, stderr.decode())
-            await interaction.followup.send(f"Something went wrong:\n{fmt.codeblock(stderr.decode()[:1500])}")
-
-    @project_group.command(name="journal")
-    @app_commands.choices(project=[app_commands.Choice(name=p, value=p) for p in PROJECTS])
-    async def project_journal(self, interaction: Interaction, project: str) -> None:
-        """📓 Get project's journal.
-
-        Parameters
-        ----------
-        project
-            Project to get journal for.
-        """
-        await interaction.response.defer()
-        proc = await asyncio.create_subprocess_exec(
-            "sudo",
-            "journalctl",
-            f"--unit={project}",
-            "-n",
-            "5000",
-            "--no-pager",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, _stderr = await proc.communicate()
-        journal = self.bot.str_to_file(stdout.decode(errors="replace"), f"{project}-journal.log")
-        await interaction.followup.send(file=journal)
 
     # --- DEV COMMANDS -------------------------------------------------------------------------------------------------
     # These commands aren't public only because I don't think people would find them useful.

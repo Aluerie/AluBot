@@ -7,9 +7,11 @@ from __future__ import annotations
 import asyncio
 import io
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
+import orjson
 from discord.ext import commands
 from loguru import logger
 
@@ -41,6 +43,9 @@ __all__ = (
 
 
 type Context = commands.Context[Bot]
+
+# The command payloads of the test bot's last Hideout autosync. Relative to the working directory, i.e. the repo root.
+AUTOSYNC_PATH = Path(".temp/autosync.json")
 
 
 class Bot(BotBase, commands.Bot):
@@ -327,16 +332,15 @@ class Bot(BotBase, commands.Bot):
         self.tree.copy_global_to(guild=guild)
 
         new: list[dict[str, Any]] = [cmd.to_dict(self.tree) for cmd in self.tree.get_commands(guild=guild)]
-        old: list[dict[str, Any]] = [r["payload"] for r in await self.pool.fetch("SELECT payload FROM auto_sync")]
+        old: list[dict[str, Any]] = orjson.loads(AUTOSYNC_PATH.read_bytes()) if AUTOSYNC_PATH.exists() else []
 
         if len(new) == len(old) and all(p in old for p in new):
             # Compared dicts, seems same.
             return False
 
-        async with self.pool.acquire() as conn, conn.transaction():
-            await conn.execute("DELETE FROM auto_sync")
-            await conn.executemany("INSERT INTO auto_sync (payload) VALUES ($1)", [(p,) for p in new])
         await self.tree.sync(guild=guild)
+        AUTOSYNC_PATH.parent.mkdir(exist_ok=True)
+        AUTOSYNC_PATH.write_bytes(orjson.dumps(new))
         return True
 
     async def on_ready(self) -> None:

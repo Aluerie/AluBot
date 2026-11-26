@@ -75,8 +75,3 @@ CREATE TABLE
 
 -- Create bot_variables row
 INSERT INTO alubot.bot_variables DEFAULT VALUES ON CONFLICT DO NOTHING;
-
-CREATE TABLE
-    IF NOT EXISTS alubot.auto_sync (
-        payload JSONB
-    );

@@ -17,8 +17,7 @@ jobs:
       PROJECT_NAME: AluBot
       DISCORD_TOKEN_ALUBOT: fake
       DISCORD_TOKEN_YENBOT: fake
-      POSTGRES_PROD: postgresql://fake
-      POSTGRES_TEST: postgresql://fake
+      DATABASE_URL: postgresql://fake
       WEBHOOK_LOGGER: https://fake.invalid/logger
       WEBHOOK_DOTANEWS: https://fake.invalid/dotanews
       WEBHOOK_ERROR: https://fake.invalid/error

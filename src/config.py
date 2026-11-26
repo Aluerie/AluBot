@@ -21,8 +21,7 @@ class Env(EnvConfig):
     PROJECT_NAME: str
     DISCORD_TOKEN_ALUBOT: str
     DISCORD_TOKEN_YENBOT: str
-    POSTGRES_PROD: str
-    POSTGRES_TEST: str
+    DATABASE_URL: str  # on the VPS, the systemd unit sets it, overriding .env
     WEBHOOK_LOGGER: str
     WEBHOOK_DOTANEWS: str
     WEBHOOK_ERROR: str

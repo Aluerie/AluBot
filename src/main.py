@@ -62,12 +62,10 @@ async def start_the_bot(
         async with (
             aiohttp.ClientSession() as session,
             await db.try_create_pool(
-                env.POSTGRES_PROD,
-                env.POSTGRES_TEST,
+                env.DATABASE_URL,
                 search_path="alubot",
                 application_name="alubot",
                 migrations_dir=MIGRATIONS_DIR,
-                is_test=is_test_account,
             ) as pool,
             Bot(
                 session=session,

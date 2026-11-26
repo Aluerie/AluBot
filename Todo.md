@@ -6,7 +6,7 @@
 
 Both are kept in the daily backups, so dropping them only removes them from the live database.
 
-- [ ] `alubot.timers_old`: the old reminders/birthdays, already moved into `alubot.scheduled_jobs` by `sql/02_scheduled_jobs.sql`.
+- [ ] `alubot.timers_old`: the old reminders/birthdays, already moved into `alubot.scheduled_jobs`.
 - [ ] `alubot.auto_sync`: the test bot's autosync now keeps its state in `.temp/autosync.json`. Drop it once that change is deployed (on prod and in the home database).
 
 ```sql

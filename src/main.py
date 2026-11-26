@@ -61,6 +61,7 @@ async def start_the_bot(
                 env.POSTGRES_PROD,
                 env.POSTGRES_TEST,
                 search_path="alubot,shared",
+                application_name="alubot",
                 is_test=is_test_account,
             ) as pool,
             Bot(

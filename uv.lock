@@ -81,7 +81,6 @@ dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "orjson" },
-    { name = "parsedatetime" },
     { name = "pillow" },
     { name = "psutil" },
     { name = "pulsefire" },
@@ -92,6 +91,7 @@ dependencies = [
     { name = "tabulate" },
     { name = "thefuzz" },
     { name = "twitchio", extra = ["starlette"] },
+    { name = "tzdata" },
     { name = "unidiff" },
     { name = "urllib3" },
     { name = "uvloop", marker = "sys_platform == 'linux'" },
@@ -127,7 +127,6 @@ requires-dist = [
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "orjson" },
-    { name = "parsedatetime" },
     { name = "pillow" },
     { name = "psutil" },
     { name = "pulsefire" },
@@ -138,6 +137,7 @@ requires-dist = [
     { name = "tabulate" },
     { name = "thefuzz" },
     { name = "twitchio", extras = ["starlette"] },
+    { name = "tzdata", specifier = ">=2026.5" },
     { name = "unidiff" },
     { name = "urllib3" },
     { name = "uvloop", marker = "sys_platform == 'linux'" },
@@ -1194,15 +1194,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7d/fa/3944b40b07da9ce895c0e6303a5ab7d53da063554f534556b134a54d6093/packaging-26.3.tar.gz", hash = "sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79", size = 313412, upload-time = "2026-08-04T18:15:28.737Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl", hash = "sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c", size = 129956, upload-time = "2026-08-04T18:15:27.159Z" },
-]
-
-[[package]]
-name = "parsedatetime"
-version = "2.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a8/20/cb587f6672dbe585d101f590c3871d16e7aec5a576a1694997a3777312ac/parsedatetime-2.6.tar.gz", hash = "sha256:4cb368fbb18a0b7231f4d76119165451c8d2e35951455dfee97c62a87b04d455", size = 60114, upload-time = "2020-05-31T23:50:57.443Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/a4/3dd804926a42537bf69fb3ebb9fd72a50ba84f807d95df5ae016606c976c/parsedatetime-2.6-py3-none-any.whl", hash = "sha256:cb96edd7016872f58479e35879294258c71437195760746faffedb692aef000b", size = 42548, upload-time = "2020-05-31T23:50:56.315Z" },
 ]
 
 [[package]]

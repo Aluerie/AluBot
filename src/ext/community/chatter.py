@@ -4,26 +4,41 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import datetime as dt
 import random
-from typing import TYPE_CHECKING, ClassVar, Final, TypedDict, override
+from typing import TYPE_CHECKING, Any, ClassVar, Final, override
 
 import discord
 from discord.ext import commands
 
-from core import Cog, Timer
-from shared import clock
+from core import Cog
+from shared import clock, scheduler
 from utils import const
 
 if TYPE_CHECKING:
     from core import Bot
 
-    class PeriodicMessageTimerData(TypedDict):
-        """PeriodicMessageTimerData."""
+PERIODIC_MESSAGE_KEY: Final = "periodic-message"
+"""Key of the one job that sends the periodic messages."""
+CHAT_ACTIVE_WITHIN: Final = dt.timedelta(minutes=30)
+"""A periodic message is only sent if somebody wrote in #general this recently: no talking to an empty room."""
+CHAT_RECHECK_AFTER: Final = dt.timedelta(minutes=30)
 
-        index: int
+
+def periodic_message_gap() -> dt.timedelta:
+    """Pick the time until the next periodic message: a random one, a few weeks."""
+    return dt.timedelta(
+        weeks=random.randint(5, 10),
+        days=random.randint(0, 7),
+        hours=random.randint(0, 24),
+        minutes=random.randint(0, 60),
+    )
+
+
+def next_periodic_message(_job: scheduler.Job[Any], now: dt.datetime) -> dt.datetime:
+    """Repeat the periodic message job a random few weeks after it ran."""
+    return now + periodic_message_gap()
 
 
 # TODO: Write proper messages (embed fixer, birthday, colour roles)
@@ -83,56 +98,41 @@ class Chatter(Cog):
         """React and respond to community member's messages."""
         if not self.community_check(message):
             return
+        self.chat_active_at = message.created_at
         await self._react_to_mentions(message)
         await self._your_life_joke(message)
 
     # --- PERIODIC MESSAGES IN #GENERAL --------------------------------------------------------------------------------
 
+    chat_active_at: dt.datetime | None = None
+    """When a community member last wrote something (since the bot started)."""
+
     @override
     async def cog_load(self) -> None:
-        # start the chain of periodic messages if there isn't one yet (a fresh database, or it was deleted)
-        if await self.bot.timers.get_by_kwargs("periodic_message") is None:
-            await self._schedule_periodic_message(index=0)
+        # start the periodic messages if there's no job for them yet (a fresh database, or it was deleted)
+        await self.bot.scheduler.schedule(
+            "periodic_message",
+            clock.utcnow() + periodic_message_gap(),
+            key=PERIODIC_MESSAGE_KEY,
+            guild_id=const.Guild.community,
+            on_conflict="keep",
+        )
         await super().cog_load()
 
-    async def _schedule_periodic_message(self, *, index: int) -> None:
-        """Create the timer for the next periodic message, a few weeks from now."""
-        data: PeriodicMessageTimerData = {"index": index}
-        await self.bot.timers.create(
-            event="periodic_message",
-            expires_at=(
-                clock.utcnow()
-                + dt.timedelta(
-                    weeks=random.randint(5, 10),
-                    days=random.randint(0, 7),
-                    hours=random.randint(0, 24),
-                    minutes=random.randint(0, 60),
-                )
-            ),
-            data=data,
+    @scheduler.handler("periodic_message", recur=next_periodic_message)
+    async def send_periodic_message(self, _job: scheduler.Job[Any]) -> scheduler.Reschedule | None:
+        """Send an informational message in #general, once somebody is around to read it."""
+        now = clock.utcnow()
+        if self.chat_active_at is None or now - self.chat_active_at > CHAT_ACTIVE_WITHIN:
+            return scheduler.Reschedule(now + CHAT_RECHECK_AFTER)
+
+        embed = discord.Embed(
+            title="Informational message",
+            colour=0x122366,
+            description=random.choice(PERIODIC_MESSAGES),
         )
-
-    @commands.Cog.listener()
-    async def on_periodic_message_timer_complete(self, timer: Timer[PeriodicMessageTimerData]) -> None:
-        """On periodic message timer complete.
-
-        Periodically send informational messages in general.
-        """
-        index = timer.data["index"]
-        # Schedule the next one first: if anything fails below, the chain of the timers is not broken.
-        # (And if this fails the timer is not cleaned up, so it's retried after the next restart.)
-        await self._schedule_periodic_message(index=index + 1)
-        try:
-            await self.bot.wait_for("message", check=self.community_check)
-            await asyncio.sleep(random.randrange(5, 10))
-            embed = discord.Embed(
-                title="Informational message",
-                colour=0x122366,
-                description=PERIODIC_MESSAGES[index % len(PERIODIC_MESSAGES)],
-            )
-            await self.general_channel.send(embed=embed)
-        finally:
-            await self.bot.timers.cleanup(timer.id)
+        await self.general_channel.send(embed=embed)
+        return None
 
 
 async def setup(bot: Bot) -> None:

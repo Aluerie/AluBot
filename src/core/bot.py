@@ -17,9 +17,9 @@ import ext
 from config import env
 from shared import clock, errors, fmt, systemd
 from shared.concepts import BotBase
+from shared.scheduler import Scheduler
 from utils import const
 
-from .scheduler import Scheduler
 from .timezones import TimezoneManager
 from .tree import AppCommandTree
 
@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from PIL import Image
 
     from shared.concepts.db import PoolTypedWithAny
+    from shared.scheduler import Job
 
 
 __all__ = (
@@ -56,7 +57,7 @@ class Bot(BotBase, commands.Bot):
         logs_via_webhook_handler: Any
         tree: AppCommandTree
         user: discord.ClientUser
-        timers: Scheduler
+        scheduler: Scheduler
         tz_manager: TimezoneManager
 
     def __init__(
@@ -273,7 +274,10 @@ class Bot(BotBase, commands.Bot):
         # of the client which only exist since the `setup_hook` is called.
         self.tz_manager = TimezoneManager(self)
         self.tz_manager.start()
-        self.timers = Scheduler(bot=self)
+        # Cogs register their job handlers when they are added (see `add_cog`). Jobs of kinds without a handler
+        # just wait, and nothing runs before the bot is ready, so the cache is filled for the handlers.
+        self.scheduler = Scheduler(self.pool, on_error=self.on_scheduler_error)
+        await self.scheduler.start(wait_until=self.wait_until_ready)
 
         failed_to_load_extensions = False
         for extension in self.extensions_to_load:
@@ -348,15 +352,52 @@ class Bot(BotBase, commands.Bot):
         token = env.DISCORD_TOKEN_YENBOT if self.test else env.DISCORD_TOKEN_ALUBOT
         await super().start(token, reconnect=True)
 
+    # --- SCHEDULER ----------------------------------------------------------------------------------------------------
+
+    @override
+    async def add_cog(self, cog: commands.Cog, /, **kwargs: Any) -> None:
+        """Add a cog and register its scheduler job handlers (methods marked with `@scheduler.handler`)."""
+        await super().add_cog(cog, **kwargs)
+        self.scheduler.register_handlers(cog)
+
+    @override
+    async def remove_cog(self, name: str, /, **kwargs: Any) -> commands.Cog | None:
+        """Remove a cog and unregister its scheduler job handlers."""
+        cog = await super().remove_cog(name, **kwargs)
+        if cog is not None:
+            self.scheduler.unregister_handlers(cog)
+        return cog
+
+    async def on_scheduler_error(self, error: BaseException, job: Job | None) -> None:
+        """Notify developers about an error of a scheduled job's handler (or of the scheduler itself)."""
+        if not isinstance(error, Exception):
+            return
+        if job is None:
+            embed = discord.Embed(color=0xFF8243, title="Scheduler Error")
+        else:
+            embed = discord.Embed(
+                color=0xFF8243,
+                title=f"Scheduled Job Error: `{job.kind}` #{job.id}",
+                description=f"Attempt {job.attempts + 1}, due {clock.discord(job.due_at, 'f', 'R')}.",
+            )
+            fmt.add_mapping_field(
+                embed,
+                name="Job",
+                mapping={"key": job.key, "user_id": job.user_id, "when": job.when, "rule": job.rule, **job.data},
+            )
+        await self.error_notification_manager.register(error, embed)
+
     # --- MANAGEMENT ---------------------------------------------------------------------------------------------------
 
     @override
     async def close(self) -> None:
         """Close the connection to Discord while cleaning up other open sessions and clients."""
         logger.info("{} is closing.", self.__class__.__name__)
-        for component_name in ("timers", "tz_manager"):
-            if (component := getattr(self, component_name, None)) is not None:
-                component.close()
+        # first: running job handlers still need the connection to Discord and the database
+        if (scheduler := getattr(self, "scheduler", None)) is not None:
+            await scheduler.close()
+        if (tz_manager := getattr(self, "tz_manager", None)) is not None:
+            tz_manager.close()
         await super().close()
         await self.pool.close()
         await self.session.close()

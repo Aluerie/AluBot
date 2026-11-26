@@ -3,25 +3,9 @@ CREATE SCHEMA IF NOT EXISTS alubot;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 /* ---------------------------------------------------------------------------------------------------------------------
-Timers: reminders, birthdays, etc.
+Scheduled jobs (reminders, birthdays, etc.): the bot creates `alubot.scheduled_jobs` itself on start,
+from `src/shared/scheduler/schema.sql`.
 --------------------------------------------------------------------------------------------------------------------- */
-
-CREATE TABLE
-    IF NOT EXISTS alubot.timers (
-        /* Timers */
-        id SERIAL PRIMARY KEY,
-        event TEXT NOT NULL,
-        expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        timezone TEXT NOT NULL DEFAULT 'UTC',
-        data JSONB NOT NULL DEFAULT '{}'::jsonb
-    );
-
-CREATE INDEX IF NOT EXISTS timers_expires_at_idx ON alubot.timers (expires_at);
-
-CREATE INDEX IF NOT EXISTS timers_event_idx ON alubot.timers (event);
-
-CREATE INDEX IF NOT EXISTS timers_data_idx ON alubot.timers USING GIN (data jsonb_path_ops);
 
 /* ---------------------------------------------------------------------------------------------------------------------
 Users

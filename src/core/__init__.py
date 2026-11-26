@@ -4,7 +4,6 @@
 
 from .bot import *
 from .cog import *
-from .scheduler import *
 from .timezones import *
 from .tree import *
 from .views import *

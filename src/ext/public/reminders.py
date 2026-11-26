@@ -583,8 +583,10 @@ class Reminders(Cog):
         """Show your reminders, with a button to delete each."""
         jobs: list[Job[ReminderData]] = await self.bot.scheduler.fetch(KIND, user_id=interaction.user.id)
         view = ReminderListView(interaction.user, jobs)
-        # public, like the confirmations: only the author can use the 🗑️ buttons and turn the pages
-        await interaction.response.send_message(view=view, allowed_mentions=discord.AllowedMentions.none())
+        # ephemeral: the user sees their list, the rest of the channel doesn't see what they're reminded of
+        await interaction.response.send_message(
+            view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none()
+        )
         view.message = await interaction.original_response()
 
     async def edit_reminder(

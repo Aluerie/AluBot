@@ -28,7 +28,7 @@ WorkingDirectory=/home/ubuntu/AluBot/
 ; systemd's notify messages, signals and exit codes then refer to the bot, not to uv.
 ExecStart=/home/ubuntu/AluBot/.venv/bin/python src/main.py
 ; post a Discord webhook message whenever the service stops for any reason other than a clean stop/restart
-ExecStopPost=/bin/sh /home/ubuntu/AluBot/src/shared/scripts/notify_failure.sh %n
+ExecStopPost=/bin/sh /home/ubuntu/LalaBot/scripts/notify_failure.sh %n
 User=ubuntu
 Restart=always
 RestartSec=30

@@ -1,4 +1,4 @@
-# Copyright (C) 2020-present, Irene Adler ❤ (@Aluerie).
+# Copyright (C) 2020-present, Irene Adler 💜 (@Aluerie).
 # Licensed under MPL-2.0, see the LICENSE file for details.
 """Main.py - the python file to launch the bot with.
 

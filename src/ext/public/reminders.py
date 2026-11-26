@@ -19,14 +19,14 @@ from typing import TYPE_CHECKING, Any, Final, Self, TypedDict, override
 lazy import re
 
 import discord
-from discord import app_commands
+from discord import app_commands, ui
 from loguru import logger
 
-from core import Cog, Modal
+from core import Cog, LayoutView, Modal
 from shared import clock, errors, scheduler
 from shared.scheduler import UTC, Job, WallTime, to_wall_time
 from shared.timeparse import ParsedTime, parse_time
-from utils import const, pages, prompts
+from utils import const, prompts
 lazy from utils.times import TimeTransformer
 
 if TYPE_CHECKING:
@@ -46,6 +46,8 @@ MAX_MENTIONS: Final = 25
 LATE_AFTER: Final = dt.timedelta(minutes=5)
 """Reminders later than this say so (e.g. the bot was offline at the time)."""
 DEFAULT_TEXT: Final = "…"
+REMINDERS_PER_PAGE: Final = 8
+"""Reminders per page of `/remind list`: a layout holds 40 components, and a reminder takes 3."""
 SNOOZE_PRESETS: Final = (("10m", "10 min"), ("1h", "1 hour"), ("1d", "1 day"))
 
 
@@ -370,6 +372,75 @@ class ReminderIdTransformer(app_commands.Transformer):
         return choices
 
 
+# --- LIST -------------------------------------------------------------------------------------------------------------
+
+
+class PageButton(ui.Button["ReminderListView"]):
+    """◀️ / ▶️ under `/remind list`."""
+
+    def __init__(self, emoji: str, step: int, *, disabled: bool) -> None:
+        super().__init__(emoji=emoji, disabled=disabled)
+        self.step: int = step
+
+    @override
+    async def callback(self, interaction: Interaction) -> None:
+        assert self.view is not None
+        await self.view.turn(interaction, self.step)
+
+
+class ReminderListView(LayoutView):
+    """``/remind list``: the user's reminders, each with a 🗑️ button next to it, a page at a time.
+
+    The delete buttons are `DeleteButton`s, the same as on the confirmations, so a deleted reminder simply
+    isn't there the next time the list is opened.
+    """
+
+    def __init__(self, user: discord.User | discord.Member, jobs: list[Job[ReminderData]]) -> None:
+        super().__init__(author_id=user.id, timeout=300)
+        self.user: discord.User | discord.Member = user
+        self.jobs: list[Job[ReminderData]] = jobs
+        self.page: int = 0
+        self.build()
+
+    @property
+    def page_count(self) -> int:
+        """How many pages the reminders take (at least one, which may be empty)."""
+        return max(1, -(-len(self.jobs) // REMINDERS_PER_PAGE))
+
+    def build(self) -> None:
+        """Lay out the current page."""
+        self.clear_items()
+        title = f"## ⏰ {self.user.display_name}'s reminders"
+        if self.page_count > 1:
+            title += f" · page {self.page + 1}/{self.page_count}"
+        container = ui.Container[Self](accent_colour=getattr(self.user, "colour", None) or const.Palette.purple_500)
+        container.add_item(ui.TextDisplay(title))
+
+        start = self.page * REMINDERS_PER_PAGE
+        for job in self.jobs[start : start + REMINDERS_PER_PAGE]:
+            text = (
+                f"**#{job.id}** · {clock.discord(job.fire_at, 'f', 'R')} {Repeat.from_rule(job.rule).label}\n"
+                f"-# {shorten(job.data['text'])}"
+            )
+            # a `DynamicItem` works as an accessory, it's only typed for both view kinds instead of `LayoutView`
+            container.add_item(ui.Section(text, accessory=DeleteButton(job.id, self.user.id)))  # ty: ignore[invalid-argument-type]
+        if not self.jobs:
+            container.add_item(ui.TextDisplay("You don't have any reminders. Set one with `/remind set`."))
+        container.add_item(ui.TextDisplay("-# Change one with `/remind edit`, or its ✏️ button on the confirmation."))
+        self.add_item(container)
+
+        if self.page_count > 1:
+            previous = PageButton("◀️", -1, disabled=self.page == 0)
+            following = PageButton("▶️", 1, disabled=self.page == self.page_count - 1)
+            self.add_item(ui.ActionRow[ReminderListView](previous, following))
+
+    async def turn(self, interaction: Interaction, step: int) -> None:
+        """Move by `step` pages and redraw."""
+        self.page = min(max(self.page + step, 0), self.page_count - 1)
+        self.build()
+        await interaction.response.edit_message(view=self, allowed_mentions=discord.AllowedMentions.none())
+
+
 # --- COG --------------------------------------------------------------------------------------------------------------
 
 
@@ -509,27 +580,13 @@ class Reminders(Cog):
 
     @remind_group.command(name="list")
     async def remind_list(self, interaction: Interaction) -> None:
-        """Show your reminders."""
+        """Show your reminders, with a button to delete each."""
         jobs: list[Job[ReminderData]] = await self.bot.scheduler.fetch(KIND, user_id=interaction.user.id)
-        entries = [
-            f"**#{job.id}** · {clock.discord(job.fire_at, 'f', 'R')} {Repeat.from_rule(job.rule).label}\n"
-            f"-# {shorten(job.data['text'])}"
-            for job in jobs
-        ]
-        paginator = pages.EmbedDescriptionPaginator(
-            interaction,
-            entries,
-            per_page=10,
-            empty_description="You don't have any reminders.",
-            template={
-                "color": const.Palette.purple_500,
-                "author": {
-                    "name": f"{interaction.user.display_name}'s reminders",
-                    "icon_url": interaction.user.display_avatar.url,
-                },
-            },
+        view = ReminderListView(interaction.user, jobs)
+        await interaction.response.send_message(
+            view=view, ephemeral=True, allowed_mentions=discord.AllowedMentions.none()
         )
-        await paginator.start()
+        view.message = await interaction.original_response()
 
     async def edit_reminder(
         self,

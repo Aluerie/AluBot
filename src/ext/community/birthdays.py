@@ -178,6 +178,40 @@ def next_birthday_date(month: int, day: int, *, on_or_after: dt.date) -> dt.date
     return date
 
 
+def congratulation_view(
+    member: discord.Member, content: str, *, wish: str, gif_url: str, footer: str
+) -> discord.ui.LayoutView:
+    """Build the birthday congratulation: a container in the member's colour with the pings, the wish and a GIF.
+
+    Parameters
+    ----------
+    member
+        The birthday person.
+    content
+        The first lines, with the mentions of the member and the birthday role (they ping like a message's content).
+    wish
+        The congratulation text.
+    gif_url
+        The GIF under it.
+    footer
+        The small print: the date and the timezone of the birthday.
+    """
+    container = discord.ui.Container[discord.ui.LayoutView](accent_colour=member.colour)
+    container.add_item(discord.ui.TextDisplay(content))
+    container.add_item(
+        discord.ui.Section(
+            f"## CONGRATULATIONS !!! {str(const.Emoji.peepoRoseDank) * 3}",
+            f"### Dear {member.display_name}!\n{wish}",
+            accessory=discord.ui.Thumbnail(member.display_avatar.url),
+        )
+    )
+    container.add_item(discord.ui.MediaGallery(discord.MediaGalleryItem(gif_url)))
+    container.add_item(discord.ui.TextDisplay(f"-# {footer}"))
+    view = discord.ui.LayoutView(timeout=None)
+    view.add_item(container)
+    return view
+
+
 def start_of_day(date: dt.date, timezone: str) -> WallTime:
     """Get the very beginning of the date on the clocks of the timezone."""
     return WallTime(dt.datetime.combine(date, dt.time()), timezone)
@@ -461,20 +495,16 @@ class Birthdays(Cog):
         if year is not None:
             content += f"\n{member.display_name} is now {today.year - year} years old !"
 
-        embed = (
-            discord
-            .Embed(
-                color=member.color,
-                title=f"CONGRATULATIONS !!! {str(const.Emoji.peepoRoseDank) * 3}",
-                description=f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emoji.DankLove}",
-            )
-            .set_author(name=f"Dear {member.display_name}!", icon_url=member.display_avatar.url)
-            .set_thumbnail(url=member.display_avatar.url)
-            .set_image(url=random.choice(GIF_URLS_BANK))
-            .set_footer(text=f"Their birthday: {birthday_fmt(month, day, year)}. Timezone: {timezone}.")
+        view = congratulation_view(
+            member,
+            content,
+            wish=f"{random.choice(CONGRATULATION_TEXT_BANK)} {const.Emoji.DankLove}",
+            gif_url=random.choice(GIF_URLS_BANK),
+            footer=f"Their birthday: {birthday_fmt(month, day, year)}. Timezone: {timezone}.",
         )
+        # mentions in a layout's text ping like in `content`, so only these two may
         mentions = discord.AllowedMentions(users=[discord.Object(member.id)], roles=[discord.Object(role.id)])
-        await self.birthday_channel.send(content=content, embed=embed, allowed_mentions=mentions)
+        await self.birthday_channel.send(view=view, allowed_mentions=mentions)
 
         # the role stays until the end of the birthday day in the person's timezone
         await self.bot.scheduler.schedule(

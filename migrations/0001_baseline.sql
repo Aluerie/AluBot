@@ -4,8 +4,6 @@ Baseline: the `alubot` schema as it was on prod on 2026-11-26.
 `scheduled_jobs` (reminders, birthdays, etc.) isn't here: `shared.scheduler` creates it on start.
 --------------------------------------------------------------------------------------------------------------------- */
 
-CREATE SCHEMA alubot;
-
 /* --- Users -------------------------------------------------------------------------------------------------------- */
 
 CREATE TABLE alubot.user_settings (

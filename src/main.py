@@ -21,6 +21,7 @@ else:
 
 
 import os
+from pathlib import Path
 
 import aiohttp
 import click
@@ -29,6 +30,9 @@ from config import env
 from core import Bot
 from shared import systemd, ut
 from shared.concepts import db, logs
+
+# The bot's database migrations, applied when it starts (`shared.concepts.migrations`).
+MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "migrations"
 
 # generated at https://patorjk.com/software/taag/ using "Standard" font
 ASCII_STARTING_UP_ART = r"""
@@ -62,6 +66,7 @@ async def start_the_bot(
                 env.POSTGRES_TEST,
                 search_path="alubot",
                 application_name="alubot",
+                migrations_dir=MIGRATIONS_DIR,
                 is_test=is_test_account,
             ) as pool,
             Bot(

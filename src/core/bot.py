@@ -16,7 +16,7 @@ from loguru import logger
 import ext
 from config import env
 from shared import clock, errors, fmt, runtime
-from shared.concepts import BotBase, autosync
+from shared.concepts import BotBase
 from shared.scheduler import Scheduler
 from utils import const
 
@@ -320,7 +320,7 @@ class Bot(BotBase, commands.Bot):
         for target in targets:
             where = "global" if target is None else f"guild {target.id}"
             try:
-                changed = await autosync.sync_if_changed(self.tree, guild=target)
+                changed = await self.tree.sync_if_changed(guild=target)
             except discord.HTTPException:
                 logger.exception("Autosync: syncing {} commands failed ❌", where)
                 continue

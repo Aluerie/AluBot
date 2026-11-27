@@ -4,6 +4,7 @@
 
 import contextlib
 import functools
+import json
 from typing import TYPE_CHECKING, Any, override
 
 import discord
@@ -13,7 +14,7 @@ from loguru import logger
 from shared import clock, fmt
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Generator
+    from collections.abc import AsyncGenerator, Generator, Iterable, Mapping
 
     from discord.ext import commands
 
@@ -26,6 +27,67 @@ __all__ = (
 
 
 type Interaction = discord.Interaction[Bot]
+
+# --- COMPARING COMMANDS WITH DISCORD'S --------------------------------------------------------------------------------
+# For `AppCommandTree.sync_if_changed`. LalaBot has the same logic (it doesn't use `shared`, to stay independent).
+
+COMPARED_KEYS = frozenset({
+    "name",
+    "type",
+    "description",
+    "options",
+    "required",
+    "choices",
+    "value",
+    "min_value",
+    "max_value",
+    "min_length",
+    "max_length",
+    "autocomplete",
+    "channel_types",
+    "default_member_permissions",
+    "nsfw",
+})
+"""Fields of a command (and its options and choices) that decide whether Discord has it right.
+
+Discord adds fields of its own (IDs, versions) and fills in defaults (``contexts``, ``integration_types``) that
+discord.py leaves out, so comparing everything would see a change on every start.
+"""
+
+
+def _normalized(payload: Any) -> Any:
+    """Keep only the compared fields of a command payload, recursively, dropping empty or default ones.
+
+    Two more differences that aren't changes: Discord returns ``default_member_permissions`` as a string while
+    discord.py sends a number, and it strips the emoji variation selector (U+FE0F) from texts ("⚔️" comes back "⚔").
+    """
+    if isinstance(payload, dict):
+        return {
+            key: str(value) if key == "default_member_permissions" else _normalized(value)
+            for key, value in payload.items()
+            if key in COMPARED_KEYS and value not in (None, False, "", [])
+        }
+    if isinstance(payload, list):
+        return [_normalized(item) for item in payload]
+    if isinstance(payload, str):
+        return payload.replace("\N{VARIATION SELECTOR-16}", "")
+    return payload
+
+
+def _signatures(payloads: Iterable[Mapping[str, Any]]) -> dict[str, str]:
+    """Map each command (by type and name) to its normalized payload as JSON, for comparing."""
+    return {
+        f"{payload.get('type', 1)}:{payload['name']}": json.dumps(_normalized(payload), sort_keys=True)
+        for payload in payloads
+    }
+
+
+def changed_commands(local: Iterable[Mapping[str, Any]], remote: Iterable[Mapping[str, Any]]) -> list[str]:
+    """Name the commands that differ between the bot's tree and what Discord has: new, changed or removed ones."""
+    ours, theirs = _signatures(local), _signatures(remote)
+    names = {key.split(":", 1)[1] for key in ours.keys() ^ theirs.keys()}
+    names |= {key.split(":", 1)[1] for key in ours.keys() & theirs.keys() if ours[key] != theirs[key]}
+    return sorted(names)
 
 
 async def _respond(interaction: Interaction, response: str) -> None:
@@ -156,6 +218,36 @@ class AppCommandTree(app_commands.CommandTree["Bot"]):
         self.application_commands[guild_id] = ret
         self.cache.pop(guild_id, None)
         return ret
+
+    async def sync_if_changed(self, *, guild: discord.abc.Snowflake | None = None) -> list[str]:
+        """Sync the global (or one guild's) app commands with Discord, but only if they changed.
+
+        Syncing on every start is simpler, but Discord rate-limits it. Comparing first needs one GET request
+        and no state of our own: Discord's copy of the commands is the state.
+
+        Parameters
+        ----------
+        guild
+            The guild whose guild-only commands to sync; `None` for the global commands.
+
+        Returns
+        -------
+        list[str]
+            The names of the commands that changed (and got synced); empty if nothing needed syncing.
+        """
+        application_id = self.client.application_id
+        if application_id is None:
+            msg = "The bot isn't logged in yet: it needs its application ID to compare the commands."
+            raise RuntimeError(msg)
+        local = [command.to_dict(self) for command in self.get_commands(guild=guild)]
+        if guild is None:
+            remote = await self.client.http.get_global_commands(application_id)
+        else:
+            remote = await self.client.http.get_guild_commands(application_id, guild.id)
+        changed = changed_commands(local, remote)
+        if changed:
+            await self.sync(guild=guild)
+        return changed
 
     @override
     async def fetch_commands(self, *, guild: discord.abc.Snowflake | None = None) -> list[app_commands.AppCommand]:

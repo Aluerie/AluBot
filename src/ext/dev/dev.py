@@ -210,7 +210,7 @@ class Dev(DevCog):
 
     ext_group = app_commands.Group(
         name="ext-dev",
-        description="Load/reload/unload bot's extensions.",
+        description="🧩 Load/reload/unload bot's extensions.",
         guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),
     )
@@ -282,7 +282,7 @@ class Dev(DevCog):
 
     @commands.command(name="invite-link")
     async def invite_link(self, ctx: Context) -> None:
-        """Get invite link for the bot.
+        """🔗 Get invite link for the bot.
 
         Somewhat pointless since 'Add App' button exists.
         But it's useful to have for @YenBot where I removed that button.
@@ -291,7 +291,7 @@ class Dev(DevCog):
 
     tools_group = app_commands.Group(
         name="tools-dev",
-        description="Useful developer tools.",
+        description="🛠️ Useful developer tools.",
         guild_ids=[const.Guild.hideout],
         default_permissions=discord.Permissions(manage_guild=True),
     )
@@ -352,7 +352,7 @@ class Dev(DevCog):
 
     @commands.command(name="py")
     async def py(self, ctx: Context, *, code: str) -> None:
-        """Evaluate Python code via jishaku.
+        """🐍 Evaluate Python code via jishaku.
 
         Alias for `jsk py`.
 

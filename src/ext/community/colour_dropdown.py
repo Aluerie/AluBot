@@ -94,7 +94,7 @@ class ColorRoles(Cog):
     @commands.is_owner()
     @commands.command(hidden=True)
     async def new_role_selection(self, ctx: Context) -> None:
-        """Create a view with color roles dropdown.
+        """🎨 Create a view with color roles dropdown.
 
         Ideally, this should only be used once to setup the color roles menu.
         """

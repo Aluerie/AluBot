@@ -176,7 +176,7 @@ class Community(Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def test_welcome(self, ctx: Context) -> None:
-        """Preview the welcome message for yourself.
+        """👋 Preview the welcome message for yourself.
 
         Sends the same message that a new member would receive, in the channel where the command is used, without
         touching any roles. Useful for testing changes to the embed and the welcome image.

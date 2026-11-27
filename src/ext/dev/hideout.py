@@ -188,7 +188,7 @@ class Hideout(DiscordWebhookLogs, DevCog):
     @commands.is_owner()
     @commands.guild_only()
     async def test_guild(self, ctx: Context) -> None:
-        """Show info about the current guild."""
+        """🏰 Show info about the current guild."""
         assert ctx.guild is not None
         await self._send_guild_info(
             ctx.guild,

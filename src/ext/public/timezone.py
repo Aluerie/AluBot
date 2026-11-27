@@ -29,12 +29,12 @@ class TimezoneSettings(Cog):
 
     timezone_group = app_commands.Group(
         name="timezone",
-        description="Manage your timezone settings or retrieve some timezone info.",
+        description="🌍 Manage your timezone settings or retrieve some timezone info.",
     )
 
     @timezone_group.command(name="set")
     async def timezone_set(self, interaction: Interaction, timezone: TransformTimeZone) -> None:
-        """Set your timezone.
+        """🌍 Set your timezone.
 
         This is used to convert times to your local timezone when
         using the reminder command and other miscellaneous commands
@@ -51,7 +51,7 @@ class TimezoneSettings(Cog):
 
     @timezone_group.command(name="info")
     async def timezone_info(self, interaction: Interaction, timezone: TransformTimeZone) -> None:
-        """Retrieve info about a timezone.
+        """🗺️ Retrieve info about a timezone.
 
         Parameters
         ----------
@@ -72,7 +72,7 @@ class TimezoneSettings(Cog):
 
     @timezone_group.command(name="check")
     async def timezone_check(self, interaction: Interaction, user: discord.User | None = None) -> None:
-        """Show the timezone of a user.
+        """🔎 Show the timezone of a user.
 
         Parameters
         ----------
@@ -99,7 +99,7 @@ class TimezoneSettings(Cog):
 
     @timezone_group.command(name="clear")
     async def timezone_clear(self, interaction: Interaction) -> None:
-        """Clear your timezone."""
+        """🧹 Clear your timezone."""
         await self.bot.tz_manager.clear_timezone(interaction.user.id)
         await interaction.response.send_message("Your timezone has been cleared.", ephemeral=True)
 

@@ -126,7 +126,7 @@ class Levels(Cog):
     @app_commands.guilds(const.Guild.community)
     @app_commands.command(name="leaderboard")
     async def leaderboard(self, interaction: Interaction) -> None:
-        """View experience leaderboard for this server."""
+        """🏆 View experience leaderboard for this server."""
         guild = self.bot.community
 
         query = """

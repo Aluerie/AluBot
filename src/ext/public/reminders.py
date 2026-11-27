@@ -575,7 +575,7 @@ class Reminders(Cog):
         self.bot.tree.remove_command(self.convert_menu.name, type=self.convert_menu.type)
         await super().cog_unload()
 
-    remind_group = app_commands.Group(name="remind", description="Reminders that ping you when the time comes.")
+    remind_group = app_commands.Group(name="remind", description="⏰ Reminders that ping you when the time comes.")
 
     # --- CREATING -----------------------------------------------------------------------------------------------------
 
@@ -683,7 +683,7 @@ class Reminders(Cog):
         repeat: Repeat = Repeat.never,
         dm: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
     ) -> None:
-        """Set a reminder: I'll ping you when the time comes.
+        """⏰ Set a reminder: I'll ping you when the time comes.
 
         Parameters
         ----------
@@ -707,7 +707,7 @@ class Reminders(Cog):
 
     @remind_group.command(name="list")
     async def remind_list(self, interaction: Interaction) -> None:
-        """Show your reminders, with buttons to delete or resume them and a menu to edit one."""
+        """📋 Show your reminders, with buttons to delete or resume them and a menu to edit one."""
         jobs: list[Job[ReminderData]] = await self.bot.scheduler.fetch(KIND, user_id=interaction.user.id)
         view = ReminderListView(interaction.user, jobs)
         # ephemeral: the user sees their list, the rest of the channel doesn't see what they're reminded of
@@ -778,7 +778,7 @@ class Reminders(Cog):
         text: app_commands.Range[str, 1, MAX_TEXT_LENGTH] | None = None,
         repeat: Repeat | None = None,
     ) -> None:
-        """Change one of your reminders.
+        """✏️ Change one of your reminders.
 
         Parameters
         ----------
@@ -797,7 +797,7 @@ class Reminders(Cog):
     async def remind_delete(
         self, interaction: Interaction, reminder: app_commands.Transform[int, ReminderIdTransformer]
     ) -> None:
-        """Delete one of your reminders.
+        """🗑️ Delete one of your reminders.
 
         Parameters
         ----------
@@ -814,7 +814,7 @@ class Reminders(Cog):
 
     @remind_group.command(name="clear")
     async def remind_clear(self, interaction: Interaction) -> None:
-        """Delete all your reminders."""
+        """🧹 Delete all your reminders."""
         total = await self.bot.scheduler.count(KIND, user_id=interaction.user.id)
         if total == 0:
             await interaction.response.send_message("You don't have any reminders.", ephemeral=True)
@@ -834,7 +834,7 @@ class Reminders(Cog):
     async def timestamp(
         self, interaction: Interaction, when: app_commands.Transform[ParsedTime, TimeTransformer]
     ) -> None:
-        """Turn a time into Discord timestamps, which show it to everyone in their own timezone.
+        """🕒 Turn a time into Discord timestamps, which show it to everyone in their own timezone.
 
         Parameters
         ----------

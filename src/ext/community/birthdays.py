@@ -270,7 +270,7 @@ class Birthdays(Cog):
 
     birthday_group = app_commands.Group(
         name="birthday",
-        description="Birthday related commands.",
+        description="🎂 Birthday related commands.",
         guild_ids=[const.Guild.community],
     )
 
@@ -285,7 +285,7 @@ class Birthdays(Cog):
         timezone: TransformTimeZone,
         year: int | None = None,
     ) -> None:
-        """Set your birthday.
+        """🎂 Set your birthday.
 
         Parameters
         ----------
@@ -382,7 +382,7 @@ class Birthdays(Cog):
 
     @birthday_group.command(name="remove")
     async def birthday_remove(self, interaction: Interaction) -> None:
-        """Remove your birthday data and stop getting congratulations."""
+        """🗑️ Remove your birthday data and stop getting congratulations."""
         deleted = await self.bot.scheduler.delete_by_key(birthday_key(interaction.user.id))
         if deleted is None:
             embed = discord.Embed(
@@ -400,7 +400,7 @@ class Birthdays(Cog):
 
     @birthday_group.command(name="check")
     async def birthday_check(self, interaction: Interaction, member: discord.Member | None = None) -> None:
-        """Check your or somebody's birthday in database.
+        """🔎 Check your or somebody's birthday in database.
 
         Parameters
         ----------
@@ -426,7 +426,7 @@ class Birthdays(Cog):
 
     @birthday_group.command(name="list")
     async def birthday_list(self, interaction: Interaction) -> None:
-        """Show list of birthdays in this server."""
+        """📅 Show list of birthdays in this server."""
         guild = self.bot.community
 
         jobs: list[Job[BirthdayData]] = await self.bot.scheduler.fetch("birthday")

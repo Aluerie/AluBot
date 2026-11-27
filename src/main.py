@@ -108,7 +108,7 @@ def launch(
     subset_mode: bool,
     test_account: bool,
 ) -> None:
-    """Launch the bot."""
+    """🚀 Launch the bot."""
     if click_ctx.invoked_subcommand is None:
         with logs.setup_logging(
             starting_up_art=ASCII_STARTING_UP_ART,

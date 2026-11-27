@@ -295,7 +295,7 @@ class ButtonRoles(Cog):
 
     button_roles_group = app_commands.Group(
         name="button-roles",
-        description="Create and manage button roles.",
+        description="🔘 Create and manage button roles.",
         allowed_contexts=app_commands.AppCommandContext(guild=True, dm_channel=False, private_channel=False),
         allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
         default_permissions=discord.Permissions(manage_roles=True),

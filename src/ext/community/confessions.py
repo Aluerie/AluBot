@@ -103,7 +103,7 @@ class Confessions(Cog):
     @commands.is_owner()
     @commands.command(hidden=True)
     async def new_confession_buttons(self, ctx: Context) -> None:
-        """Create a view with anonymous/non-anonymous confession buttons.
+        """🤫 Create a view with anonymous/non-anonymous confession buttons.
 
         Ideally, this should only be used once to setup the confession menu.
         """

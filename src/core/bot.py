@@ -7,18 +7,16 @@ from __future__ import annotations
 import asyncio
 import io
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, override
 
 import discord
-import orjson
 from discord.ext import commands
 from loguru import logger
 
 import ext
 from config import env
 from shared import clock, errors, fmt, runtime
-from shared.concepts import BotBase
+from shared.concepts import BotBase, autosync
 from shared.scheduler import Scheduler
 from utils import const
 
@@ -43,9 +41,6 @@ __all__ = (
 
 
 type Context = commands.Context[Bot]
-
-# The command payloads of the test bot's last Hideout autosync. Relative to the working directory, i.e. the repo root.
-AUTOSYNC_PATH = Path(".temp/autosync.json")
 
 
 class Bot(BotBase, commands.Bot):
@@ -296,52 +291,43 @@ class Bot(BotBase, commands.Bot):
                 ).set_footer(text=f'setup_hook: loading extension "{extension}"')
                 await self.error_notification_manager.register(error, embed)
 
-        if self.test:
-            if failed_to_load_extensions:
-                logger.info("Autosync: cancelled ❌ One or more cogs failed to load.")
-            else:
-                self._autosync_task = asyncio.create_task(self.try_autosync_hideout())
-
-    async def try_autosync_hideout(self) -> None:
-        """Wrap `auto_sync_hideout` into `try/except` with some logging."""
-        try:
-            result = await self.autosync_hideout()
-        except Exception:
-            logger.exception("Autosync: failed ❌")
+        if failed_to_load_extensions:
+            # syncing a tree without the broken cogs' commands would remove them from Discord
+            logger.info("Autosync: cancelled ❌ One or more cogs failed to load.")
         else:
-            if result:
-                logger.success("Autosync: success.")
-            else:
-                logger.info("Autosync: not needed 🫰.")
+            self._autosync_task = asyncio.create_task(self.autosync())
 
-    async def autosync_hideout(self) -> bool:
-        """Try automatic `copy_global_to` + `sync` Hideout Guild for easier testing purposes.
+    async def autosync(self) -> None:
+        """Once ready, sync the app commands with Discord, but only the ones that changed (Discord rate-limits syncs).
 
-        ?tag ass (auto-syncing sucks) and all, but it's just too convenient to pass on.
-        The function is using non-global sync methods so should be fine on rate-limits.
+        * Production: the global commands, and the guild-only ones of every guild that has some
+          (Hideout, the community server).
+        * Test bot: the global commands are copied into Hideout instead, so changes show up there right away.
 
-        Sources
-        -------
-        * DuckBot-Discord/DuckBot (MPL v2 License), `try_autosync` function
-            https://github.com/DuckBot-Discord/DuckBot/blob/rewrite/bot.py
+        ``$sync`` and ``/sync-dev`` (in ``ext.dev.dev``) still force a sync by hand.
         """
-        # safeguard. Need the app id.
         await self.wait_until_ready()
+        hideout = discord.Object(id=const.Guild.hideout)
+        targets: list[discord.abc.Snowflake | None]
+        if self.test:
+            self.tree.copy_global_to(guild=hideout)
+            targets = [hideout]
+        else:
+            guild_ids: set[int] = {int(const.Guild.hideout), int(const.Guild.community)}
+            guild_ids |= {guild.id for guild in self.guilds if self.tree.get_commands(guild=guild)}
+            targets = [None, *(discord.Object(id=guild_id) for guild_id in sorted(guild_ids))]
 
-        guild = discord.Object(id=const.Guild.hideout)
-        self.tree.copy_global_to(guild=guild)
-
-        new: list[dict[str, Any]] = [cmd.to_dict(self.tree) for cmd in self.tree.get_commands(guild=guild)]
-        old: list[dict[str, Any]] = orjson.loads(AUTOSYNC_PATH.read_bytes()) if AUTOSYNC_PATH.exists() else []
-
-        if len(new) == len(old) and all(p in old for p in new):
-            # Compared dicts, seems same.
-            return False
-
-        await self.tree.sync(guild=guild)
-        AUTOSYNC_PATH.parent.mkdir(exist_ok=True)
-        AUTOSYNC_PATH.write_bytes(orjson.dumps(new))
-        return True
+        for target in targets:
+            where = "global" if target is None else f"guild {target.id}"
+            try:
+                changed = await autosync.sync_if_changed(self.tree, guild=target)
+            except discord.HTTPException:
+                logger.exception("Autosync: syncing {} commands failed ❌", where)
+                continue
+            if changed:
+                logger.success("Autosync: synced {} commands, these changed: {}", where, ", ".join(changed))
+            else:
+                logger.info("Autosync: {} commands are up to date 🫰", where)
 
     async def on_ready(self) -> None:
         """Handle `ready` event."""

@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import unicodedata
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, assert_never, cast, override
 
@@ -36,15 +35,13 @@ class Dev(DevCog):
 
     Features
     --------
-    * `sync` prefix command and `/sync-dev` slash command for syncing the app command tree;
-    * `autosync` task that syncs global and Hideout commands shortly once the bot is ready (skipped on the test bot);
+    * `sync` prefix command and `/sync-dev` slash command for forcing a sync of the app command tree
+      (the bot syncs what changed by itself on start, see `Bot.autosync`);
     * `healthcheck` task that pings healthchecks.io while the bot is healthy (only in prod on the VPS).
     """
 
     @override
     async def cog_load(self) -> None:
-        if not self.bot.test:
-            self.autosync.start()
         # only prod (`BOT_ENV=prod`) pings, so a bot running at home doesn't keep the check green
         if not self.bot.test and env.HEALTHCHECK_URL and runtime.is_prod():
             self.healthcheck.add_exception_type(aiohttp.ClientError, TimeoutError)
@@ -53,7 +50,6 @@ class Dev(DevCog):
 
     @override
     async def cog_unload(self) -> None:
-        self.autosync.cancel()
         self.healthcheck.cancel()
         await super().cog_unload()
 
@@ -75,28 +71,6 @@ class Dev(DevCog):
             return
         async with self.bot.session.get(env.HEALTHCHECK_URL, timeout=aiohttp.ClientTimeout(total=10)) as response:
             response.raise_for_status()
-
-    # --- AUTOSYNC -----------------------------------------------------------------------------------------------------
-
-    @loop(count=1, wait_for_ready=True)
-    async def autosync(self) -> None:
-        """Sync global and Hideout guild commands once after startup.
-
-        Convenient enough to keep over the manual `?tag ass` workflow. If we ever get rate limited,
-        replace it with something smarter (e.g. sync only on changes or more sleep time).
-
-        Notes
-        -----
-        * Not related to `AluBot.autosync_hideout`, which must stay on the bot class:
-          it runs on every test-bot launch, while this cog is not always loaded.
-        """
-        # Global
-        await self.bot.tree.sync()
-        # Hideout Guild
-        await asyncio.sleep(30.0)
-        await self.bot.tree.sync(guild=discord.Object(id=const.Guild.hideout))
-
-        logger.success("Synced global and Hideout bound commands.")
 
     # --- SYNC COMMANDS ------------------------------------------------------------------------------------------------
 

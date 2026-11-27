@@ -28,7 +28,7 @@ import click
 
 from config import env
 from core import Bot
-from shared import systemd, ut
+from shared import runtime, ut
 from shared.concepts import db, logs
 
 # The bot's database migrations, applied when it starts (`shared.concepts.migrations`).
@@ -57,7 +57,7 @@ async def start_the_bot(
     is_test_account: bool,
 ) -> None:
     """Start the bot."""
-    watchdog_task = asyncio.create_task(systemd.watchdog_loop())
+    watchdog_task = asyncio.create_task(runtime.watchdog_loop())
     try:
         async with (
             aiohttp.ClientSession() as session,
@@ -115,9 +115,11 @@ def launch(
         ):
             try:
                 ut.run(
-                    start_the_bot(
-                        is_subset_mode=subset_mode,
-                        is_test_account=test_account,
+                    runtime.run_until_sigterm(
+                        start_the_bot(
+                            is_subset_mode=subset_mode,
+                            is_test_account=test_account,
+                        )
                     )
                 )
             except KeyboardInterrupt:

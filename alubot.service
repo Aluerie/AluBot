@@ -30,6 +30,8 @@ ExecStart=/home/ubuntu/AluBot/.venv/bin/python src/main.py
 ; the database through the Unix socket, as `ubuntu` (peer authentication, so no password);
 ; real environment variables override .env, which holds the home database's URL
 Environment=DATABASE_URL=postgresql:///alubot?host=/var/run/postgresql
+; tells the bot it's prod (`shared.runtime.is_prod`), e.g. so only prod pings healthchecks.io
+Environment=BOT_ENV=prod
 ; post a Discord webhook message whenever the service stops for any reason other than a clean stop/restart
 ExecStopPost=/bin/sh /home/ubuntu/LalaBot/scripts/notify_failure.sh %n
 User=ubuntu

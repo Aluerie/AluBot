@@ -17,7 +17,7 @@ from loguru import logger
 
 from config import env
 from core import DevCog
-from shared import errors, fmt, systemd
+from shared import errors, fmt, runtime
 from shared.concepts import loop
 from utils import const
 
@@ -45,8 +45,8 @@ class Dev(DevCog):
     async def cog_load(self) -> None:
         if not self.bot.test:
             self.autosync.start()
-        # only the VPS (a systemd service) pings, so a bot running at home doesn't keep the check green
-        if not self.bot.test and env.HEALTHCHECK_URL and systemd.is_systemd_service():
+        # only prod (`BOT_ENV=prod`) pings, so a bot running at home doesn't keep the check green
+        if not self.bot.test and env.HEALTHCHECK_URL and runtime.is_prod():
             self.healthcheck.add_exception_type(aiohttp.ClientError, TimeoutError)
             self.healthcheck.start()
         await super().cog_load()

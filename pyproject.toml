@@ -56,6 +56,10 @@ dependencies = [
 steamio = { git = "https://github.com/Aluerie/steam.py", rev = "introduce-ext.dota2" }
 jishaku = { git = "https://github.com/Gorialis/jishaku.git" }
 
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
 [dependency-groups]
 dev = [
     "pyright",

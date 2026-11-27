@@ -12,6 +12,16 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      # a throwaway PostgreSQL for tests/test_sql.py
+      postgres:
+        image: postgres:19
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       # fake values, only so `config.env` loads for the import check; nothing here connects anywhere
       PROJECT_NAME: AluBot
@@ -61,6 +71,11 @@ jobs:
               importlib.import_module(module)
           print(f'Imported {len(modules)} extensions')
           "
+
+      - name: Test
+        run: uv run pytest
+        env:
+          SQL_CHECK_POSTGRES: postgresql://postgres:postgres@localhost:5432/postgres
 
   deploy:
     # a broken commit must not reach the server
